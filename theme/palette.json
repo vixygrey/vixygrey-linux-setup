@@ -1,0 +1,22 @@
+{
+  "name": "Dracula-Sakura",
+  "colors": {
+    "bg": "#282a36",
+    "panel": "#323448",
+    "panel_soft": "#2f3144",
+    "current": "#4b4963",
+    "selection": "#6a5d86",
+    "fg": "#f8f8f2",
+    "muted": "#ddd2f7",
+    "dim": "#a297cb",
+    "comment": "#8a88c7",
+    "cyan": "#9be7ff",
+    "mint": "#8af7cf",
+    "peach": "#ffcf93",
+    "rose": "#ff9fe3",
+    "blush": "#ffc2ec",
+    "lilac": "#d4b2ff",
+    "red": "#ff7aa8",
+    "yellow": "#fff0a8"
+  }
+}

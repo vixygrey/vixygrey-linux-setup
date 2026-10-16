@@ -1,0 +1,698 @@
+[
+  {
+    "id": "flameshot",
+    "name": "flameshot",
+    "method": "flatpak",
+    "package": "org.flameshot.Flameshot",
+    "source": "https://flathub.org/apps/org.flameshot.Flameshot",
+    "notes": "Officially documented distro-agnostic Flatpak; screen capture on Wayland is mediated by the desktop portal.",
+    "third_party": true
+  },
+  {
+    "id": "ghostwriter",
+    "name": "ghostwriter",
+    "method": "flatpak",
+    "package": "org.kde.ghostwriter",
+    "source": "https://flathub.org/apps/org.kde.ghostwriter",
+    "notes": "KDE's Markdown editor is published on Flathub under this application ID.",
+    "third_party": true
+  },
+  {
+    "id": "google-chrome",
+    "name": "google chrome",
+    "method": "flatpak",
+    "package": "com.google.Chrome",
+    "source": "https://flathub.org/apps/com.google.Chrome",
+    "notes": "Flathub package for Google's proprietary Chrome build; this is a vendor/noncore application.",
+    "third_party": true
+  },
+  {
+    "id": "docker-engine",
+    "name": "Docker Engine on Aurora DX",
+    "method": "system",
+    "package": "docker",
+    "source": "https://docs.getaurora.dev/dx/aurora-dx-intro/",
+    "notes": "User-approved replacement for Docker Desktop. Aurora DX supplies Docker Engine. On standard Aurora, run ujust devmode and follow its reboot prompts; then ujust dx-group and log out/in. Group access is root-equivalent. The setup checks the local Engine and never switches images, changes groups, or enables services automatically.",
+    "aliases": [
+      "docker",
+      "docker engine"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "micro",
+    "name": "micro",
+    "method": "brew",
+    "package": "micro",
+    "source": "https://github.com/micro-editor/micro",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "omp",
+    "name": "omp",
+    "method": "archive",
+    "package": "omp",
+    "version": "18.11.2",
+    "source": "https://github.com/can1357/oh-my-pi/releases/tag/v18.11.2",
+    "notes": "Official release executables published for Linux x86_64 and arm64.",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.11.2/omp-linux-x64",
+        "sha256": "d7d68a2abda24d61870ef2b1943b3fc7bda236d0b98f9eed01b48d8e4d5ffdc7",
+        "format": "raw",
+        "filename": "omp"
+      },
+      "aarch64": {
+        "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.11.2/omp-linux-arm64",
+        "sha256": "7085f5616a450370af23dbf377302a5e6b731071b1bdea3b34735b334f084761",
+        "format": "raw",
+        "filename": "omp"
+      }
+    },
+    "commands": {
+      "omp": "omp"
+    },
+    "third_party": true
+  },
+  {
+    "id": "kiro",
+    "name": "Kiro",
+    "method": "archive",
+    "package": "Kiro",
+    "version": "1.3.11",
+    "source": "https://kiro.dev/downloads/",
+    "notes": "Official universal Linux tarballs. SHA-256 values were computed from the versioned vendor downloads. Kiro/bin/kiro is the CLI launcher and Kiro/kiro is the Electron desktop executable. The user-local install relies on unprivileged user namespaces for Chromium sandboxing because its chrome-sandbox helper cannot be installed root-owned setuid; --no-sandbox is not used.",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://prod.download.desktop.kiro.dev/releases/stable/linux-x64/signed/1.3.11/tar/kiro-ide-1.3.11-stable-linux-x64.tar.gz",
+        "sha256": "536a03db6df5e1c58ca79be7053d1b240bab0b71d79cd8975e2d5563de08d38f"
+      },
+      "aarch64": {
+        "url": "https://prod.download.desktop.kiro.dev/releases/stable/linux-arm64/signed/1.3.11/tar/kiro-ide-1.3.11-stable-linux-arm64.tar.gz",
+        "sha256": "f08cea2b94ea6010aa217524e33caf46e94b727affdb5e8cc76ec82f028325db"
+      }
+    },
+    "commands": {
+      "kiro": "Kiro/bin/kiro",
+      "kiro-ide": "Kiro/kiro"
+    },
+    "third_party": true
+  },
+  {
+    "id": "bat",
+    "name": "bat",
+    "method": "brew",
+    "package": "bat",
+    "source": "https://github.com/sharkdp/bat",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "eza",
+    "name": "eza",
+    "method": "brew",
+    "package": "eza",
+    "source": "https://eza.rocks",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "aria2",
+    "name": "aria2",
+    "method": "brew",
+    "package": "aria2",
+    "source": "https://aria2.github.io/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "procs",
+    "name": "procs",
+    "method": "brew",
+    "package": "procs",
+    "source": "https://github.com/dalance/procs",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "btop",
+    "name": "btop",
+    "method": "brew",
+    "package": "btop",
+    "source": "https://github.com/aristocratos/btop",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "llama-cpp-vulkan",
+    "name": "llama.cpp w/ vulkan",
+    "method": "archive",
+    "package": "llama.cpp",
+    "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b11669",
+    "notes": "Official prebuilt Ubuntu Vulkan release; requires a working host Vulkan driver and must pass a runtime smoke check on Aurora. The executables and their shared libraries are under llama-b11669 in the archive. This does not substitute a CPU-only build.",
+    "version": "b11669",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-x64.tar.gz",
+        "sha256": "e8709e5ba6c1b093dea7f3de57f4aba842f9a188fba6b465782d65d6fcfa4d9f"
+      },
+      "aarch64": {
+        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-arm64.tar.gz",
+        "sha256": "d283522e479c0d532e3a04d715dd852ffb2d95925caa6d41ef2ba53a65e46a51"
+      }
+    },
+    "commands": {
+      "llama-cli": "llama-b11669/llama-cli",
+      "llama-server": "llama-b11669/llama-server"
+    },
+    "third_party": true
+  },
+  {
+    "id": "starship",
+    "name": "starship",
+    "method": "brew",
+    "package": "starship",
+    "source": "https://starship.rs/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "atuin",
+    "name": "atuin",
+    "method": "brew",
+    "package": "atuin",
+    "source": "https://atuin.sh/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "zellij",
+    "name": "zellij",
+    "method": "brew",
+    "package": "zellij",
+    "source": "https://zellij.dev/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "direnv",
+    "name": "direnv",
+    "method": "brew",
+    "package": "direnv",
+    "source": "https://direnv.net/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "gum",
+    "name": "gum",
+    "method": "brew",
+    "package": "gum",
+    "source": "https://github.com/charmbracelet/gum",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "fastfetch",
+    "name": "fastfetch",
+    "method": "brew",
+    "package": "fastfetch",
+    "source": "https://github.com/fastfetch-cli/fastfetch",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "vivid",
+    "name": "vivid",
+    "method": "brew",
+    "package": "vivid",
+    "source": "https://github.com/sharkdp/vivid",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "clipse",
+    "name": "clipse",
+    "method": "go",
+    "package": "github.com/savedra1/clipse",
+    "version": "v1.2.1",
+    "source": "https://github.com/savedra1/clipse",
+    "notes": "Builds the upstream Wayland backend with CGO disabled and installs wl-clipboard through Homebrew if its commands are missing. Clipboard listening, auto-paste and uinput permissions are never enabled automatically.",
+    "build_tags": [
+      "wayland"
+    ],
+    "cgo": false,
+    "runtime": {
+      "wl-copy": "wl-clipboard",
+      "wl-paste": "wl-clipboard"
+    },
+    "third_party": true
+  },
+  {
+    "id": "zsh-autosuggestions",
+    "name": "zsh-authsuggestions",
+    "method": "brew",
+    "package": "zsh-autosuggestions",
+    "source": "https://github.com/zsh-users/zsh-autosuggestions",
+    "notes": "The requested spelling maps to the established Homebrew core formula. It is shell source rather than an architecture-specific binary.",
+    "aliases": [
+      "zsh-autosuggestions"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "zsh-syntax-highlighting",
+    "name": "zsh-syntax-highlighting",
+    "method": "brew",
+    "package": "zsh-syntax-highlighting",
+    "source": "https://github.com/zsh-users/zsh-syntax-highlighting",
+    "notes": "Homebrew core installs the portable Zsh plugin source on Linux.",
+    "third_party": false
+  },
+  {
+    "id": "duf",
+    "name": "duf",
+    "method": "brew",
+    "package": "duf",
+    "source": "https://github.com/muesli/duf",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "fzf",
+    "name": "fzf",
+    "method": "brew",
+    "package": "fzf",
+    "source": "https://junegunn.github.io/fzf/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "ripgrep",
+    "name": "ripgrep",
+    "method": "brew",
+    "package": "ripgrep",
+    "source": "https://github.com/BurntSushi/ripgrep",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "fd",
+    "name": "fd",
+    "method": "brew",
+    "package": "fd",
+    "source": "https://github.com/sharkdp/fd",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "ast-grep",
+    "name": "ast-grep",
+    "method": "brew",
+    "package": "ast-grep",
+    "source": "https://ast-grep.github.io/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "yazi",
+    "name": "yazi",
+    "method": "brew",
+    "package": "yazi",
+    "source": "https://yazi-rs.github.io/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "ouch",
+    "name": "ouch",
+    "method": "brew",
+    "package": "ouch",
+    "source": "https://github.com/ouch-org/ouch",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "rsync",
+    "name": "rsync",
+    "method": "brew",
+    "package": "rsync",
+    "source": "https://rsync.samba.org/",
+    "notes": "Homebrew core publishes current Linux bottles for both x86_64 and arm64 rather than relying on Aurora's host copy.",
+    "third_party": false
+  },
+  {
+    "id": "rclone",
+    "name": "rclone",
+    "method": "brew",
+    "package": "rclone",
+    "source": "https://rclone.org/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "watchexec",
+    "name": "watchexec",
+    "method": "brew",
+    "package": "watchexec",
+    "source": "https://watchexec.github.io/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "jq",
+    "name": "jq",
+    "method": "brew",
+    "package": "jq",
+    "source": "https://jqlang.github.io/jq/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "yq",
+    "name": "yq",
+    "method": "brew",
+    "package": "yq",
+    "source": "https://github.com/mikefarah/yq",
+    "notes": "This is Mike Farah's yq; Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "jc",
+    "name": "jc",
+    "method": "brew",
+    "package": "jc",
+    "source": "https://github.com/kellyjonbrazil/jc",
+    "notes": "Homebrew core builds the portable Python CLI from source on Linux; a Linux bottle is not currently published.",
+    "third_party": false
+  },
+  {
+    "id": "fx",
+    "name": "fx",
+    "method": "brew",
+    "package": "fx",
+    "source": "https://fx.wtf/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "jnv",
+    "name": "jnv",
+    "method": "brew",
+    "package": "jnv",
+    "source": "https://github.com/ynqa/jnv",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "jqp",
+    "name": "jqp",
+    "method": "brew",
+    "package": "jqp",
+    "source": "https://github.com/noahgorstein/jqp",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "git",
+    "name": "git",
+    "method": "brew",
+    "package": "git",
+    "source": "https://git-scm.com/",
+    "notes": "Homebrew core publishes current Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "gh",
+    "name": "gh",
+    "method": "brew",
+    "package": "gh",
+    "source": "https://cli.github.com/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "lazygit",
+    "name": "lazygit",
+    "method": "brew",
+    "package": "lazygit",
+    "source": "https://github.com/jesseduffield/lazygit",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "delta",
+    "name": "delta",
+    "method": "brew",
+    "package": "git-delta",
+    "source": "https://dandavison.github.io/delta/",
+    "notes": "The delta executable is provided by the git-delta Homebrew core formula, with Linux bottles for both supported architectures.",
+    "aliases": [
+      "git-delta"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "difft",
+    "name": "difft",
+    "method": "brew",
+    "package": "difftastic",
+    "source": "https://difftastic.wilfred.me.uk/",
+    "notes": "The difft executable is provided by the difftastic Homebrew core formula, with Linux bottles for both supported architectures.",
+    "aliases": [
+      "difftastic"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "git-absorb",
+    "name": "git-absorb",
+    "method": "brew",
+    "package": "git-absorb",
+    "source": "https://github.com/tummychow/git-absorb",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "pre-commit",
+    "name": "pre-commit",
+    "method": "brew",
+    "package": "pre-commit",
+    "source": "https://pre-commit.com/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "xh",
+    "name": "xh",
+    "method": "brew",
+    "package": "xh",
+    "source": "https://github.com/ducaale/xh",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "hurl",
+    "name": "hurl",
+    "method": "brew",
+    "package": "hurl",
+    "source": "https://hurl.dev/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "posting",
+    "name": "posting",
+    "method": "uv",
+    "package": "posting",
+    "version": "2.11.1",
+    "source": "https://github.com/darrenburns/posting",
+    "notes": "The official Python package installs the Posting terminal HTTP client on Linux.",
+    "third_party": true
+  },
+  {
+    "id": "ngrok",
+    "name": "ngrok",
+    "method": "archive",
+    "package": "ngrok",
+    "version": "3.39.11",
+    "source": "https://ngrok.com/download/linux",
+    "notes": "Official versioned zero-dependency Linux tarballs; SHA-256 values were computed from the vendor artifacts. Authentication is deliberately not configured.",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://bin.equinox.io/a/5Mrhp7gRDVb/ngrok-v3-3.39.11-linux-amd64.tar.gz",
+        "sha256": "cec0b4997fcc5f529dfc74bac89050354d11a915f968720600039738fdf330cf"
+      },
+      "aarch64": {
+        "url": "https://bin.equinox.io/a/dg26hrkwY2F/ngrok-v3-3.39.11-linux-arm64.tar.gz",
+        "sha256": "3b6ba05a9d9585c34157fa0819fa95cdb13839f5b506b9e63204705cf7f79e29"
+      }
+    },
+    "commands": {
+      "ngrok": "ngrok"
+    },
+    "third_party": true
+  },
+  {
+    "id": "mkcert",
+    "name": "mkcert?",
+    "method": "brew",
+    "package": "mkcert",
+    "source": "https://github.com/FiloSottile/mkcert",
+    "notes": "Optional local development CA tool; Homebrew core publishes Linux bottles for both x86_64 and arm64. Running mkcert -install changes the trust store and is not automatic.",
+    "aliases": [
+      "mkcert"
+    ],
+    "optional": true,
+    "third_party": false
+  },
+  {
+    "id": "chawan",
+    "name": "chawan",
+    "method": "brew",
+    "package": "chawan",
+    "source": "https://sr.ht/~bptato/chawan/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "trippy",
+    "name": "trippy",
+    "method": "brew",
+    "package": "trippy",
+    "source": "https://trippy.rs/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64; some tracing modes may require Linux network capabilities.",
+    "third_party": false
+  },
+  {
+    "id": "gping",
+    "name": "gping",
+    "method": "brew",
+    "package": "gping",
+    "source": "https://github.com/orf/gping",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "doggo",
+    "name": "doggo",
+    "method": "brew",
+    "package": "doggo",
+    "source": "https://doggo.mrkaran.dev/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "nmap",
+    "name": "nmap",
+    "method": "brew",
+    "package": "nmap",
+    "source": "https://nmap.org/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64; privileged scan types still require appropriate permissions.",
+    "third_party": false
+  },
+  {
+    "id": "ssh-audit",
+    "name": "ssh-audit",
+    "method": "brew",
+    "package": "ssh-audit",
+    "source": "https://github.com/jtesta/ssh-audit",
+    "notes": "Homebrew core builds this portable Python CLI on Linux; a Linux bottle is not currently published.",
+    "third_party": false
+  },
+  {
+    "id": "lazyssh",
+    "name": "lazzyssh",
+    "method": "brew",
+    "package": "lazyssh",
+    "source": "https://github.com/Adembc/lazyssh",
+    "notes": "The requested spelling maps to Adembc lazyssh, the Homebrew core terminal SSH manager with Linux bottles for both architectures.",
+    "aliases": [
+      "lazyssh"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "duckdb",
+    "name": "duckdb",
+    "method": "brew",
+    "package": "duckdb",
+    "source": "https://www.duckdb.org/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "harlequin",
+    "name": "harlequin",
+    "method": "brew",
+    "package": "harlequin",
+    "source": "https://harlequin.sh/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "usql",
+    "name": "usql",
+    "method": "go",
+    "package": "github.com/xo/usql",
+    "version": "v0.21.6",
+    "source": "https://github.com/xo/usql",
+    "notes": "The upstream Go command module supplies usql on Linux; there is no Homebrew core formula under this name.",
+    "third_party": true
+  },
+  {
+    "id": "lazydocker",
+    "name": "lazydocker",
+    "method": "brew",
+    "package": "lazydocker",
+    "source": "https://github.com/jesseduffield/lazydocker",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64; it requires access to an existing compatible container engine.",
+    "third_party": false
+  },
+  {
+    "id": "dive",
+    "name": "dive",
+    "method": "brew",
+    "package": "dive",
+    "source": "https://github.com/wagoodman/dive",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64; engine-backed image sources require a separately configured container engine.",
+    "third_party": false
+  },
+  {
+    "id": "hadolint",
+    "name": "hadolint",
+    "method": "brew",
+    "package": "hadolint",
+    "source": "https://github.com/hadolint/hadolint",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "trivy",
+    "name": "trivy",
+    "method": "brew",
+    "package": "trivy",
+    "source": "https://trivy.dev/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "semgrep",
+    "name": "semgrep",
+    "method": "brew",
+    "package": "semgrep",
+    "source": "https://semgrep.dev/",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "cosign",
+    "name": "cosign",
+    "method": "brew",
+    "package": "cosign",
+    "source": "https://github.com/sigstore/cosign",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  }
+]

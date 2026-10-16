@@ -1,0 +1,144 @@
+palette = "dracula_sakura"
+add_newline = false
+scan_timeout = 10
+command_timeout = 500
+format = """
+[╭─](comment)$os$username$hostname$directory$git_branch$git_status$git_state$fill$battery$time
+[╰─](comment)$nodejs$python$rust$golang$docker_context$cmd_duration$jobs$character"""
+
+[character]
+success_symbol = "[♡](bold rose)"
+error_symbol = "[✗](bold red)"
+vimcmd_symbol = "[❮](bold mint)"
+
+[fill]
+symbol = " "
+
+[os]
+disabled = false
+style = "fg:dim"
+format = "[$symbol ]($style)"
+
+[os.symbols]
+Linux = ""
+Fedora = ""
+Ubuntu = ""
+Debian = ""
+
+[username]
+show_always = false
+style_user = "fg:lilac"
+style_root = "bold fg:red"
+format = "[$user]($style) "
+
+[hostname]
+ssh_only = true
+style = "fg:rose"
+format = "[@$hostname]($style) "
+
+[directory]
+style = "bold fg:cyan"
+format = "[✿ ](rose)[$path]($style)[$read_only]($read_only_style) "
+truncation_length = 8
+truncation_symbol = "…/"
+read_only = " 󰌾"
+read_only_style = "fg:red"
+
+[git_branch]
+symbol = " "
+style = "fg:lilac"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+truncation_length = 24
+
+[git_status]
+style = "fg:rose"
+format = "([$all_status$ahead_behind]($style) )"
+conflicted = "⚡${count} "
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+untracked = "?${count} "
+stashed = "📦${count} "
+modified = "!${count} "
+staged = "+${count} "
+renamed = "»${count} "
+deleted = "✘${count} "
+
+[git_state]
+style = "bold fg:peach"
+format = "[$state( $progress_current/$progress_total)]($style) "
+
+[nodejs]
+symbol = " "
+style = "fg:mint"
+format = "[$symbol$version]($style) "
+detect_files = ["package.json", ".nvmrc"]
+detect_extensions = []
+
+[python]
+symbol = " "
+style = "fg:yellow"
+format = '[$symbol$version( \($virtualenv\))]($style) '
+
+[rust]
+symbol = "🦀 "
+style = "fg:peach"
+format = "[$symbol$version]($style) "
+
+[golang]
+symbol = " "
+style = "fg:cyan"
+format = "[$symbol$version]($style) "
+
+[docker_context]
+symbol = " "
+style = "fg:cyan"
+format = "[$symbol$context]($style) "
+only_with_files = true
+
+[cmd_duration]
+min_time = 3000
+style = "fg:peach"
+format = "[󱎫 $duration]($style) "
+
+[jobs]
+symbol = "✦"
+style = "bold fg:cyan"
+number_threshold = 1
+format = "[$symbol $number]($style) "
+
+[battery]
+format = "[$symbol$percentage]($style) "
+
+[[battery.display]]
+threshold = 15
+style = "bold fg:red"
+
+[[battery.display]]
+threshold = 30
+style = "fg:peach"
+
+[time]
+disabled = false
+style = "fg:dim"
+format = "[ $time]($style)"
+time_format = "%H:%M"
+
+[palettes.dracula_sakura]
+bg = "#282a36"
+panel = "#323448"
+panel_soft = "#2f3144"
+current = "#4b4963"
+selection = "#6a5d86"
+fg = "#f8f8f2"
+muted = "#ddd2f7"
+dim = "#a297cb"
+comment = "#8a88c7"
+cyan = "#9be7ff"
+mint = "#8af7cf"
+peach = "#ffcf93"
+rose = "#ff9fe3"
+blush = "#ffc2ec"
+lilac = "#d4b2ff"
+red = "#ff7aa8"
+yellow = "#fff0a8"

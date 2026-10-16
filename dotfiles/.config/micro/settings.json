@@ -1,0 +1,40 @@
+{
+  "colorscheme": "dracula-sakura",
+  "keymenu": true,
+  "infobar": true,
+  "statusline": true,
+  "mouse": true,
+  "ruler": true,
+  "scrollbar": true,
+  "cursorline": true,
+  "matchbrace": true,
+  "softwrap": true,
+  "wordwrap": true,
+  "diffgutter": true,
+  "hlsearch": true,
+  "incsearch": true,
+  "autoindent": true,
+  "eofnewline": true,
+  "rmtrailingws": true,
+  "hltrailingws": true,
+  "saveundo": true,
+  "savecursor": true,
+  "autosave": 0,
+  "tabsize": 2,
+  "tabstospaces": true,
+  "ft:python": {
+    "tabsize": 4
+  },
+  "ft:go": {
+    "tabstospaces": false,
+    "tabsize": 4
+  },
+  "ft:makefile": {
+    "tabstospaces": false
+  },
+  "colorcolumn": 100,
+  "scrollbarchar": "┃",
+  "divchars": "│─",
+  "statusformatl": "☾ $(filename) $(modified)$(overwrite)  ($(line),$(col))  ✿ $(opt:filetype)",
+  "statusformatr": "♡ $(opt:fileformat) · $(opt:encoding) · $(bind:ToggleHelp) help"
+}
