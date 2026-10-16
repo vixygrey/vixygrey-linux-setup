@@ -1,0 +1,11 @@
+theme:
+  preset: dracula
+  primary: "#ff9fe3"
+  danger: "#ff7aa8"
+  success: "#8af7cf"
+
+autosave:
+  enabled: false
+
+ai:
+  save_sessions: false

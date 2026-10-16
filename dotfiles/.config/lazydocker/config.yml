@@ -1,0 +1,16 @@
+gui:
+  theme:
+    activeBorderColor: ['#ff9fe3', bold]
+    inactiveBorderColor: ['#4b4963']
+    selectedLineBgColor: ['#6a5d86']
+    inactiveViewSelectedLineBgColor: ['#323448']
+    optionsTextColor: ['#9be7ff']
+    defaultFgColor: ['#ddd2f7']
+  returnImmediately: false
+  wrapMainPanel: true
+commandTemplates:
+  restartService: docker compose restart {{ .Service.Name }}
+  dockerCompose: docker compose
+logs:
+  timestamps: true
+  since: "60m"

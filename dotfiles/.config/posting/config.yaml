@@ -1,0 +1,33 @@
+theme: dracula-sakura
+layout: vertical
+spacing: compact
+animation: none
+use_host_environment: false
+watch_env_files: true
+watch_collection_files: true
+watch_themes: true
+
+heading:
+  visible: true
+  show_host: true
+  show_version: true
+
+url_bar:
+  show_value_preview: true
+  hide_secrets_in_value_preview: true
+
+response:
+  prettify_json: true
+  show_size_and_time: true
+
+collection_browser:
+  position: left
+  show_on_startup: true
+
+command_palette:
+  theme_preview: true
+
+focus:
+  on_startup: url
+
+editor: micro

@@ -1,0 +1,19 @@
+[theme]
+name = "dracula-sakura"
+
+[colors]
+Base = "#f8f8f2"
+Title = "#ff9fe3"
+Important = "#ffc2ec"
+Guidance = "#9be7ff"
+Annotation = "#8a88c7"
+Muted = "#a297cb"
+AlertInfo = "#9be7ff"
+AlertWarn = "#ffcf93"
+AlertError = "#ff7aa8"
+SyntaxCommand = "#ff9fe3"
+SyntaxFlag = "#d4b2ff"
+SyntaxString = "#fff0a8"
+SyntaxVariable = "#ffcf93"
+SyntaxOperator = "#ff9fe3"
+SyntaxComment = "#8a88c7"

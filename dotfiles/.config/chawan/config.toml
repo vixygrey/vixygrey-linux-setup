@@ -1,0 +1,18 @@
+[buffer]
+styling = true
+images = true
+scripting = false
+referer-from = false
+cookie = false
+meta-refresh = "ask"
+
+[network]
+prepend-scheme = "https://"
+allow-http-from-file = false
+
+[display]
+color-mode = "true-color"
+image-mode = "kitty"
+highlight-color = "#ff9fe3"
+default-background-color = "#282a36"
+default-foreground-color = "#f8f8f2"

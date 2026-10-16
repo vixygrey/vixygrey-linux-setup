@@ -1,0 +1,38 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "small",
+    "color": {
+      "1": "#ff9fe3",
+      "2": "#d4b2ff"
+    },
+    "padding": { "top": 1, "left": 2, "right": 3 }
+  },
+  "display": {
+    "separator": "  ",
+    "color": {
+      "keys": "#d4b2ff",
+      "title": "#9be7ff"
+    },
+    "bar": {
+      "char": { "elapsed": "█", "total": "░" },
+      "width": 20
+    }
+  },
+  "modules": [
+    { "type": "os", "key": "  󰀵 OS" },
+    { "type": "kernel", "key": "  󰌽 Kernel" },
+    { "type": "uptime", "key": "  󰅐 Uptime" },
+    { "type": "packages", "key": "  󰏗 Packages" },
+    { "type": "shell", "key": "  󰆍 Shell" },
+    { "type": "terminal", "key": "   Terminal" },
+    { "type": "separator", "string": "─" },
+    { "type": "cpu", "key": "  󰍛 CPU", "showPeCoreCount": false },
+    { "type": "gpu", "key": "  󰢮 GPU" },
+    { "type": "memory", "key": "  󰘚 Memory" },
+    { "type": "disk", "key": "  󰋊 Disk", "folders": "/" },
+    { "type": "battery", "key": "  󰁹 Battery" },
+    { "type": "separator", "string": "─" },
+    { "type": "colors", "symbol": "circle" }
+  ]
+}

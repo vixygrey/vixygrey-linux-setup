@@ -1,0 +1,665 @@
+[
+  {
+    "id": "aws-cli",
+    "name": "aws",
+    "method": "brew",
+    "package": "awscli",
+    "source": "https://github.com/aws/aws-cli",
+    "notes": "Official AWS command-line interface; Homebrew core provides Linux bottles.",
+    "aliases": [
+      "awscli"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "granted",
+    "name": "granted",
+    "method": "brew",
+    "package": "granted",
+    "source": "https://github.com/fwdcloudsec/granted",
+    "notes": "AWS access utility; the assume shell integration is provided by Granted.",
+    "aliases": [
+      "assume"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "aws-cdk-cli",
+    "name": "aws cdk cli",
+    "method": "npm",
+    "package": "aws-cdk",
+    "source": "https://github.com/aws/aws-cdk-cli",
+    "notes": "Official AWS CDK Toolkit CLI; installs the cdk executable.",
+    "aliases": [
+      "cdk"
+    ],
+    "version": "2.1145.0",
+    "third_party": true
+  },
+  {
+    "id": "aws-sam-cli",
+    "name": "aws sam cli",
+    "method": "brew",
+    "package": "aws-sam-cli",
+    "source": "https://github.com/aws/aws-sam-cli",
+    "notes": "Official AWS SAM CLI; Homebrew core provides Linux bottles.",
+    "aliases": [
+      "sam"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "cfn-lint",
+    "name": "cfn-lint",
+    "method": "brew",
+    "package": "cfn-lint",
+    "source": "https://github.com/aws-cloudformation/cfn-lint",
+    "notes": "CloudFormation template linter from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "s5cmd",
+    "name": "s5cmd",
+    "method": "brew",
+    "package": "s5cmd",
+    "source": "https://github.com/peak/s5cmd",
+    "notes": "Parallel S3 and local filesystem tool from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "stu",
+    "name": "stu",
+    "method": "brew",
+    "package": "stu",
+    "source": "https://github.com/lusingander/stu",
+    "notes": "Amazon S3 TUI from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "e1s",
+    "name": "e1s",
+    "method": "brew",
+    "package": "e1s",
+    "source": "https://github.com/keidarcy/e1s",
+    "notes": "AWS ECS terminal UI from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "e2c",
+    "name": "e2c",
+    "method": "go",
+    "package": "github.com/nlamirault/e2c/cmd/e2c",
+    "source": "https://github.com/nlamirault/e2c",
+    "notes": "Cross-platform ECS command-line client installed from its Go module.",
+    "version": "0.5.0",
+    "third_party": true
+  },
+  {
+    "id": "claws",
+    "name": "claws",
+    "method": "brew",
+    "package": "clawscli/tap/claws",
+    "source": "https://github.com/clawscli/claws",
+    "notes": "AWS resource-management TUI; its official tap explicitly publishes amd64 and arm64 Linux artifacts.",
+    "third_party": true
+  },
+  {
+    "id": "iamlive",
+    "name": "iamlive",
+    "method": "brew",
+    "package": "iann0036/iamlive/iamlive",
+    "source": "https://github.com/iann0036/iamlive",
+    "notes": "IAM policy generator; its official tap explicitly provides amd64 and arm64 Linux artifacts.",
+    "third_party": true
+  },
+  {
+    "id": "session-manager-plugin",
+    "name": "session-manager-plugin",
+    "method": "archive",
+    "package": "session-manager-plugin",
+    "source": "https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-debian-and-ubuntu.html",
+    "notes": "Official AWS Debian payload, extracted user-locally without maintainer scripts or host writes. The package declares only libc6; the command points directly to its relocatable Go executable, while systemd/upstart files in the payload are inert.",
+    "version": "1.2.896.0",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://s3.amazonaws.com/session-manager-downloads/plugin/1.2.896.0/ubuntu_64bit/session-manager-plugin.deb",
+        "sha256": "53f51fcc67314a4bf85888a38a3967cd41f8d0f28a60a9469a63acf935ba713e",
+        "format": "deb"
+      },
+      "aarch64": {
+        "url": "https://s3.amazonaws.com/session-manager-downloads/plugin/1.2.896.0/ubuntu_arm64/session-manager-plugin.deb",
+        "sha256": "914eeca87b18b55356c58be197080f73742b3ca60d3823f0a45670dc9056aa9c",
+        "format": "deb"
+      }
+    },
+    "commands": {
+      "session-manager-plugin": "usr/local/sessionmanagerplugin/bin/session-manager-plugin"
+    },
+    "third_party": true
+  },
+  {
+    "id": "checkov",
+    "name": "checkov",
+    "method": "brew",
+    "package": "checkov",
+    "source": "https://github.com/bridgecrewio/checkov",
+    "notes": "Infrastructure-as-code security scanner from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "gitleaks",
+    "name": "gitleaks",
+    "method": "brew",
+    "package": "gitleaks",
+    "source": "https://github.com/gitleaks/gitleaks",
+    "notes": "Secret scanner from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "age",
+    "name": "age",
+    "method": "brew",
+    "package": "age",
+    "source": "https://github.com/FiloSottile/age",
+    "notes": "File encryption tool from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "just",
+    "name": "just",
+    "method": "brew",
+    "package": "just",
+    "source": "https://github.com/casey/just",
+    "notes": "Command runner from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "act",
+    "name": "act",
+    "method": "brew",
+    "package": "act",
+    "source": "https://github.com/nektos/act",
+    "notes": "Local GitHub Actions runner from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "actionlint",
+    "name": "actionlint",
+    "method": "brew",
+    "package": "actionlint",
+    "source": "https://github.com/rhysd/actionlint",
+    "notes": "GitHub Actions workflow linter from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "ruff",
+    "name": "ruff",
+    "method": "brew",
+    "package": "ruff",
+    "source": "https://github.com/astral-sh/ruff",
+    "notes": "Python linter and formatter from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "shellcheck",
+    "name": "shellcheck",
+    "method": "brew",
+    "package": "shellcheck",
+    "source": "https://github.com/koalaman/shellcheck",
+    "notes": "Shell script static analyzer from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "shfmt",
+    "name": "shfmt",
+    "method": "brew",
+    "package": "shfmt",
+    "source": "https://github.com/mvdan/sh",
+    "notes": "Shell formatter from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "typos",
+    "name": "typos",
+    "method": "brew",
+    "package": "typos-cli",
+    "source": "https://github.com/crate-ci/typos",
+    "notes": "Source-code spell checker; Homebrew formula is named typos-cli and installs typos.",
+    "aliases": [
+      "typos-cli"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "mise",
+    "name": "mise",
+    "method": "brew",
+    "package": "mise",
+    "source": "https://github.com/jdx/mise",
+    "notes": "Polyglot tool-version manager from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "uv",
+    "name": "uv",
+    "method": "brew",
+    "package": "uv",
+    "source": "https://github.com/astral-sh/uv",
+    "notes": "Python package and project manager from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "yaml-py",
+    "name": "yaml-py",
+    "method": "python-helper",
+    "package": "PyYAML",
+    "source": "https://github.com/yaml/pyyaml",
+    "notes": "Matches the Mac setup's dedicated yaml-py helper: an isolated uv-managed Python interpreter with PyYAML importable, not the unrelated python-yq CLI.",
+    "version": "6.0.3",
+    "third_party": true
+  },
+  {
+    "id": "typescript",
+    "name": "tsc",
+    "method": "npm",
+    "package": "typescript",
+    "source": "https://github.com/microsoft/TypeScript",
+    "notes": "Official TypeScript package; installs the tsc compiler.",
+    "aliases": [
+      "typescript"
+    ],
+    "version": "7.0.2",
+    "third_party": true
+  },
+  {
+    "id": "tsx",
+    "name": "tsx",
+    "method": "npm",
+    "package": "tsx",
+    "source": "https://github.com/privatenumber/tsx",
+    "notes": "TypeScript execution runtime from npm.",
+    "version": "4.23.15",
+    "third_party": true
+  },
+  {
+    "id": "chezmoi",
+    "name": "chezmoi",
+    "method": "brew",
+    "package": "chezmoi",
+    "source": "https://github.com/twpayne/chezmoi",
+    "notes": "Dotfile manager from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "cheznav",
+    "name": "cheznav",
+    "method": "uv",
+    "package": "cheznav",
+    "source": "https://github.com/djetelina/cheznav",
+    "notes": "Chezmoi TUI published on PyPI; requires Python 3.14 or newer.",
+    "version": "0.3.0",
+    "python": "3.14",
+    "third_party": true
+  },
+  {
+    "id": "borg",
+    "name": "borg",
+    "method": "brew",
+    "package": "borgbackup",
+    "source": "https://github.com/borgbackup/borg",
+    "notes": "Deduplicating backup tool; Homebrew formula borgbackup installs the borg command.",
+    "aliases": [
+      "borgbackup"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "borgmatic",
+    "name": "borgmatic",
+    "method": "brew",
+    "package": "borgmatic",
+    "source": "https://projects.torsion.org/borgmatic-collective/borgmatic",
+    "notes": "Borg automation wrapper from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "leaf",
+    "name": "leaf",
+    "method": "brew",
+    "package": "leaf-markdown-viewer",
+    "source": "https://github.com/RivoLink/leaf",
+    "notes": "Terminal Markdown viewer; Homebrew core Linux bottles install the leaf executable.",
+    "aliases": [
+      "leaf-markdown-viewer"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "libreoffice",
+    "name": "libreoffice",
+    "method": "flatpak",
+    "package": "org.libreoffice.LibreOffice",
+    "source": "https://www.libreoffice.org/",
+    "notes": "Verified Flathub build of the LibreOffice suite; soffice is its command name, not a separate application.",
+    "aliases": [
+      "soffice"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "drawio",
+    "name": "draw.io",
+    "method": "flatpak",
+    "package": "com.jgraph.drawio.desktop",
+    "source": "https://github.com/jgraph/drawio-desktop",
+    "notes": "Linux desktop application published on Flathub.",
+    "aliases": [
+      "drawio"
+    ],
+    "third_party": true
+  },
+  {
+    "id": "imagemagick",
+    "name": "imagemagick",
+    "method": "brew",
+    "package": "imagemagick",
+    "source": "https://imagemagick.org/",
+    "notes": "Image manipulation tools from Homebrew core.",
+    "aliases": [
+      "ImageMagick"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "oxipng",
+    "name": "oxiping",
+    "method": "brew",
+    "package": "oxipng",
+    "source": "https://github.com/shssoichiro/oxipng",
+    "notes": "The requested oxiping spelling resolves to oxipng, the multithreaded PNG optimizer in Homebrew core.",
+    "aliases": [
+      "oxipng"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "jpegoptim",
+    "name": "jpegoptim",
+    "method": "brew",
+    "package": "jpegoptim",
+    "source": "https://github.com/tjko/jpegoptim",
+    "notes": "JPEG optimizer from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "mpv",
+    "name": "mpv",
+    "method": "flatpak",
+    "package": "io.mpv.Mpv",
+    "source": "https://mpv.io/",
+    "notes": "Cross-platform media player via its Flathub desktop package.",
+    "third_party": true
+  },
+  {
+    "id": "vlc",
+    "name": "VLC",
+    "method": "flatpak",
+    "package": "org.videolan.VLC",
+    "source": "https://www.videolan.org/vlc/",
+    "notes": "VLC media player via Flathub.",
+    "aliases": [
+      "vlc"
+    ],
+    "third_party": true
+  },
+  {
+    "id": "lnav",
+    "name": "lnav",
+    "method": "brew",
+    "package": "lnav",
+    "source": "https://lnav.org/",
+    "notes": "Log-file navigator from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "nerdlog",
+    "name": "nerdlog",
+    "method": "brew",
+    "package": "nerdlog",
+    "source": "https://github.com/dimonomid/nerdlog",
+    "notes": "Remote-first TUI log viewer from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "cliamp",
+    "name": "cliamp",
+    "method": "brew",
+    "package": "bjarneo/cliamp/cliamp",
+    "source": "https://github.com/bjarneo/cliamp",
+    "notes": "Terminal music player; its tap explicitly provides amd64 and arm64 Linux binaries.",
+    "third_party": true
+  },
+  {
+    "id": "lazynpm",
+    "name": "lazynpm",
+    "method": "brew",
+    "package": "jesseduffield/lazynpm/lazynpm",
+    "source": "https://github.com/jesseduffield/lazynpm",
+    "notes": "npm TUI; its tap formula explicitly provides x86_64 and arm64 Linux artifacts.",
+    "third_party": true
+  },
+  {
+    "id": "lazyrsync",
+    "name": "lazyrsync",
+    "method": "brew",
+    "package": "lazyrsync",
+    "source": "https://github.com/westpoint-io/lazyrsync",
+    "notes": "rsync TUI from Homebrew core with Linux bottles.",
+    "third_party": false
+  },
+  {
+    "id": "caligula",
+    "name": "caligula",
+    "method": "archive",
+    "package": "caligula",
+    "source": "https://github.com/ifd3f/caligula",
+    "notes": "Official checksum-pinned Linux release executables avoid Caligula's bindgen, C compiler, and native compression-library source-build requirements.",
+    "version": "0.5.0",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/ifd3f/caligula/releases/download/v0.5.0/caligula-x86_64-linux",
+        "sha256": "470da9381d2ac44bbd54485ac8c8afcc23fd2aecbce98cd1aba815d1ef5ed3ed",
+        "format": "raw",
+        "filename": "caligula"
+      },
+      "aarch64": {
+        "url": "https://github.com/ifd3f/caligula/releases/download/v0.5.0/caligula-aarch64-linux",
+        "sha256": "9dd0cea2080bfa51e5b9a50c8048632e9767c1b269784e6902663566f53dbf75",
+        "format": "raw",
+        "filename": "caligula"
+      }
+    },
+    "commands": {
+      "caligula": "caligula"
+    },
+    "third_party": true
+  },
+  {
+    "id": "emeraldian",
+    "name": "emeraldian",
+    "method": "archive",
+    "package": "emeraldian",
+    "source": "https://github.com/iamrohithrnair/emeraldian",
+    "notes": "Official checksum-pinned Linux release archives avoid a Rust 1.90 source build and need no host build dependencies.",
+    "version": "0.6.0",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/iamrohithrnair/emeraldian/releases/download/v0.6.0/emeraldian-x86_64-unknown-linux-gnu.tar.gz",
+        "sha256": "033dbd0cd9f9f19d15469f726fe5d17ec3798a8c8ca68c16a3cd26fe374cab6d",
+        "commands": {
+          "emeraldian": "emeraldian-x86_64-unknown-linux-gnu/emeraldian"
+        }
+      },
+      "aarch64": {
+        "url": "https://github.com/iamrohithrnair/emeraldian/releases/download/v0.6.0/emeraldian-aarch64-unknown-linux-gnu.tar.gz",
+        "sha256": "3d88a2eaf8157b4bef84b1888149129cd207b9076d58997c701974f20b0c9f7d",
+        "commands": {
+          "emeraldian": "emeraldian-aarch64-unknown-linux-gnu/emeraldian"
+        }
+      }
+    },
+    "third_party": true
+  },
+  {
+    "id": "obsidian",
+    "name": "obsidian",
+    "method": "flatpak",
+    "package": "md.obsidian.Obsidian",
+    "source": "https://obsidian.md/",
+    "notes": "Officially verified Obsidian package on Flathub.",
+    "aliases": [
+      "Obsidian"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "eilmeldung",
+    "name": "eilmeldung",
+    "method": "archive",
+    "package": "eilmeldung",
+    "source": "https://github.com/christo-auer/eilmeldung",
+    "notes": "Official checksum-pinned static-musl Linux release archives avoid upstream's Fedora native source-build prerequisites.",
+    "version": "1.9.0",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/christo-auer/eilmeldung/releases/download/1.9.0/eilmeldung-x86_64-unknown-linux-musl-1.9.0.tar.gz",
+        "sha256": "03088b672c8195aebe32dfc8646f5e1e14096e64ad28e223cf5ae717085e7cf7"
+      },
+      "aarch64": {
+        "url": "https://github.com/christo-auer/eilmeldung/releases/download/1.9.0/eilmeldung-aarch64-unknown-linux-musl-1.9.0.tar.gz",
+        "sha256": "65532eaa2d17b1ff65d4a521c363920cdb3e11625f530073eb597a72fc8d6dad"
+      }
+    },
+    "commands": {
+      "eilmeldung": "eilmeldung/eilmeldung"
+    },
+    "third_party": true
+  },
+  {
+    "id": "cfait",
+    "name": "cfait",
+    "method": "cargo",
+    "package": "cfait",
+    "source": "https://git.disroot.org/trougnouf/cfait",
+    "notes": "The requested terminal UI, not the GUI-only Flatpak. Use the official pinned x86_64 bundle when available; aarch64 builds the official crate using Homebrew Rust, LLVM, CMake, Ninja and pkgconf and requires C development headers. The SHA256 was computed from the versioned official download.",
+    "version": "1.2.0",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://git.disroot.org/trougnouf/cfait/releases/download/v1.2.0/cfait-linux-v1.2.0.tar.xz",
+        "sha256": "b3ce304c9abdb9299df7d8992f8c5be1df4e0099c1472ab2ab54b1e49b431937",
+        "commands": {
+          "cfait": "cfait-linux-1.2.0/cfait"
+        }
+      }
+    },
+    "third_party": true
+  },
+  {
+    "id": "chamber",
+    "name": "chamber",
+    "method": "brew",
+    "package": "chamber",
+    "source": "https://github.com/segmentio/chamber",
+    "notes": "AWS SSM Parameter Store secrets CLI from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "croft-ide",
+    "name": "croft IDE",
+    "method": "archive",
+    "package": "croft",
+    "source": "https://github.com/vitali87/croft",
+    "notes": "Official checksum-pinned static-musl Linux release archives avoid Croft's native Rust source-build toolchain.",
+    "aliases": [
+      "croft"
+    ],
+    "version": "0.2.32",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/vitali87/croft/releases/download/v0.2.32/croft-x86_64-unknown-linux-musl.tar.gz",
+        "sha256": "6b71e75387b2e316b6274412d1c29127c3a02fa6bd34c8b6549af1924961fb9f",
+        "commands": {
+          "croft": "croft-x86_64-unknown-linux-musl/croft"
+        }
+      },
+      "aarch64": {
+        "url": "https://github.com/vitali87/croft/releases/download/v0.2.32/croft-aarch64-unknown-linux-musl.tar.gz",
+        "sha256": "27b626cedeb6830545956a1991c5c2e6a212274449dd4b604623d10d72fd8d2b",
+        "commands": {
+          "croft": "croft-aarch64-unknown-linux-musl/croft"
+        }
+      }
+    },
+    "third_party": true
+  },
+  {
+    "id": "herald",
+    "name": "herald",
+    "method": "brew",
+    "package": "herald-email/herald/herald",
+    "source": "https://github.com/herald-email/herald-mail-app",
+    "notes": "Terminal email client; its official tap explicitly publishes amd64 and arm64 Linux artifacts.",
+    "third_party": true
+  },
+  {
+    "id": "kitty",
+    "name": "kitty",
+    "method": "archive",
+    "package": "kitty",
+    "source": "https://sw.kovidgoyal.net/kitty/binary/",
+    "notes": "Official checksum-pinned Linux binary bundle; extraction preserves Kitty's required directory layout and exposes kitty and kitten through wrappers.",
+    "version": "0.49.2",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/kovidgoyal/kitty/releases/download/v0.49.2/kitty-0.49.2-x86_64.txz",
+        "sha256": "d573618b911e9c461bd421b96c13c74c7f1cb2f1ac9c327818d4ff84366cf5c6"
+      },
+      "aarch64": {
+        "url": "https://github.com/kovidgoyal/kitty/releases/download/v0.49.2/kitty-0.49.2-arm64.txz",
+        "sha256": "0c81a995614426cccf0fecaf7d104d47cd63bbccf173d14976e9f92e3d60fce6"
+      }
+    },
+    "commands": {
+      "kitty": "bin/kitty",
+      "kitten": "bin/kitten"
+    },
+    "third_party": true
+  },
+  {
+    "id": "bitwarden",
+    "name": "bitwarden",
+    "method": "flatpak",
+    "package": "com.bitwarden.desktop",
+    "source": "https://bitwarden.com/",
+    "notes": "Officially verified Bitwarden desktop package on Flathub.",
+    "aliases": [
+      "Bitwarden"
+    ],
+    "third_party": false
+  },
+  {
+    "id": "jetbrains-mono-nerd-font",
+    "name": "Jetbrains mono nerd font",
+    "method": "font",
+    "package": "JetBrainsMono",
+    "source": "https://github.com/ryanoasis/nerd-fonts",
+    "notes": "Checksum-verified Nerd Fonts release archive; installer deploys only font files to the user font directory.",
+    "aliases": [
+      "JetBrains Mono Nerd Font"
+    ],
+    "version": "3.5.1",
+    "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/JetBrainsMono.zip",
+    "sha256": "fab782a66f7d3019da64f6572db9fc5d3a4bcb19f9fa13e2d8a62e3693d6396e",
+    "third_party": true
+  }
+]
