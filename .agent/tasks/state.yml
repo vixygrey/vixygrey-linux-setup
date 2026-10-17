@@ -1,0 +1,26 @@
+workflow_mode: solo-git
+active_flow: execute_group
+active_task: null
+active_group: null
+phase: verify
+group_cycle:
+  mode: checkpoint
+  current_step: trace-requirement
+  completed_steps: [kickoff-branch, develop-tdd, verify-work]
+bug_cycle:
+  current_step: null
+  completed_steps: []
+git:
+  branch: feat/2-project-cockpit
+  hash: 76cc456
+handoff:
+  next_skill: trace-requirement
+  last_step_completed: verify-work
+  context: Issue 2 verification passed; generate traceability before release.
+  open_decisions: []
+  required_reading:
+    - .agent/product/scope.yml
+    - .agent/tasks/release-plan.yml
+  group_id: null
+  artifacts_summary: null
+  git_context: null

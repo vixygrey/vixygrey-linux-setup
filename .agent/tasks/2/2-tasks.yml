@@ -1,0 +1,18 @@
+work_item: "2"
+tasks:
+  - id: cockpit
+    status: done
+    risk: P2
+    verify: test -f .agent/product/scope.yml && test -f .agent/tasks/release-plan.yml && test -f .agent/tasks/state.yml && test -f AGENTS.md && test -f CONVENTIONS.md
+  - id: quality-gate
+    status: done
+    risk: P1
+    verify: ./scripts/verify
+  - id: documentation
+    status: done
+    risk: P2
+    verify: grep -Fq './scripts/verify' README.md
+  - id: evidence
+    status: done
+    risk: P1
+    verify: test -f .agent/tasks/2/verification.md

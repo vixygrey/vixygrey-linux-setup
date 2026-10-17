@@ -1,0 +1,12 @@
+schema_version: 1
+release: initial-project-workflow
+tasks:
+  - task_id: "2"
+    task_name: Establish a TrueNorth project cockpit and canonical quality gate
+    verify_command: ./scripts/verify
+    priority: P1
+    requirements:
+      - Scoped project cockpit with conventions, release plan, and session state.
+      - One documented local quality command.
+      - Observable verification evidence recorded for the work item.
+      - No runtime dependency or preview-first behavior change.
