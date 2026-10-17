@@ -19,14 +19,27 @@ require() {
 }
 
 smoke_preview() {
-  local temporary
+  local expected=0
+  if [[ "${1:-}" == --expect=* ]]; then
+    expected="${1#--expect=}"
+    shift
+  fi
+  local temporary status
   temporary="$(mktemp -d "${TMPDIR:-/tmp}/vixygrey-setup-verify.XXXXXX")"
   temporary_directories+=("$temporary")
-  env HOME="$temporary" \
+  if env HOME="$temporary" \
     XDG_CONFIG_HOME="$temporary/.config" \
     XDG_DATA_HOME="$temporary/.local/share" \
     PYTHONDONTWRITEBYTECODE=1 \
-    "$ROOT/setup.sh" "$@"
+    "$ROOT/setup.sh" "$@"; then
+    status=0
+  else
+    status=$?
+  fi
+  if [[ "$status" -ne "$expected" ]]; then
+    printf 'Preview returned %s, expected %s\n' "$status" "$expected" >&2
+    exit 2
+  fi
   if [[ -n "$(find "$temporary" -mindepth 1 -print -quit)" ]]; then
     printf 'Preview wrote to temporary home: %s\n' "$temporary" >&2
     exit 2
@@ -58,6 +71,7 @@ shellcheck setup.sh scripts/format-python scripts/format-shell scripts/verify
 ./setup.sh --list >/dev/null
 smoke_preview --apps-only --only omp --trust omp
 smoke_preview --theme-only
+smoke_preview --expect=2 --apps-only --profile ai
 smoke_preview --status --apps-only --only omp --trust omp --format json
 smoke_preview --doctor --format json
 printf '%s\n' 'Verification passed.'

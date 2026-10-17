@@ -13,6 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.dont_write_bytecode = True
 
 import archives
+import setup
+
 from safe_files import Files, SafetyError
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -170,6 +172,98 @@ class CommandSafety(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 2)
                 self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_profiles_expand_canonical_ids_allow_skip_and_do_not_imply_trust(self):
+        environment = {"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"}
+        with tempfile.TemporaryDirectory() as temporary:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "setup.py"),
+                    "--apps-only",
+                    "--profile",
+                    "base",
+                    "--skip",
+                    "git",
+                    "--format",
+                    "json",
+                ],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            document = json.loads(result.stdout)
+            self.assertEqual(document["intent"]["profiles"], ["base"])
+            self.assertIn("micro", document["selected_ids"])
+            self.assertNotIn("git", document["selected_ids"])
+        with tempfile.TemporaryDirectory() as temporary:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "setup.py"),
+                    "--apps-only",
+                    "--profile",
+                    "desktop",
+                    "--format",
+                    "json",
+                ],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            document = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(
+                "flameshot: review https://flathub.org/apps/org.flameshot.Flameshot and explicitly --trust flameshot",
+                document["blockers"],
+            )
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_profiles_reject_unknown_names_and_invalid_members(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            environment = {
+                "HOME": temporary,
+                "PATH": "/usr/bin:/bin",
+                "PYTHONDONTWRITEBYTECODE": "1",
+            }
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "setup.py"),
+                    "--apps-only",
+                    "--profile",
+                    "missing",
+                ],
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("Unknown --profile entries: missing", result.stderr)
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+
+            original = setup.PROFILE_PATH
+            path = Path(temporary) / "profiles.json"
+            entries = [
+                {"id": "git", "name": "Git", "aliases": ["git-alias"]},
+                {"id": "optional", "name": "Optional", "optional": True},
+            ]
+            try:
+                for values, message in [
+                    ({"valid": ["git", "git"]}, "unique non-empty"),
+                    ({"valid": ["git-alias"]}, "canonical IDs"),
+                    ({"valid": ["optional"]}, "optional app"),
+                    ({"valid": ["unknown"]}, "unknown profile member"),
+                ]:
+                    path.write_text(json.dumps(values))
+                    setup.PROFILE_PATH = path
+                    with self.subTest(values=values), self.assertRaisesRegex(SafetyError, message):
+                        setup.profiles(entries)
+            finally:
+                setup.PROFILE_PATH = original
 
     def test_xdg_home_aliases_match_the_same_canonical_home_without_writes(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -358,7 +452,7 @@ class CommandSafety(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             document = json.loads(result.stdout)
-            self.assertEqual(document["schema_version"], 1)
+            self.assertEqual(document["schema_version"], 2)
             self.assertEqual(document["selected_ids"], ["omp"])
             self.assertIn("actions", document)
             self.assertEqual(json.loads(plan.read_text()), document)
