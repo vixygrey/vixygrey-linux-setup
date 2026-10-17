@@ -1,0 +1,5 @@
+terms:
+  catalog: Versioned application definitions under catalog/.
+  preview: A plan-only invocation without --apply.
+  preserved conflict: An existing home file intentionally left unchanged.
+  receipt: Installer-owned deployment metadata under ~/.local/state/vixygrey-setup/receipts/.

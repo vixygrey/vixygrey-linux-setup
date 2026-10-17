@@ -1,0 +1,11 @@
+title: Establish a TrueNorth project cockpit and canonical quality gate
+status: in-progress
+work_items:
+  - task_id: "2"
+    title: Establish a TrueNorth project cockpit and canonical quality gate
+    status: in-progress
+    task_name: Establish a TrueNorth project cockpit and canonical quality gate
+    verify_command: ./scripts/verify
+    delta: ADDED
+    spec: 2-spec.md
+    tasks: 2-tasks.yml

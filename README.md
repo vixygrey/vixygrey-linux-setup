@@ -155,10 +155,10 @@ Do not put cloud credentials, SSH keys, Bitwarden exports, shell history, Atuin 
 ## Verification
 
 ```sh
-python3 -B -m unittest discover -s tests -v
-zsh -n dotfiles/.zshrc dotfiles/.config/vixygrey/setup.zsh
-shellcheck setup.sh
+./scripts/verify
 ```
+
+This canonical check requires Python 3.11+, Zsh, and ShellCheck. It runs the safety suite, validates the catalog with `--list`, checks the managed shell files, and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools.
 
 The safety suite covers preservation, backups, symlink/traversal rejection, executable modes, archive links and setuid stripping, font filtering, Debian-container boundaries, invalid selections, source approval, and canonical home aliases.
 
