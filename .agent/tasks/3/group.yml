@@ -1,0 +1,11 @@
+title: Add a CI quality gate for installer safety and configuration checks
+status: in-progress
+work_items:
+  - task_id: "3"
+    title: Add a CI quality gate for installer safety and configuration checks
+    status: in-progress
+    task_name: Add a CI quality gate for installer safety and configuration checks
+    verify_command: ./scripts/verify
+    delta: ADDED
+    spec: 3-spec.md
+    tasks: 3-tasks.yml

@@ -10,3 +10,11 @@ tasks:
       - One documented local quality command.
       - Observable verification evidence recorded for the work item.
       - No runtime dependency or preview-first behavior change.
+  - task_id: "3"
+    task_name: Add a CI quality gate for installer safety and configuration checks
+    verify_command: ./scripts/verify
+    priority: P1
+    requirements:
+      - Least-privilege GitHub Actions verification on pull requests and main.
+      - Python compilation, shell checks, catalog validation, and no-write previews.
+      - Local and hosted verification evidence.

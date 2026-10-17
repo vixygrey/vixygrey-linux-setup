@@ -45,6 +45,9 @@ if ! python3 -c 'import sys; raise SystemExit(sys.version_info < (3, 11))'; then
 fi
 
 cd -- "$ROOT"
+compile_cache="$(mktemp -d "${TMPDIR:-/tmp}/vixygrey-setup-verify.XXXXXX")"
+temporary_directories+=("$compile_cache")
+PYTHONPYCACHEPREFIX="$compile_cache/pycache" python3 -m py_compile setup.py archives.py app_files.py safe_files.py
 python3 -B -m unittest discover -s tests -v
 zsh -n dotfiles/.zshrc dotfiles/.config/vixygrey/setup.zsh
 shellcheck setup.sh scripts/verify
