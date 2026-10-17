@@ -26,3 +26,11 @@ tasks:
       - Pinned development-only Prettier toolchain and lockfile.
       - Explicit format boundaries and supported-file normalization.
       - Shared local and CI formatting verification evidence.
+  - task_id: "11"
+    task_name: Add a pinned Python formatter quality gate
+    verify_command: ./scripts/verify
+    priority: P1
+    requirements:
+      - Locked development-only Ruff formatter tooling.
+      - Explicit check and write commands for tracked Python sources and tests.
+      - Shared local and CI formatting verification evidence.

@@ -1,0 +1,18 @@
+work_item: "11"
+tasks:
+  - id: locked-toolchain
+    status: done
+    risk: P1
+    verify: uv sync --locked --group dev && ./scripts/format-python --check
+  - id: canonical-gate
+    status: done
+    risk: P1
+    verify: ./scripts/verify
+  - id: workflow
+    status: done
+    risk: P1
+    verify: actionlint .github/workflows/test-build-release-python.yml
+  - id: hosted-run
+    status: pending
+    risk: P1
+    verify: GitHub Actions verify job passes on the pull request and main

@@ -11,3 +11,7 @@ tasks:
     status: in-progress
     updated_at: 2026-10-17
     verification: .agent/tasks/8/verification.md
+  "11":
+    status: in-progress
+    updated_at: 2026-10-17
+    verification: .agent/tasks/11/verification.md

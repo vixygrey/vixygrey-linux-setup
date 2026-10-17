@@ -1,6 +1,6 @@
 workflow_mode: solo-git
 active_flow: execute_group
-active_task: "8"
+active_task: "11"
 active_group: null
 phase: execute
 group_cycle:
@@ -11,12 +11,12 @@ bug_cycle:
   current_step: null
   completed_steps: []
 git:
-  branch: feat/8-prettier
-  hash: 5d14838
+  branch: feat/11-ruff-format
+  hash: f99d225
 handoff:
   next_skill: verify-work
   last_step_completed: develop-tdd
-  context: Local formatter checks passed; the TrueNorth gate is externally blocked in truenorth-mcp#552, and hosted CI evidence remains pending.
+  context: Local Ruff checks passed; hosted pull-request and main CI evidence remain pending.
   open_decisions: []
   required_reading:
     - .agent/product/scope.yml
