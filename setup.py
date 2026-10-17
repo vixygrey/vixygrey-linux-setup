@@ -42,6 +42,7 @@ def catalog() -> list[dict]:
     entries = []
     for path in sorted((ROOT / "catalog").glob("*.json")):
         entries.extend(json.loads(path.read_text()))
+    validate_catalog(entries)
     seen = set()
     for entry in entries:
         if entry["method"] == "cargo" and archives.machine_arch() in entry.get("artifacts", {}):
@@ -81,6 +82,47 @@ def catalog() -> list[dict]:
     if not entries:
         raise SafetyError("Application catalog is empty")
     return entries
+
+
+def validate_catalog(entries: list[dict]) -> None:
+    aliases = {}
+    commands = {architecture: set() for architecture in ("x86_64", "aarch64")}
+    required = {"id", "name", "method", "package", "source", "notes", "third_party"}
+    versioned = {"npm", "uv", "go", "cargo", "archive", "font", "python-helper"}
+    for entry in entries:
+        identifier = entry.get("id", "")
+        missing = required - entry.keys()
+        if missing or not isinstance(entry.get("third_party"), bool):
+            raise SafetyError(f"{identifier}: missing required catalog fields")
+        if not entry["source"].startswith("https://"):
+            raise SafetyError(f"{identifier}: source must use HTTPS")
+        if entry["method"] not in METHODS:
+            raise SafetyError(f"{identifier}: unsupported method")
+        if entry["method"] in versioned and not re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9.+_-]*", entry.get("version", "")
+        ):
+            raise SafetyError(f"{identifier}: exact version required")
+        for name in [identifier, entry["name"], *entry.get("aliases", [])]:
+            key = name.lower().strip()
+            if not key or (key in aliases and aliases[key] != identifier):
+                raise SafetyError(f"{identifier}: duplicate ID or alias: {name}")
+            aliases[key] = identifier
+        if entry["method"] == "archive":
+            artifacts = entry.get("artifacts", {})
+            if set(artifacts) != {"x86_64", "aarch64"}:
+                raise SafetyError(f"{identifier}: archive requires x86_64 and aarch64 artifacts")
+        for architecture, artifact in entry.get("artifacts", {}).items():
+            if architecture not in commands:
+                raise SafetyError(f"{identifier}: unsupported artifact architecture")
+            if not artifact.get("url", "").startswith("https://") or not re.fullmatch(
+                r"[0-9a-f]{64}", artifact.get("sha256", "")
+            ):
+                raise SafetyError(f"{identifier}: invalid pinned artifact")
+            for command, member in artifact.get("commands", entry.get("commands", {})).items():
+                if command in commands[architecture]:
+                    raise SafetyError(f"{identifier}: duplicate command: {command}")
+                commands[architecture].add(command)
+                relative_path(member)
 
 
 def aurora() -> bool:
@@ -792,6 +834,9 @@ def main(argv=None) -> int:
         "--list", action="store_true", help="Print catalog with install methods, notes, and sources"
     )
     parser.add_argument(
+        "--validate-catalog", action="store_true", help="Validate catalog data without planning"
+    )
+    parser.add_argument(
         "--only",
         action="append",
         default=[],
@@ -831,6 +876,25 @@ def main(argv=None) -> int:
         help="Activate KDE colors and wallpaper, preserving other desktop settings",
     )
     args = parser.parse_args(argv)
+    if args.validate_catalog:
+        if (
+            args.apply
+            or args.apply_plan
+            or args.format
+            or args.plan_out
+            or args.list
+            or args.only
+            or args.skip
+            or args.trust
+            or args.include_optional
+            or args.apps_only
+            or args.theme_only
+            or args.replace
+            or args.desktop
+        ):
+            parser.error("--validate-catalog cannot be combined with other options")
+        print(f"Catalog valid: {len(catalog())} entries")
+        return 0
     if args.apply_plan and (
         args.apply
         or args.list

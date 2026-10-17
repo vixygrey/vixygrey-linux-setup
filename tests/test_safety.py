@@ -257,6 +257,19 @@ class CommandSafety(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertEqual(list(home.iterdir()), [])
 
+    def test_catalog_validator_is_offline_and_does_not_write_home(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--validate-catalog"],
+                env={"HOME": temporary, "PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Catalog valid: 122 entries", result.stdout)
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+
 
 if __name__ == "__main__":
     unittest.main()
