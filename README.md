@@ -36,6 +36,17 @@ Docker Engine is supplied by [Aurora DX](https://docs.getaurora.dev/dx/aurora-dx
 
 A preview can run on this Mac; `--apply` requires Aurora and a non-root user. Read-only package queries may use package managers' own caches or locks.
 
+### Reviewable JSON plans
+
+Keep the default text preview for interactive use. To attach a deterministic review artifact, request JSON explicitly:
+
+```sh
+./setup.sh --apps-only --only omp --trust omp --format json --plan-out omp-plan.json
+./setup.sh --apply-plan omp-plan.json
+```
+
+`--apply-plan` is an application mode. It accepts no additional selection or approval flags, checks the artifact schema, catalog digest, and canonical selection intent, then re-plans under the existing setup lock before mutation. The artifact records actions and preflight facts for review, but is never executed directly. A catalog edit invalidates it; mutable package and file state are checked again during the locked re-plan. Plan files are created only at an explicitly requested new path and can include local conflict metadata.
+
 Third-party taps, registries, vendor artifacts, and catalog-marked Flatpaks need explicit source approval. Approval is per application and per invocation:
 
 ```sh
