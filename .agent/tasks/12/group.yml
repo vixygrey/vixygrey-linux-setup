@@ -1,0 +1,11 @@
+title: Add a pinned shell formatter quality gate
+status: in-progress
+work_items:
+  - task_id: "12"
+    title: Add a pinned shell formatter quality gate
+    status: in-progress
+    task_name: Add a pinned shell formatter quality gate
+    verify_command: ./scripts/verify
+    delta: ADDED
+    spec: 12-spec.md
+    tasks: 12-tasks.yml

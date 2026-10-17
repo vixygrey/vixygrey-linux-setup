@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+EXPECTED_SHFMT_VERSION="3.14.1"
+SHFMT="${SHFMT:-shfmt}"
+
+require_shfmt() {
+  if ! command -v "$SHFMT" >/dev/null 2>&1; then
+    printf 'shfmt is unavailable. Run: go install mvdan.cc/sh/v3/cmd/shfmt@v%s\n' "$EXPECTED_SHFMT_VERSION" >&2
+    exit 2
+  fi
+
+  local actual_version
+  actual_version="$("$SHFMT" --version)"
+  actual_version="${actual_version#v}"
+  if [[ "$actual_version" != "$EXPECTED_SHFMT_VERSION" ]]; then
+    printf 'shfmt %s is required. Run: go install mvdan.cc/sh/v3/cmd/shfmt@v%s\n' \
+      "$EXPECTED_SHFMT_VERSION" "$EXPECTED_SHFMT_VERSION" >&2
+    exit 2
+  fi
+}
+
+check_formatting() {
+  local status=0
+
+  "$SHFMT" -ln=bash -i 2 -d \
+    "$ROOT/setup.sh" \
+    "$ROOT/scripts/verify" \
+    "$ROOT/scripts/format-python" \
+    "$ROOT/scripts/format-shell" || status=1
+  "$SHFMT" -ln=zsh -i 2 -d \
+    "$ROOT/dotfiles/.zshrc" \
+    "$ROOT/dotfiles/.config/vixygrey/setup.zsh" || status=1
+
+  return "$status"
+}
+
+write_formatting() {
+  "$SHFMT" -ln=bash -i 2 -w \
+    "$ROOT/setup.sh" \
+    "$ROOT/scripts/verify" \
+    "$ROOT/scripts/format-python" \
+    "$ROOT/scripts/format-shell"
+  "$SHFMT" -ln=zsh -i 2 -w \
+    "$ROOT/dotfiles/.zshrc" \
+    "$ROOT/dotfiles/.config/vixygrey/setup.zsh"
+}
+
+require_shfmt
+
+case "${1:-}" in
+--check)
+  check_formatting
+  ;;
+--write)
+  write_formatting
+  ;;
+*)
+  printf 'Usage: %s --check|--write\n' "${0##*/}" >&2
+  exit 2
+  ;;
+esac

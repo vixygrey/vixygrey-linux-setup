@@ -34,3 +34,11 @@ tasks:
       - Locked development-only Ruff formatter tooling.
       - Explicit check and write commands for tracked Python sources and tests.
       - Shared local and CI formatting verification evidence.
+  - task_id: "12"
+    task_name: Add a pinned shell formatter quality gate
+    verify_command: ./scripts/verify
+    priority: P1
+    requirements:
+      - Pinned development-only shfmt toolchain for Bash and Zsh.
+      - Explicit check and write commands for tracked shell sources.
+      - Shared local and CI formatting verification evidence.

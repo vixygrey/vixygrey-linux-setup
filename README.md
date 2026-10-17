@@ -157,10 +157,12 @@ Do not put cloud credentials, SSH keys, Bitwarden exports, shell history, Atuin 
 ```sh
 npm ci
 uv sync --locked --group dev
+go install mvdan.cc/sh/v3/cmd/shfmt@v3.14.1
+export PATH="$(go env GOPATH)/bin:$PATH"
 ./scripts/verify
 ```
 
-This canonical check requires Node 24.18.1, uv 0.13.1, Python 3.11+, Zsh, and ShellCheck. Run `npm ci` and `uv sync --locked --group dev` after cloning or changing their lockfiles. Node, Prettier, uv, and Ruff are development-only tooling; the installer runtime remains Python standard library. The check validates Prettier and Ruff formatting, runs the safety suite, validates the catalog with `--list`, checks managed shell files, and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools.
+This canonical check requires Node 24.18.1, uv 0.13.1, Go 1.26+, Python 3.11+, Zsh, and ShellCheck. Run `npm ci` and `uv sync --locked --group dev` after cloning or changing their lockfiles. Node, Prettier, uv, Ruff, Go, and shfmt are development-only tooling; the installer runtime remains Python standard library. The check validates Prettier, Ruff, and explicitly-dialected Bash/Zsh shfmt formatting; runs the safety suite; validates the catalog with `--list`; checks managed shell files; and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools. `scripts/format-shell --check` verifies `setup.sh`, the repository Bash helper scripts, and the two managed Zsh files; `--write` is the opt-in normalization command. It uses two-space indentation and does not enable shfmt simplification.
 
 The safety suite covers preservation, backups, symlink/traversal rejection, executable modes, archive links and setuid stripping, font filtering, Debian-container boundaries, invalid selections, source approval, and canonical home aliases.
 
