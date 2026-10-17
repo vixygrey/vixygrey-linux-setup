@@ -14,4 +14,5 @@
 
 ## Risk
 
-P1. CI controls whether safety regressions reach `main`; local and hosted commands must remain identical.
+P1. CI controls whether safety regressions reach `main`; local and hosted commands must remain
+identical.

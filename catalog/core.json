@@ -33,10 +33,7 @@
     "package": "docker",
     "source": "https://docs.getaurora.dev/dx/aurora-dx-intro/",
     "notes": "User-approved replacement for Docker Desktop. Aurora DX supplies Docker Engine. On standard Aurora, run ujust devmode and follow its reboot prompts; then ujust dx-group and log out/in. Group access is root-equivalent. The setup checks the local Engine and never switches images, changes groups, or enables services automatically.",
-    "aliases": [
-      "docker",
-      "docker engine"
-    ],
+    "aliases": ["docker", "docker engine"],
     "third_party": false
   },
   {
@@ -239,9 +236,7 @@
     "version": "v1.2.1",
     "source": "https://github.com/savedra1/clipse",
     "notes": "Builds the upstream Wayland backend with CGO disabled and installs wl-clipboard through Homebrew if its commands are missing. Clipboard listening, auto-paste and uinput permissions are never enabled automatically.",
-    "build_tags": [
-      "wayland"
-    ],
+    "build_tags": ["wayland"],
     "cgo": false,
     "runtime": {
       "wl-copy": "wl-clipboard",
@@ -256,9 +251,7 @@
     "package": "zsh-autosuggestions",
     "source": "https://github.com/zsh-users/zsh-autosuggestions",
     "notes": "The requested spelling maps to the established Homebrew core formula. It is shell source rather than an architecture-specific binary.",
-    "aliases": [
-      "zsh-autosuggestions"
-    ],
+    "aliases": ["zsh-autosuggestions"],
     "third_party": false
   },
   {
@@ -448,9 +441,7 @@
     "package": "git-delta",
     "source": "https://dandavison.github.io/delta/",
     "notes": "The delta executable is provided by the git-delta Homebrew core formula, with Linux bottles for both supported architectures.",
-    "aliases": [
-      "git-delta"
-    ],
+    "aliases": ["git-delta"],
     "third_party": false
   },
   {
@@ -460,9 +451,7 @@
     "package": "difftastic",
     "source": "https://difftastic.wilfred.me.uk/",
     "notes": "The difft executable is provided by the difftastic Homebrew core formula, with Linux bottles for both supported architectures.",
-    "aliases": [
-      "difftastic"
-    ],
+    "aliases": ["difftastic"],
     "third_party": false
   },
   {
@@ -541,9 +530,7 @@
     "package": "mkcert",
     "source": "https://github.com/FiloSottile/mkcert",
     "notes": "Optional local development CA tool; Homebrew core publishes Linux bottles for both x86_64 and arm64. Running mkcert -install changes the trust store and is not automatic.",
-    "aliases": [
-      "mkcert"
-    ],
+    "aliases": ["mkcert"],
     "optional": true,
     "third_party": false
   },
@@ -608,9 +595,7 @@
     "package": "lazyssh",
     "source": "https://github.com/Adembc/lazyssh",
     "notes": "The requested spelling maps to Adembc lazyssh, the Homebrew core terminal SSH manager with Linux bottles for both architectures.",
-    "aliases": [
-      "lazyssh"
-    ],
+    "aliases": ["lazyssh"],
     "third_party": false
   },
   {

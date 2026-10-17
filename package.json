@@ -1,0 +1,12 @@
+{
+  "name": "vixygrey-linux-setup-tools",
+  "private": true,
+  "description": "Development-only repository tooling.",
+  "scripts": {
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}

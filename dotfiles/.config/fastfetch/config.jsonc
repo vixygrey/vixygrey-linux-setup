@@ -4,20 +4,20 @@
     "type": "small",
     "color": {
       "1": "#ff9fe3",
-      "2": "#d4b2ff"
+      "2": "#d4b2ff",
     },
-    "padding": { "top": 1, "left": 2, "right": 3 }
+    "padding": { "top": 1, "left": 2, "right": 3 },
   },
   "display": {
     "separator": "  ",
     "color": {
       "keys": "#d4b2ff",
-      "title": "#9be7ff"
+      "title": "#9be7ff",
     },
     "bar": {
       "char": { "elapsed": "█", "total": "░" },
-      "width": 20
-    }
+      "width": 20,
+    },
   },
   "modules": [
     { "type": "os", "key": "  󰀵 OS" },
@@ -33,6 +33,6 @@
     { "type": "disk", "key": "  󰋊 Disk", "folders": "/" },
     { "type": "battery", "key": "  󰁹 Battery" },
     { "type": "separator", "string": "─" },
-    { "type": "colors", "symbol": "circle" }
-  ]
+    { "type": "colors", "symbol": "circle" },
+  ],
 }
