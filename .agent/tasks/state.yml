@@ -1,6 +1,6 @@
 workflow_mode: solo-git
 active_flow: execute_group
-active_task: "11"
+active_task: "12"
 active_group: null
 phase: execute
 group_cycle:
@@ -11,12 +11,12 @@ bug_cycle:
   current_step: null
   completed_steps: []
 git:
-  branch: feat/11-ruff-format
-  hash: f99d225
+  branch: feat/12-shfmt-format
+  hash: 25e9e91
 handoff:
   next_skill: verify-work
   last_step_completed: develop-tdd
-  context: Local Ruff checks passed; hosted pull-request and main CI evidence remain pending.
+  context: Local shell formatter checks passed. Hosted pull-request and main CI evidence remain pending. The TrueNorth writer lock routing defect is tracked externally in truenorth-mcp#550.
   open_decisions: []
   required_reading:
     - .agent/product/scope.yml

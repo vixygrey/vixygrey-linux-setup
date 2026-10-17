@@ -5,54 +5,55 @@ ROOT="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 temporary_directories=()
 
 cleanup() {
-    local directory
-    for directory in "${temporary_directories[@]}"; do
-        rm -rf -- "$directory"
-    done
+  local directory
+  for directory in "${temporary_directories[@]}"; do
+    rm -rf -- "$directory"
+  done
 }
 
 require() {
-    if ! command -v "$1" >/dev/null 2>&1; then
-        printf 'Required verification tool is missing: %s\n' "$1" >&2
-        exit 2
-    fi
+  if ! command -v "$1" >/dev/null 2>&1; then
+    printf 'Required verification tool is missing: %s\n' "$1" >&2
+    exit 2
+  fi
 }
 
 smoke_preview() {
-    local temporary
-    temporary="$(mktemp -d "${TMPDIR:-/tmp}/vixygrey-setup-verify.XXXXXX")"
-    temporary_directories+=("$temporary")
-    env HOME="$temporary" \
-        XDG_CONFIG_HOME="$temporary/.config" \
-        XDG_DATA_HOME="$temporary/.local/share" \
-        PYTHONDONTWRITEBYTECODE=1 \
-        "$ROOT/setup.sh" "$@"
-    if [[ -n "$(find "$temporary" -mindepth 1 -print -quit)" ]]; then
-        printf 'Preview wrote to temporary home: %s\n' "$temporary" >&2
-        exit 2
-    fi
+  local temporary
+  temporary="$(mktemp -d "${TMPDIR:-/tmp}/vixygrey-setup-verify.XXXXXX")"
+  temporary_directories+=("$temporary")
+  env HOME="$temporary" \
+    XDG_CONFIG_HOME="$temporary/.config" \
+    XDG_DATA_HOME="$temporary/.local/share" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    "$ROOT/setup.sh" "$@"
+  if [[ -n "$(find "$temporary" -mindepth 1 -print -quit)" ]]; then
+    printf 'Preview wrote to temporary home: %s\n' "$temporary" >&2
+    exit 2
+  fi
 }
 
 trap cleanup EXIT
 
-for tool in npm python3 zsh shellcheck; do
-    require "$tool"
+for tool in npm python3 zsh shellcheck shfmt; do
+  require "$tool"
 done
 
 if ! python3 -c 'import sys; raise SystemExit(sys.version_info < (3, 11))'; then
-    printf '%s\n' 'Python 3.11+ is required for verification.' >&2
-    exit 2
+  printf '%s\n' 'Python 3.11+ is required for verification.' >&2
+  exit 2
 fi
 
 cd -- "$ROOT"
 npm run format:check
 ./scripts/format-python --check
+./scripts/format-shell --check
 compile_cache="$(mktemp -d "${TMPDIR:-/tmp}/vixygrey-setup-verify.XXXXXX")"
 temporary_directories+=("$compile_cache")
 PYTHONPYCACHEPREFIX="$compile_cache/pycache" python3 -m py_compile setup.py archives.py app_files.py safe_files.py
 python3 -B -m unittest discover -s tests -v
 zsh -n dotfiles/.zshrc dotfiles/.config/vixygrey/setup.zsh
-shellcheck setup.sh scripts/format-python scripts/verify
+shellcheck setup.sh scripts/format-python scripts/format-shell scripts/verify
 ./setup.sh --list >/dev/null
 smoke_preview --apps-only --only omp --trust omp
 smoke_preview --theme-only

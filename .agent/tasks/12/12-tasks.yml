@@ -1,0 +1,18 @@
+work_item: "12"
+tasks:
+  - id: locked-toolchain
+    status: done
+    risk: P1
+    verify: go install mvdan.cc/sh/v3/cmd/shfmt@v3.14.1 && ./scripts/format-shell --check
+  - id: canonical-gate
+    status: done
+    risk: P1
+    verify: ./scripts/verify
+  - id: workflow
+    status: done
+    risk: P1
+    verify: actionlint .github/workflows/test-build-release-python.yml
+  - id: hosted-run
+    status: pending
+    risk: P1
+    verify: GitHub Actions verify job passes on the pull request and main
