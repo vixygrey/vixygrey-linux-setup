@@ -227,6 +227,20 @@ def plan_bytes(document: dict) -> bytes:
     return (json.dumps(document, indent=2, sort_keys=True) + "\n").encode()
 
 
+def print_report(document: dict, format_name: str):
+    if format_name == "json":
+        print(json.dumps(document, indent=2, sort_keys=True))
+        return
+    if document["kind"] == "status":
+        for entry in document["apps"]:
+            print(f"APP {entry['state']} {entry['id']} [{entry['method']}]")
+        for entry in document["files"]:
+            print(f"FILE {entry['state']} {entry['path']}")
+        return
+    for check in document["checks"]:
+        print(f"CHECK {check['state']} {check['id']}: {check['remediation']}")
+
+
 def write_plan(path: str, data: bytes):
     target = Path(path)
     if not target.parent.is_dir() or target.is_symlink() or target.exists():
@@ -322,6 +336,7 @@ class Setup:
         self.trust = tokens(args.trust)
         self.brew_packages = None
         self.manager_packages = {}
+        self.selected: list[dict] = []
 
     def executable(self, name: str) -> str | None:
         return shutil.which(name, path=self.env["PATH"])
@@ -467,6 +482,150 @@ class Setup:
             check=False,
         )
         return result.returncode == 0 and result.stdout.strip() == entry["version"]
+
+    def app_status(self, entry: dict) -> dict:
+        identifier, method = entry["id"], entry["method"]
+        if method in {"archive", "font"}:
+            try:
+                if self.is_installed(entry):
+                    return {"id": identifier, "method": method, "state": "installed"}
+            except (OSError, ValueError, SafetyError, subprocess.SubprocessError):
+                pass
+            try:
+                if self.files.target(archives.receipt_path(entry)).exists():
+                    return {"id": identifier, "method": method, "state": "stale-receipt"}
+            except SafetyError:
+                return {"id": identifier, "method": method, "state": "stale-receipt"}
+        else:
+            try:
+                if self.is_installed(entry):
+                    return {"id": identifier, "method": method, "state": "installed"}
+            except (OSError, ValueError, SafetyError, subprocess.SubprocessError):
+                return {"id": identifier, "method": method, "state": "blocked"}
+        paths = {name: data for name, data, _ in launchers(entry, self.files.home)}
+        if method == "archive":
+            paths.update(archives.wrappers(entry, self.files.home))
+        if method == "python-helper":
+            _, _, _, name, wrapper = self.helper_paths(entry)
+            paths[name] = wrapper
+        for name, data in paths.items():
+            if self.files.status(name, data, 0o755) in {"preserve", "protected"}:
+                return {"id": identifier, "method": method, "state": "command-conflict"}
+        if entry.get("third_party") and identifier not in self.trust:
+            return {"id": identifier, "method": method, "state": "blocked"}
+        if method == "system":
+            return {"id": identifier, "method": method, "state": "blocked"}
+        managers = {
+            "brew": "brew",
+            "flatpak": "flatpak",
+            "npm": "npm",
+            "uv": "uv",
+            "go": "go",
+            "cargo": "cargo",
+            "python-helper": "uv",
+        }
+        if method in managers and not self.executable(managers[method]):
+            return {"id": identifier, "method": method, "state": "blocked"}
+        return {"id": identifier, "method": method, "state": "missing"}
+
+    def file_status(self) -> list[dict]:
+        records = {}
+        for entry in self.selected:
+            for name, data, mode in launchers(entry, self.files.home):
+                records[name] = (data, mode)
+        if not self.args.apps_only:
+            for source in sorted((ROOT / "dotfiles").rglob("*")):
+                if source.is_file():
+                    records[str(source.relative_to(ROOT / "dotfiles"))] = (
+                        source.read_bytes(),
+                        0o600,
+                    )
+        states = {
+            "create": "missing",
+            "mode": "unchanged",
+            "preserve": "preserved",
+            "protected": "protected",
+            "replace": "preserved",
+            "unchanged": "unchanged",
+        }
+        return [
+            {"path": name, "state": states[self.files.status(name, data, mode)]}
+            for name, (data, mode) in records.items()
+        ]
+
+    def status_document(self) -> dict:
+        return {
+            "apps": [self.app_status(entry) for entry in self.selected],
+            "files": self.file_status(),
+            "kind": "status",
+        }
+
+    def doctor_document(self) -> dict:
+        checks = []
+
+        def check(identifier: str, state: str, remediation: str, **values):
+            checks.append({"id": identifier, "remediation": remediation, "state": state, **values})
+
+        check(
+            "aurora",
+            "ready" if aurora() else "blocked",
+            "Run --apply only from Aurora Linux as a non-root user.",
+        )
+        architecture = archives.machine_arch()
+        check(
+            "architecture",
+            "ready" if architecture in {"x86_64", "aarch64"} else "blocked",
+            "Use a supported x86_64 or aarch64 Aurora machine.",
+            value=architecture,
+        )
+        for command, remediation in (
+            ("brew", "Complete Aurora's supported Homebrew provisioning."),
+            ("flatpak", "Install or enable Flatpak through normal Aurora provisioning."),
+        ):
+            check(command, "ready" if self.executable(command) else "blocked", remediation)
+        docker = {"method": "system", "package": "docker"}
+        check(
+            "docker",
+            "ready" if self.is_installed(docker) else "blocked",
+            "Provision Aurora DX, run ujust dx-group, then log out and back in.",
+        )
+        plasma = (
+            "KDE" in os.environ.get("XDG_CURRENT_DESKTOP", "").upper()
+            and self.executable("plasma-apply-colorscheme")
+            and self.executable("plasma-apply-wallpaperimage")
+        )
+        check(
+            "plasma",
+            "ready" if plasma else "blocked",
+            "Use an active KDE Plasma session with both plasma apply commands available.",
+        )
+        llama = self.executable("llama-cli")
+        if llama:
+            result = self.run(["llama-cli", "--list-devices"], capture=True)
+            vulkan = result.returncode == 0 and bool(
+                re.search(r"(?m)^\s*Vulkan\d+\s*:", result.stdout)
+            )
+            check(
+                "vulkan",
+                "ready" if vulkan else "blocked",
+                "Install the Vulkan llama.cpp selection and confirm a working Aurora GPU driver.",
+            )
+        else:
+            check(
+                "vulkan",
+                "missing",
+                "Install the Vulkan llama.cpp selection and confirm a working Aurora GPU driver.",
+            )
+        for identifier, path in (("root-space", Path("/")), ("home-space", self.files.home)):
+            usage = shutil.disk_usage(path)
+            check(
+                identifier,
+                "ready",
+                "Keep sufficient free space for selected apps, models, and configuration backups.",
+                available_bytes=usage.free,
+                total_bytes=usage.total,
+            )
+        return {"checks": checks, "kind": "doctor"}
 
     def plan_app(self, entry: dict):
         identifier, method, package = entry["id"], entry["method"], entry["package"]
@@ -839,6 +998,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--status", action="store_true", help="Report read-only installation status"
     )
+    parser.add_argument("--doctor", action="store_true", help="Report read-only machine readiness")
     parser.add_argument(
         "--only",
         action="append",
@@ -880,41 +1040,81 @@ def main(argv=None) -> int:
     )
     args = parser.parse_args(argv)
     if args.validate_catalog:
-        if (
-            args.apply
-            or args.apply_plan
-            or args.format
-            or args.plan_out
-            or args.list
-            or args.status
-            or args.only
-            or args.skip
-            or args.trust
-            or args.include_optional
-            or args.apps_only
-            or args.theme_only
-            or args.replace
-            or args.desktop
+        if any(
+            (
+                args.apply,
+                args.apply_plan,
+                args.format,
+                args.plan_out,
+                args.list,
+                args.status,
+                args.doctor,
+                args.only,
+                args.skip,
+                args.trust,
+                args.include_optional,
+                args.apps_only,
+                args.theme_only,
+                args.replace,
+                args.desktop,
+            )
         ):
             parser.error("--validate-catalog cannot be combined with other options")
         print(f"Catalog valid: {len(catalog())} entries")
         return 0
-    if args.apply_plan and (
-        args.apply
-        or args.status
-        or args.list
-        or args.format is not None
-        or args.plan_out
-        or args.only
-        or args.skip
-        or args.trust
-        or args.include_optional
-        or args.apps_only
-        or args.theme_only
-        or args.replace
-        or args.desktop
+    if args.apply_plan and any(
+        (
+            args.apply,
+            args.status,
+            args.doctor,
+            args.list,
+            args.format is not None,
+            args.plan_out,
+            args.only,
+            args.skip,
+            args.trust,
+            args.include_optional,
+            args.apps_only,
+            args.theme_only,
+            args.replace,
+            args.desktop,
+        )
     ):
         parser.error("--apply-plan cannot be combined with other plan options")
+    if args.status and any(
+        (
+            args.apply,
+            args.apply_plan,
+            args.doctor,
+            args.list,
+            args.plan_out,
+            args.replace,
+            args.desktop,
+        )
+    ):
+        parser.error(
+            "--status cannot be combined with apply, planning, replacement, or desktop options"
+        )
+    if args.doctor and any(
+        (
+            args.apply,
+            args.apply_plan,
+            args.status,
+            args.list,
+            args.plan_out,
+            args.only,
+            args.skip,
+            args.trust,
+            args.include_optional,
+            args.apps_only,
+            args.theme_only,
+            args.replace,
+            args.desktop,
+        )
+    ):
+        parser.error("--doctor cannot be combined with selection, apply, or planning options")
+    if args.list and args.format is not None:
+        parser.error("--list does not support --format")
     if args.plan_out and args.format != "json":
         parser.error("--plan-out requires --format json")
     args.format = args.format or "text"
@@ -949,21 +1149,21 @@ def main(argv=None) -> int:
                 f"{entry['id']} [{entry['method']}{'; optional' if entry.get('optional') else ''}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
             )
         return 0
+    setup = Setup(args)
+    value = intent(args)
+    setup.selected = select(entries, value)
+    if args.doctor:
+        print_report(setup.doctor_document(), args.format)
+        return 0
+    if args.status:
+        print_report(setup.status_document(), args.format)
+        return 0
     if approved and approved["catalog_digest"] != catalog_digest():
         raise SafetyError("Plan catalog digest does not match this checkout")
     if args.apply and (os.geteuid() == 0 or not aurora()):
         raise SafetyError(
             "Apply requires Aurora Linux and a non-root user. Preview is supported on other hosts."
         )
-    setup = Setup(args)
-    value = intent(args)
-    setup.selected = select(entries, value)
-    if args.status:
-        for entry in setup.selected:
-            print(
-                f"{'installed' if setup.is_installed(entry) else 'missing'} {entry['id']} [{entry['method']}]"
-            )
-        return 0
     if approved and approved["selected_ids"] != sorted(entry["id"] for entry in setup.selected):
         raise SafetyError("Plan selection intent does not match the current catalog")
     if args.format == "json":

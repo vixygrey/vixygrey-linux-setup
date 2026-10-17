@@ -36,6 +36,22 @@ Docker Engine is supplied by [Aurora DX](https://docs.getaurora.dev/dx/aurora-dx
 
 A preview can run on this Mac; `--apply` requires Aurora and a non-root user. Read-only package queries may use package managers' own caches or locks.
 
+### Status and readiness
+
+`--status` inspects selected applications and managed files without writing to your home. It reports
+installed, missing, blocked, stale-receipt, command-conflict, preserved, and protected states. Use
+JSON when another tool needs a stable record:
+
+```sh
+./setup.sh --status --apps-only --only omp --trust omp --format json
+./setup.sh --doctor --format json
+```
+
+`--doctor` reports the current Aurora, architecture, Homebrew, Flatpak, Docker, Plasma, Vulkan,
+and root/home free-space readiness. It never installs, repairs, downloads, locks, or creates
+state. Both commands are observation-only and cannot be combined with `--apply`, replacement,
+desktop activation, or plan-writing options.
+
 ### Reviewable JSON plans
 
 Keep the default text preview for interactive use. To attach a deterministic review artifact, request JSON explicitly:

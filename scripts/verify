@@ -58,4 +58,6 @@ shellcheck setup.sh scripts/format-python scripts/format-shell scripts/verify
 ./setup.sh --list >/dev/null
 smoke_preview --apps-only --only omp --trust omp
 smoke_preview --theme-only
+smoke_preview --status --apps-only --only omp --trust omp --format json
+smoke_preview --doctor --format json
 printf '%s\n' 'Verification passed.'
