@@ -213,6 +213,123 @@ class CommandSafety(unittest.TestCase):
                 self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
                 self.assertEqual(list(Path(temporary).iterdir()), [])
 
+    def test_status_reports_stale_receipts_conflicts_and_preserved_files_without_writes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            receipt = home / ".local/state/vixygrey-setup/receipts/omp.json"
+            receipt.parent.mkdir(parents=True)
+            receipt.write_text("{}")
+            command = home / ".local/bin/omp"
+            command.parent.mkdir(parents=True)
+            command.write_text("mine")
+            managed = home / ".config/kitty/kitty.conf"
+            managed.parent.mkdir(parents=True)
+            managed.write_text("mine")
+            before = {
+                path.relative_to(home): path.read_bytes()
+                for path in home.rglob("*")
+                if path.is_file()
+            }
+            environment = {
+                "HOME": temporary,
+                "PATH": "/usr/bin:/bin",
+                "PYTHONDONTWRITEBYTECODE": "1",
+            }
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "setup.py"),
+                    "--status",
+                    "--only",
+                    "omp",
+                    "--trust",
+                    "omp",
+                    "--format",
+                    "json",
+                ],
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            document = json.loads(result.stdout)
+            self.assertEqual(
+                document["apps"], [{"id": "omp", "method": "archive", "state": "stale-receipt"}]
+            )
+            self.assertIn(
+                {"path": ".config/kitty/kitty.conf", "state": "preserved"}, document["files"]
+            )
+            after = {
+                path.relative_to(home): path.read_bytes()
+                for path in home.rglob("*")
+                if path.is_file()
+            }
+            self.assertEqual(after, before)
+            receipt.unlink()
+            before = {
+                path.relative_to(home): path.read_bytes()
+                for path in home.rglob("*")
+                if path.is_file()
+            }
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "setup.py"),
+                    "--status",
+                    "--only",
+                    "omp",
+                    "--trust",
+                    "omp",
+                    "--format",
+                    "json",
+                ],
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["apps"][0]["state"], "command-conflict")
+            after = {
+                path.relative_to(home): path.read_bytes()
+                for path in home.rglob("*")
+                if path.is_file()
+            }
+            self.assertEqual(after, before)
+
+    def test_status_and_doctor_are_json_read_only_and_reject_apply(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            environment = {
+                "HOME": temporary,
+                "PATH": "/usr/bin:/bin",
+                "PYTHONDONTWRITEBYTECODE": "1",
+            }
+            for arguments, kind in [
+                (["--status", "--apps-only", "--only", "omp", "--trust", "omp"], "status"),
+                (["--doctor"], "doctor"),
+            ]:
+                result = subprocess.run(
+                    [sys.executable, str(ROOT / "setup.py"), *arguments, "--format", "json"],
+                    env=environment,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout)["kind"], kind)
+                self.assertEqual(list(Path(temporary).iterdir()), [])
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--status", "--apply"],
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("--status cannot be combined", result.stderr)
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+
     def test_json_plan_serialization_and_tamper_rejection(self):
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary) / "home"
