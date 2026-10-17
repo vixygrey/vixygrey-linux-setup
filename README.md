@@ -200,6 +200,24 @@ TLS and hashes protect downloads against unexpected changes. Hashes are publishe
 
 Top-level registry versions and vendor assets are pinned, but this is not a fully reproducible supply-chain lock: Homebrew/Flatpak use their current catalogs, and registry transitive dependencies can change. OS updates and application vulnerability maintenance remain necessary.
 
+### Refreshing catalog pins
+
+Catalog and profile changes are deliberately manual. Do not use Dependabot or another automated
+updater for `catalog/*.json`, `profiles.json`, vendor artifact URLs, SHA-256 values, Flatpak IDs,
+Homebrew formulas, or source-approval classifications.
+
+For every catalog refresh:
+
+1. Start from the authoritative upstream release page or publisher documentation.
+2. Review the version, URL, architecture artifacts, commands, install method, and source
+   classification before changing the catalog entry.
+3. Download each target artifact from its official URL and calculate its SHA-256 locally. Compare
+   that value with an upstream publisher checksum when one is available.
+4. Update the version, URL, and checksum together in one reviewable pull request. A publisher
+   checksum is evidence of artifact consistency, not proof of publisher identity.
+5. Run `./setup.sh --validate-catalog` and `./scripts/verify`, then preview the changed selection
+   before any explicit `--apply`.
+
 Do not put cloud credentials, SSH keys, Bitwarden exports, shell history, Atuin databases, browser profiles, rclone remotes, backup secrets, or generated state in this repository.
 
 ## Verification
