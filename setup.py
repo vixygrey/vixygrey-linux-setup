@@ -36,6 +36,58 @@ METHODS = {
     "system",
 }
 FLATHUB = "https://dl.flathub.org/repo/"
+PROFILE_PATH = ROOT / "profiles.json"
+
+
+def profiles(entries: list[dict]) -> dict[str, list[str]]:
+    try:
+        values = json.loads(PROFILE_PATH.read_text())
+    except (json.JSONDecodeError, OSError) as error:
+        raise SafetyError(f"Cannot read profiles: {error}") from None
+    if not isinstance(values, dict) or not values:
+        raise SafetyError("Profiles must be a non-empty object")
+    identifiers = {entry["id"]: entry for entry in entries}
+    aliases = {
+        name.lower().strip(): entry["id"]
+        for entry in entries
+        for name in [entry["id"], entry["name"], *entry.get("aliases", [])]
+    }
+    for name, members in values.items():
+        if not isinstance(name, str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name):
+            raise SafetyError(f"Invalid profile name: {name!r}")
+        if (
+            not isinstance(members, list)
+            or not members
+            or not all(isinstance(identifier, str) for identifier in members)
+            or len(members) != len(set(members))
+        ):
+            raise SafetyError(f"{name}: profile members must be a unique non-empty list")
+        for identifier in members:
+            if identifier not in identifiers:
+                if aliases.get(identifier.lower().strip()):
+                    raise SafetyError(
+                        f"{name}: profile members must use canonical IDs: {identifier}"
+                    )
+                raise SafetyError(f"{name}: unknown profile member: {identifier}")
+            if identifiers[identifier].get("optional"):
+                raise SafetyError(f"{name}: optional app requires explicit --only: {identifier}")
+    return values
+
+
+def profile_memberships(profile_map: dict[str, list[str]]) -> dict[str, list[str]]:
+    memberships = {}
+    for name, members in profile_map.items():
+        for identifier in members:
+            memberships.setdefault(identifier, []).append(name)
+    return memberships
+
+
+def selected_profile_ids(profile_map: dict[str, list[str]], names: list[str]) -> set[str]:
+    return {identifier for name in names for identifier in profile_map[name]}
+
+
+def catalog_paths() -> list[Path]:
+    return [*sorted((ROOT / "catalog").glob("*.json")), PROFILE_PATH]
 
 
 def catalog() -> list[dict]:
@@ -43,6 +95,7 @@ def catalog() -> list[dict]:
     for path in sorted((ROOT / "catalog").glob("*.json")):
         entries.extend(json.loads(path.read_text()))
     validate_catalog(entries)
+    profiles(entries)
     seen = set()
     for entry in entries:
         if entry["method"] == "cargo" and archives.machine_arch() in entry.get("artifacts", {}):
@@ -147,12 +200,12 @@ def tokens(values) -> set[str]:
     return {token.strip() for value in values for token in value.split(",") if token.strip()}
 
 
-PLAN_SCHEMA_VERSION = 1
+PLAN_SCHEMA_VERSION = 2
 
 
 def catalog_digest() -> str:
     chunks = []
-    for path in sorted((ROOT / "catalog").glob("*.json")):
+    for path in catalog_paths():
         name = str(path.relative_to(ROOT)).encode()
         data = path.read_bytes()
         chunks.extend([len(name).to_bytes(8), name, len(data).to_bytes(8), data])
@@ -165,6 +218,7 @@ def intent(args) -> dict:
         "desktop": args.desktop,
         "include_optional": args.include_optional,
         "only": sorted(set(args.only)),
+        "profiles": sorted(set(args.profile)),
         "replace": sorted({str(relative_path(value)) for value in args.replace}),
         "skip": sorted(set(args.skip)),
         "theme_only": args.theme_only,
@@ -172,15 +226,16 @@ def intent(args) -> dict:
     }
 
 
-def select(entries: list[dict], value: dict) -> list[dict]:
+def select(entries: list[dict], value: dict, profile_ids: set[str]) -> list[dict]:
     if value["theme_only"]:
         return []
+    requested = set(value["only"]) | profile_ids
     return [
         entry
         for entry in entries
-        if (not value["only"] or entry["id"] in value["only"])
+        if (not requested or entry["id"] in requested)
         and entry["id"] not in value["skip"]
-        and (not entry.get("optional") or value["include_optional"] or entry["id"] in value["only"])
+        and (not entry.get("optional") or value["include_optional"] or entry["id"] in requested)
     ]
 
 
@@ -277,6 +332,7 @@ def load_plan(path: str) -> dict:
         "desktop",
         "include_optional",
         "only",
+        "profiles",
         "replace",
         "skip",
         "theme_only",
@@ -959,6 +1015,8 @@ class Setup:
                     self.command(["bat", "cache", "--build"])
 
     def plan(self):
+        if self.args.profile:
+            print("PROFILES " + ", ".join(self.args.profile))
         for entry in self.selected:
             self.plan_app(entry)
             for name, data, mode in launchers(entry, self.files.home):
@@ -999,6 +1057,13 @@ def main(argv=None) -> int:
         "--status", action="store_true", help="Report read-only installation status"
     )
     parser.add_argument("--doctor", action="store_true", help="Report read-only machine readiness")
+    parser.add_argument(
+        "--profile",
+        action="append",
+        default=[],
+        metavar="NAME[,NAME]",
+        help="Select explicit checked-in application profiles",
+    )
     parser.add_argument(
         "--only",
         action="append",
@@ -1050,6 +1115,7 @@ def main(argv=None) -> int:
                 args.status,
                 args.doctor,
                 args.only,
+                args.profile,
                 args.skip,
                 args.trust,
                 args.include_optional,
@@ -1074,6 +1140,7 @@ def main(argv=None) -> int:
             args.skip,
             args.trust,
             args.include_optional,
+            args.profile,
             args.apps_only,
             args.theme_only,
             args.replace,
@@ -1104,6 +1171,7 @@ def main(argv=None) -> int:
             args.plan_out,
             args.only,
             args.skip,
+            args.profile,
             args.trust,
             args.include_optional,
             args.apps_only,
@@ -1125,11 +1193,23 @@ def main(argv=None) -> int:
         args.apply = True
     if args.only and not tokens(args.only):
         parser.error("--only requires at least one application")
+    if args.profile and not tokens(args.profile):
+        parser.error("--profile requires at least one profile")
     if args.desktop and args.apps_only:
         parser.error("--desktop cannot be used with --apps-only")
-    if args.theme_only and (args.only or args.skip or args.trust or args.include_optional):
+    if args.theme_only and (
+        args.only or args.profile or args.skip or args.trust or args.include_optional
+    ):
         parser.error("Application selection flags cannot be used with --theme-only")
     entries = catalog()
+    profile_map = profiles(entries)
+    profile_names = {name.lower() for name in tokens(args.profile)}
+    unknown_profiles = profile_names - profile_map.keys()
+    if unknown_profiles:
+        parser.error(
+            f"Unknown --profile entries: {', '.join(sorted(unknown_profiles))}; use --list"
+        )
+    args.profile = sorted(profile_names)
     aliases = {}
     for entry in entries:
         for name in [entry["id"], entry["name"], *entry.get("aliases", [])]:
@@ -1144,14 +1224,20 @@ def main(argv=None) -> int:
             parser.error(f"Unknown --{flag} entries: {', '.join(sorted(unknown))}; use --list")
         setattr(args, flag, [aliases[name] for name in raw])
     if args.list:
+        memberships = profile_memberships(profile_map)
         for entry in entries:
+            profile_note = (
+                "; profiles " + ",".join(memberships[entry["id"]])
+                if entry["id"] in memberships
+                else ""
+            )
             print(
-                f"{entry['id']} [{entry['method']}{'; optional' if entry.get('optional') else ''}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
+                f"{entry['id']} [{entry['method']}{'; optional' if entry.get('optional') else ''}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
             )
         return 0
     setup = Setup(args)
     value = intent(args)
-    setup.selected = select(entries, value)
+    setup.selected = select(entries, value, selected_profile_ids(profile_map, args.profile))
     if args.doctor:
         print_report(setup.doctor_document(), args.format)
         return 0

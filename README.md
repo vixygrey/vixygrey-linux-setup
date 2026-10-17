@@ -30,13 +30,30 @@ Docker Engine is supplied by [Aurora DX](https://docs.getaurora.dev/dx/aurora-dx
 
 # Preview the entire catalog and theme. No installation or configuration writes.
 ./setup.sh
-
-# Start with a small selection, without changing dotfiles.
-./setup.sh --apps-only --only micro,bat,eza,git,starship
-./setup.sh --apps-only --only micro,bat,eza,git,starship --apply
 ```
 
-A preview can run on this Mac; `--apply` requires Aurora and a non-root user. Read-only package queries may use package managers' own caches or locks.
+### Profiles
+
+Profiles are checked-in canonical catalog IDs: `base`, `terminal`, `developer`, `cloud`,
+`security`, `desktop`, and `ai`. `--list` shows every profile containing each application.
+Use the staged order `base`, then `terminal` or `developer`, then only the domain profile you
+need. Every profile is selection only: optional applications still require `--only` or
+`--include-optional`, and third-party sources still require per-ID `--trust`.
+
+```sh
+# Start with an explicit, reviewable profile. Profiles select apps but never trust sources.
+./setup.sh --apps-only --profile base --format json
+./setup.sh --apps-only --profile base,terminal --skip btop
+
+# Apply only after reviewing the plan and approving its reported third-party IDs.
+./setup.sh --apps-only --profile desktop --trust flameshot,ghostwriter,drawio --apply
+
+# Individual IDs can refine a profile; --skip always wins.
+./setup.sh --apps-only --profile developer --only lazygit --skip gh
+```
+
+A preview can run on this Mac; `--apply` requires Aurora and a non-root user. Read-only package
+queries may use package managers' own caches or locks.
 
 ### Status and readiness
 
@@ -133,7 +150,11 @@ Atuin cloud sync is disabled in the shipped config. An existing conflicting Atui
 
 ## Package behavior and important constraints
 
-The complete source of truth is [`catalog/core.json`](catalog/core.json) and [`catalog/extended.json`](catalog/extended.json). `--list` shows every requested application. Sources were resolved using the Mac Brewfile, installed configuration, existing Mac setup implementation, and upstream Linux documentation.
+The complete source of truth is [`catalog/core.json`](catalog/core.json),
+[`catalog/extended.json`](catalog/extended.json), and [`profiles.json`](profiles.json).
+`--list` shows every requested application and its profile membership. Sources were resolved using
+the Mac Brewfile, installed configuration, existing Mac setup implementation, and upstream Linux
+documentation.
 
 | Route                 | Behavior                                                                                                                                                                                                                               |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
