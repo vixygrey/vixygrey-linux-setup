@@ -12,6 +12,8 @@ The catalog covers all 123 requested names as 122 distinct applications. `soffic
 - The standard `~/.config` and `~/.local/share` locations are supported. Equivalent canonical paths, including Aurora's `/home` aliases, are accepted. A genuinely different XDG location is blocked rather than written incorrectly.
 - Review the catalog and the plan before applying. The setup is not an OS installer or a replacement for system backups.
 
+Before the first apply on any machine, complete the [machine commissioning runbook](docs/machine-commissioning.md). It keeps storage, encryption, backup, power, and optional capability decisions per-machine without changing installer defaults.
+
 Aurora's recommended software model is [Flatpak, Homebrew, then containers](https://docs.getaurora.dev/guides/software/), not normal host `dnf` installation. This setup never layers RPMs, changes the OS image, alters groups, enables system services, or changes your login shell.
 
 ### Docker Engine
