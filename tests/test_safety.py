@@ -1,3 +1,4 @@
+import json
 import io
 import os
 from pathlib import Path
@@ -211,6 +212,50 @@ class CommandSafety(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
                 self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_json_plan_serialization_and_tamper_rejection(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary) / "home"
+            home.mkdir()
+            plan = Path(temporary) / "plan.json"
+            command = [
+                sys.executable,
+                str(ROOT / "setup.py"),
+                "--apps-only",
+                "--only",
+                "omp",
+                "--trust",
+                "omp",
+                "--format",
+                "json",
+                "--plan-out",
+                str(plan),
+            ]
+            environment = {
+                "HOME": str(home),
+                "PATH": "/usr/bin:/bin",
+                "PYTHONDONTWRITEBYTECODE": "1",
+            }
+            result = subprocess.run(
+                command, env=environment, text=True, capture_output=True, check=False
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            document = json.loads(result.stdout)
+            self.assertEqual(document["schema_version"], 1)
+            self.assertEqual(document["selected_ids"], ["omp"])
+            self.assertIn("actions", document)
+            self.assertEqual(json.loads(plan.read_text()), document)
+            document["catalog_digest"] = "0" * 64
+            plan.write_text(json.dumps(document))
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--apply-plan", str(plan)],
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(list(home.iterdir()), [])
 
 
 if __name__ == "__main__":

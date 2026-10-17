@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import fcntl
 import json
 import os
@@ -19,7 +20,7 @@ sys.dont_write_bytecode = True
 
 import archives
 from app_files import launchers
-from safe_files import Files, SafetyError, relative_path
+from safe_files import Files, SafetyError, digest, relative_path
 
 ROOT = Path(__file__).resolve().parent
 METHODS = {
@@ -102,6 +103,152 @@ def aurora() -> bool:
 
 def tokens(values) -> set[str]:
     return {token.strip() for value in values for token in value.split(",") if token.strip()}
+
+
+PLAN_SCHEMA_VERSION = 1
+
+
+def catalog_digest() -> str:
+    chunks = []
+    for path in sorted((ROOT / "catalog").glob("*.json")):
+        name = str(path.relative_to(ROOT)).encode()
+        data = path.read_bytes()
+        chunks.extend([len(name).to_bytes(8), name, len(data).to_bytes(8), data])
+    return digest(b"".join(chunks))
+
+
+def intent(args) -> dict:
+    return {
+        "apps_only": args.apps_only,
+        "desktop": args.desktop,
+        "include_optional": args.include_optional,
+        "only": sorted(set(args.only)),
+        "replace": sorted({str(relative_path(value)) for value in args.replace}),
+        "skip": sorted(set(args.skip)),
+        "theme_only": args.theme_only,
+        "trust": sorted(set(args.trust)),
+    }
+
+
+def select(entries: list[dict], value: dict) -> list[dict]:
+    if value["theme_only"]:
+        return []
+    return [
+        entry
+        for entry in entries
+        if (not value["only"] or entry["id"] in value["only"])
+        and entry["id"] not in value["skip"]
+        and (not entry.get("optional") or value["include_optional"] or entry["id"] in value["only"])
+    ]
+
+
+def action_records(setup) -> list[dict]:
+    records = []
+    for kind, payload in setup.steps:
+        if kind == "app":
+            records.append(
+                {
+                    "id": payload["id"],
+                    "kind": kind,
+                    "method": payload["method"],
+                    "package": payload["package"],
+                    "source": payload["source"],
+                    "version": payload.get("version", ""),
+                }
+            )
+        elif kind == "file":
+            name, data, mode = payload
+            records.append({"digest": digest(data), "kind": kind, "mode": mode, "path": name})
+        else:
+            records.append({"kind": kind, "value": payload})
+    return records
+
+
+def plan_document(setup, value: dict) -> dict:
+    return {
+        "actions": action_records(setup),
+        "blockers": setup.blocks,
+        "catalog_digest": catalog_digest(),
+        "intent": value,
+        "preflight": {
+            "architecture": archives.machine_arch(),
+            "is_aurora": aurora(),
+            "platform": sys.platform,
+        },
+        "preserved_conflicts": setup.preserved,
+        "schema_version": PLAN_SCHEMA_VERSION,
+        "selected_ids": sorted(entry["id"] for entry in setup.selected),
+    }
+
+
+def plan_bytes(document: dict) -> bytes:
+    return (json.dumps(document, indent=2, sort_keys=True) + "\n").encode()
+
+
+def write_plan(path: str, data: bytes):
+    target = Path(path)
+    if not target.parent.is_dir() or target.is_symlink() or target.exists():
+        raise SafetyError(
+            f"Plan output must be a new regular file in an existing directory: {target}"
+        )
+    fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def load_plan(path: str) -> dict:
+    try:
+        document = json.loads(Files.read(Path(path)))
+    except (json.JSONDecodeError, OSError) as error:
+        raise SafetyError(f"Cannot read plan: {error}") from None
+    required = {
+        "actions",
+        "blockers",
+        "catalog_digest",
+        "intent",
+        "preflight",
+        "preserved_conflicts",
+        "schema_version",
+        "selected_ids",
+    }
+    if not isinstance(document, dict) or set(document) != required:
+        raise SafetyError("Invalid plan schema")
+    value = document["intent"]
+    fields = {
+        "apps_only",
+        "desktop",
+        "include_optional",
+        "only",
+        "replace",
+        "skip",
+        "theme_only",
+        "trust",
+    }
+    if (
+        document["schema_version"] != PLAN_SCHEMA_VERSION
+        or not isinstance(value, dict)
+        or set(value) != fields
+    ):
+        raise SafetyError("Unsupported plan schema")
+    if not re.fullmatch(r"[0-9a-f]{64}", document["catalog_digest"]):
+        raise SafetyError("Invalid plan catalog digest")
+    for name in fields:
+        expected = (
+            isinstance(value[name], bool)
+            if name in {"apps_only", "desktop", "include_optional", "theme_only"}
+            else isinstance(value[name], list)
+            and value[name] == sorted(set(value[name]))
+            and all(isinstance(item, str) for item in value[name])
+        )
+        if not expected:
+            raise SafetyError(f"Invalid plan intent: {name}")
+    if document["selected_ids"] != sorted(set(document["selected_ids"])) or not all(
+        isinstance(item, str) for item in document["selected_ids"]
+    ):
+        raise SafetyError("Invalid plan selected IDs")
+    return document
 
 
 class Setup:
@@ -638,6 +785,9 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--apply", action="store_true", help="Execute the plan; otherwise read-only"
     )
+    parser.add_argument("--apply-plan", metavar="FILE", help="Apply a reviewed JSON plan")
+    parser.add_argument("--format", choices=("text", "json"), default=None)
+    parser.add_argument("--plan-out", metavar="FILE", help="Write the JSON plan artifact")
     parser.add_argument(
         "--list", action="store_true", help="Print catalog with install methods, notes, and sources"
     )
@@ -681,6 +831,29 @@ def main(argv=None) -> int:
         help="Activate KDE colors and wallpaper, preserving other desktop settings",
     )
     args = parser.parse_args(argv)
+    if args.apply_plan and (
+        args.apply
+        or args.list
+        or args.format is not None
+        or args.plan_out
+        or args.only
+        or args.skip
+        or args.trust
+        or args.include_optional
+        or args.apps_only
+        or args.theme_only
+        or args.replace
+        or args.desktop
+    ):
+        parser.error("--apply-plan cannot be combined with other plan options")
+    if args.plan_out and args.format != "json":
+        parser.error("--plan-out requires --format json")
+    args.format = args.format or "text"
+    approved = load_plan(args.apply_plan) if args.apply_plan else None
+    if approved:
+        for name, value in approved["intent"].items():
+            setattr(args, name, value)
+        args.apply = True
     if args.only and not tokens(args.only):
         parser.error("--only requires at least one application")
     if args.desktop and args.apps_only:
@@ -707,23 +880,30 @@ def main(argv=None) -> int:
                 f"{entry['id']} [{entry['method']}{'; optional' if entry.get('optional') else ''}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
             )
         return 0
+    if approved and approved["catalog_digest"] != catalog_digest():
+        raise SafetyError("Plan catalog digest does not match this checkout")
     if args.apply and (os.geteuid() == 0 or not aurora()):
         raise SafetyError(
             "Apply requires Aurora Linux and a non-root user. Preview is supported on other hosts."
         )
     setup = Setup(args)
-    setup.selected = (
-        []
-        if args.theme_only
-        else [
-            entry
-            for entry in entries
-            if (not args.only or entry["id"] in args.only)
-            and entry["id"] not in args.skip
-            and (not entry.get("optional") or args.include_optional or entry["id"] in args.only)
-        ]
-    )
-    setup.plan()
+    value = intent(args)
+    setup.selected = select(entries, value)
+    if approved and approved["selected_ids"] != sorted(entry["id"] for entry in setup.selected):
+        raise SafetyError("Plan selection intent does not match the current catalog")
+    if args.format == "json":
+        with contextlib.redirect_stdout(None):
+            setup.plan()
+        document = plan_document(setup, value)
+        output = plan_bytes(document)
+        if args.plan_out:
+            write_plan(args.plan_out, output)
+        sys.stdout.buffer.write(output)
+    elif approved:
+        setup.apply()
+        return 3 if setup.preserved else 0
+    else:
+        setup.plan()
     if setup.blocks:
         return 2
     if args.apply:
