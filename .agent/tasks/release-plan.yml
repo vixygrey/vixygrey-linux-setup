@@ -18,3 +18,11 @@ tasks:
       - Least-privilege GitHub Actions verification on pull requests and main.
       - Python compilation, shell checks, catalog validation, and no-write previews.
       - Local and hosted verification evidence.
+  - task_id: "8"
+    task_name: Add Prettier as the repository formatter
+    verify_command: ./scripts/verify
+    priority: P1
+    requirements:
+      - Pinned development-only Prettier toolchain and lockfile.
+      - Explicit format boundaries and supported-file normalization.
+      - Shared local and CI formatting verification evidence.

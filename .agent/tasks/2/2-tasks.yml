@@ -3,7 +3,8 @@ tasks:
   - id: cockpit
     status: done
     risk: P2
-    verify: test -f .agent/product/scope.yml && test -f .agent/tasks/release-plan.yml && test -f .agent/tasks/state.yml && test -f AGENTS.md && test -f CONVENTIONS.md
+    verify: test -f .agent/product/scope.yml && test -f .agent/tasks/release-plan.yml && test -f
+      .agent/tasks/state.yml && test -f AGENTS.md && test -f CONVENTIONS.md
   - id: quality-gate
     status: done
     risk: P1

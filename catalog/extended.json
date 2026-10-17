@@ -6,9 +6,7 @@
     "package": "awscli",
     "source": "https://github.com/aws/aws-cli",
     "notes": "Official AWS command-line interface; Homebrew core provides Linux bottles.",
-    "aliases": [
-      "awscli"
-    ],
+    "aliases": ["awscli"],
     "third_party": false
   },
   {
@@ -18,9 +16,7 @@
     "package": "granted",
     "source": "https://github.com/fwdcloudsec/granted",
     "notes": "AWS access utility; the assume shell integration is provided by Granted.",
-    "aliases": [
-      "assume"
-    ],
+    "aliases": ["assume"],
     "third_party": false
   },
   {
@@ -30,9 +26,7 @@
     "package": "aws-cdk",
     "source": "https://github.com/aws/aws-cdk-cli",
     "notes": "Official AWS CDK Toolkit CLI; installs the cdk executable.",
-    "aliases": [
-      "cdk"
-    ],
+    "aliases": ["cdk"],
     "version": "2.1145.0",
     "third_party": true
   },
@@ -43,9 +37,7 @@
     "package": "aws-sam-cli",
     "source": "https://github.com/aws/aws-sam-cli",
     "notes": "Official AWS SAM CLI; Homebrew core provides Linux bottles.",
-    "aliases": [
-      "sam"
-    ],
+    "aliases": ["sam"],
     "third_party": false
   },
   {
@@ -225,9 +217,7 @@
     "package": "typos-cli",
     "source": "https://github.com/crate-ci/typos",
     "notes": "Source-code spell checker; Homebrew formula is named typos-cli and installs typos.",
-    "aliases": [
-      "typos-cli"
-    ],
+    "aliases": ["typos-cli"],
     "third_party": false
   },
   {
@@ -265,9 +255,7 @@
     "package": "typescript",
     "source": "https://github.com/microsoft/TypeScript",
     "notes": "Official TypeScript package; installs the tsc compiler.",
-    "aliases": [
-      "typescript"
-    ],
+    "aliases": ["typescript"],
     "version": "7.0.2",
     "third_party": true
   },
@@ -308,9 +296,7 @@
     "package": "borgbackup",
     "source": "https://github.com/borgbackup/borg",
     "notes": "Deduplicating backup tool; Homebrew formula borgbackup installs the borg command.",
-    "aliases": [
-      "borgbackup"
-    ],
+    "aliases": ["borgbackup"],
     "third_party": false
   },
   {
@@ -329,9 +315,7 @@
     "package": "leaf-markdown-viewer",
     "source": "https://github.com/RivoLink/leaf",
     "notes": "Terminal Markdown viewer; Homebrew core Linux bottles install the leaf executable.",
-    "aliases": [
-      "leaf-markdown-viewer"
-    ],
+    "aliases": ["leaf-markdown-viewer"],
     "third_party": false
   },
   {
@@ -341,9 +325,7 @@
     "package": "org.libreoffice.LibreOffice",
     "source": "https://www.libreoffice.org/",
     "notes": "Verified Flathub build of the LibreOffice suite; soffice is its command name, not a separate application.",
-    "aliases": [
-      "soffice"
-    ],
+    "aliases": ["soffice"],
     "third_party": false
   },
   {
@@ -353,9 +335,7 @@
     "package": "com.jgraph.drawio.desktop",
     "source": "https://github.com/jgraph/drawio-desktop",
     "notes": "Linux desktop application published on Flathub.",
-    "aliases": [
-      "drawio"
-    ],
+    "aliases": ["drawio"],
     "third_party": true
   },
   {
@@ -365,9 +345,7 @@
     "package": "imagemagick",
     "source": "https://imagemagick.org/",
     "notes": "Image manipulation tools from Homebrew core.",
-    "aliases": [
-      "ImageMagick"
-    ],
+    "aliases": ["ImageMagick"],
     "third_party": false
   },
   {
@@ -377,9 +355,7 @@
     "package": "oxipng",
     "source": "https://github.com/shssoichiro/oxipng",
     "notes": "The requested oxiping spelling resolves to oxipng, the multithreaded PNG optimizer in Homebrew core.",
-    "aliases": [
-      "oxipng"
-    ],
+    "aliases": ["oxipng"],
     "third_party": false
   },
   {
@@ -407,9 +383,7 @@
     "package": "org.videolan.VLC",
     "source": "https://www.videolan.org/vlc/",
     "notes": "VLC media player via Flathub.",
-    "aliases": [
-      "vlc"
-    ],
+    "aliases": ["vlc"],
     "third_party": true
   },
   {
@@ -517,9 +491,7 @@
     "package": "md.obsidian.Obsidian",
     "source": "https://obsidian.md/",
     "notes": "Officially verified Obsidian package on Flathub.",
-    "aliases": [
-      "Obsidian"
-    ],
+    "aliases": ["Obsidian"],
     "third_party": false
   },
   {
@@ -580,9 +552,7 @@
     "package": "croft",
     "source": "https://github.com/vitali87/croft",
     "notes": "Official checksum-pinned static-musl Linux release archives avoid Croft's native Rust source-build toolchain.",
-    "aliases": [
-      "croft"
-    ],
+    "aliases": ["croft"],
     "version": "0.2.32",
     "artifacts": {
       "x86_64": {
@@ -642,9 +612,7 @@
     "package": "com.bitwarden.desktop",
     "source": "https://bitwarden.com/",
     "notes": "Officially verified Bitwarden desktop package on Flathub.",
-    "aliases": [
-      "Bitwarden"
-    ],
+    "aliases": ["Bitwarden"],
     "third_party": false
   },
   {
@@ -654,9 +622,7 @@
     "package": "JetBrainsMono",
     "source": "https://github.com/ryanoasis/nerd-fonts",
     "notes": "Checksum-verified Nerd Fonts release archive; installer deploys only font files to the user font directory.",
-    "aliases": [
-      "JetBrains Mono Nerd Font"
-    ],
+    "aliases": ["JetBrains Mono Nerd Font"],
     "version": "3.5.1",
     "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/JetBrainsMono.zip",
     "sha256": "fab782a66f7d3019da64f6572db9fc5d3a4bcb19f9fa13e2d8a62e3693d6396e",

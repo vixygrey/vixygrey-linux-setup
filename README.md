@@ -106,15 +106,15 @@ Atuin cloud sync is disabled in the shipped config. An existing conflicting Atui
 
 The complete source of truth is [`catalog/core.json`](catalog/core.json) and [`catalog/extended.json`](catalog/extended.json). `--list` shows every requested application. Sources were resolved using the Mac Brewfile, installed configuration, existing Mac setup implementation, and upstream Linux documentation.
 
-| Route | Behavior |
-| --- | --- |
-| Homebrew | CLI formulas, never casks. Existing formulas are skipped. Missing manager prerequisites are planned explicitly. No automatic global upgrade or cleanup. |
-| Flatpak | Missing apps install per user from Flathub. An existing system installation is left in place. A conflicting user `flathub` URL blocks installation. LibreOffice/`soffice`, mpv, and VLC receive conflict-preserving CLI wrappers. |
-| Vendor archives | Versioned HTTPS downloads with catalog SHA256 checks. Payloads stay in versioned user directories, with executable wrappers and GUI launchers. No archive install hooks, device nodes, escaping paths, escaping links, or setuid bits. |
-| Go | Exact module versions, built into temporary staging before conflict-safe executable deployment. Clipse uses the Wayland build and `wl-clipboard`; no clipboard listener starts automatically. |
-| uv / npm | Exact top-level package versions in user-owned locations. Cheznav requests Python 3.14 through uv. Python tools may download a compatible managed interpreter. |
-| Cfait source fallback | aarch64 uses Cargo with the upstream lockfile and a user-local build toolchain. Missing native C headers block preflight; no host layering is attempted. |
-| `yaml-py` | A private uv environment containing PyYAML, exposed as a Python interpreter command, matching the Mac helper rather than substituting a different YAML CLI. |
+| Route                 | Behavior                                                                                                                                                                                                                               |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Homebrew              | CLI formulas, never casks. Existing formulas are skipped. Missing manager prerequisites are planned explicitly. No automatic global upgrade or cleanup.                                                                                |
+| Flatpak               | Missing apps install per user from Flathub. An existing system installation is left in place. A conflicting user `flathub` URL blocks installation. LibreOffice/`soffice`, mpv, and VLC receive conflict-preserving CLI wrappers.      |
+| Vendor archives       | Versioned HTTPS downloads with catalog SHA256 checks. Payloads stay in versioned user directories, with executable wrappers and GUI launchers. No archive install hooks, device nodes, escaping paths, escaping links, or setuid bits. |
+| Go                    | Exact module versions, built into temporary staging before conflict-safe executable deployment. Clipse uses the Wayland build and `wl-clipboard`; no clipboard listener starts automatically.                                          |
+| uv / npm              | Exact top-level package versions in user-owned locations. Cheznav requests Python 3.14 through uv. Python tools may download a compatible managed interpreter.                                                                         |
+| Cfait source fallback | aarch64 uses Cargo with the upstream lockfile and a user-local build toolchain. Missing native C headers block preflight; no host layering is attempted.                                                                               |
+| `yaml-py`             | A private uv environment containing PyYAML, exposed as a Python interpreter command, matching the Mac helper rather than substituting a different YAML CLI.                                                                            |
 
 ### Special applications
 
@@ -135,12 +135,12 @@ Only one setup process can apply at a time. Commands stop at the first failure. 
 
 Exit codes:
 
-| Code | Meaning |
-| --- | --- |
-| 0 | Plan/apply completed without blockers or preserved conflicts |
-| 2 | Preflight blocked, invalid input, unsupported platform, or an operation failed |
-| 3 | Existing configuration or launcher conflicts were intentionally preserved |
-| 130 | Interrupted; completed changes remain |
+| Code | Meaning                                                                        |
+| ---- | ------------------------------------------------------------------------------ |
+| 0    | Plan/apply completed without blockers or preserved conflicts                   |
+| 2    | Preflight blocked, invalid input, unsupported platform, or an operation failed |
+| 3    | Existing configuration or launcher conflicts were intentionally preserved      |
+| 130  | Interrupted; completed changes remain                                          |
 
 ## Security model
 
@@ -155,10 +155,11 @@ Do not put cloud credentials, SSH keys, Bitwarden exports, shell history, Atuin 
 ## Verification
 
 ```sh
+npm ci
 ./scripts/verify
 ```
 
-This canonical check requires Python 3.11+, Zsh, and ShellCheck. It runs the safety suite, validates the catalog with `--list`, checks the managed shell files, and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools.
+This canonical check requires Node 24.18.1, Python 3.11+, Zsh, and ShellCheck. Run `npm ci` after cloning or changing the lockfile. Node and Prettier are development-only tooling; the installer runtime remains Python standard library. The check validates formatting, runs the safety suite, validates the catalog with `--list`, checks managed shell files, and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools.
 
 The safety suite covers preservation, backups, symlink/traversal rejection, executable modes, archive links and setuid stripping, font filtering, Debian-container boundaries, invalid selections, source approval, and canonical home aliases.
 

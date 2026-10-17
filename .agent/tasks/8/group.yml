@@ -1,0 +1,11 @@
+title: Add Prettier as the repository formatter
+status: in-progress
+work_items:
+  - task_id: "8"
+    title: Add Prettier as the repository formatter
+    status: in-progress
+    task_name: Add Prettier as the repository formatter
+    verify_command: ./scripts/verify
+    delta: ADDED
+    spec: 8-spec.md
+    tasks: 8-tasks.yml

@@ -1,6 +1,6 @@
 workflow_mode: solo-git
 active_flow: execute_group
-active_task: "3"
+active_task: "8"
 active_group: null
 phase: execute
 group_cycle:
@@ -11,12 +11,12 @@ bug_cycle:
   current_step: null
   completed_steps: []
 git:
-  branch: feat/3-ci-quality-gate
-  hash: 7b5bae5
+  branch: feat/8-prettier
+  hash: 5d14838
 handoff:
   next_skill: verify-work
   last_step_completed: develop-tdd
-  context: Local verification passed; wait for the pull-request and main GitHub Actions runs.
+  context: Local formatter checks passed; the TrueNorth gate is externally blocked in truenorth-mcp#552, and hosted CI evidence remains pending.
   open_decisions: []
   required_reading:
     - .agent/product/scope.yml

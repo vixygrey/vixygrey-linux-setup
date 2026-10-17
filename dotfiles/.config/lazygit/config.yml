@@ -6,18 +6,18 @@ gui:
   showCommandLog: false
   border: rounded
   branchColors:
-    '*': '#d4b2ff'
+    "*": "#d4b2ff"
   theme:
-    activeBorderColor: ['#ff9fe3', bold]
-    inactiveBorderColor: ['#4b4963']
-    optionsTextColor: ['#9be7ff']
-    selectedLineBgColor: ['#6a5d86']
-    inactiveViewSelectedLineBgColor: ['#323448']
-    cherryPickedCommitFgColor: ['#8af7cf']
-    cherryPickedCommitBgColor: ['#4b4963']
-    unstagedChangesColor: ['#ff7aa8']
-    defaultFgColor: ['#ddd2f7']
-    searchingActiveBorderColor: ['#ffcf93']
+    activeBorderColor: ["#ff9fe3", bold]
+    inactiveBorderColor: ["#4b4963"]
+    optionsTextColor: ["#9be7ff"]
+    selectedLineBgColor: ["#6a5d86"]
+    inactiveViewSelectedLineBgColor: ["#323448"]
+    cherryPickedCommitFgColor: ["#8af7cf"]
+    cherryPickedCommitBgColor: ["#4b4963"]
+    unstagedChangesColor: ["#ff7aa8"]
+    defaultFgColor: ["#ddd2f7"]
+    searchingActiveBorderColor: ["#ffcf93"]
 git:
   paging:
     colorArg: always
@@ -27,11 +27,11 @@ git:
   autoFetch: true
   autoRefresh: true
 os:
-  edit: 'micro {{filename}}'
-  editAtLine: 'micro {{filename}} +{{line}}'
-  editAtLineAndWait: 'micro {{filename}} +{{line}}'
+  edit: "micro {{filename}}"
+  editAtLine: "micro {{filename}} +{{line}}"
+  editAtLineAndWait: "micro {{filename}} +{{line}}"
   editInTerminal: true
-  open: 'xdg-open {{filename}}'
-  openLink: 'xdg-open {{link}}'
+  open: "xdg-open {{filename}}"
+  openLink: "xdg-open {{link}}"
 notARepository: skip
 promptToReturnFromSubprocess: false
