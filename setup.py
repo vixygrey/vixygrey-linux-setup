@@ -837,6 +837,9 @@ def main(argv=None) -> int:
         "--validate-catalog", action="store_true", help="Validate catalog data without planning"
     )
     parser.add_argument(
+        "--status", action="store_true", help="Report read-only installation status"
+    )
+    parser.add_argument(
         "--only",
         action="append",
         default=[],
@@ -883,6 +886,7 @@ def main(argv=None) -> int:
             or args.format
             or args.plan_out
             or args.list
+            or args.status
             or args.only
             or args.skip
             or args.trust
@@ -897,6 +901,7 @@ def main(argv=None) -> int:
         return 0
     if args.apply_plan and (
         args.apply
+        or args.status
         or args.list
         or args.format is not None
         or args.plan_out
@@ -953,6 +958,12 @@ def main(argv=None) -> int:
     setup = Setup(args)
     value = intent(args)
     setup.selected = select(entries, value)
+    if args.status:
+        for entry in setup.selected:
+            print(
+                f"{'installed' if setup.is_installed(entry) else 'missing'} {entry['id']} [{entry['method']}]"
+            )
+        return 0
     if approved and approved["selected_ids"] != sorted(entry["id"] for entry in setup.selected):
         raise SafetyError("Plan selection intent does not match the current catalog")
     if args.format == "json":
