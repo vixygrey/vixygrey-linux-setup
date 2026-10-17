@@ -54,6 +54,7 @@ PYTHONPYCACHEPREFIX="$compile_cache/pycache" python3 -m py_compile setup.py arch
 python3 -B -m unittest discover -s tests -v
 zsh -n dotfiles/.zshrc dotfiles/.config/vixygrey/setup.zsh
 shellcheck setup.sh scripts/format-python scripts/format-shell scripts/verify
+./setup.sh --validate-catalog >/dev/null
 ./setup.sh --list >/dev/null
 smoke_preview --apps-only --only omp --trust omp
 smoke_preview --theme-only
