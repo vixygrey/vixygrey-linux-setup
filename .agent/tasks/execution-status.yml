@@ -3,3 +3,7 @@ tasks:
     status: done
     updated_at: 2026-10-17
     verification: .agent/tasks/2/verification.md
+  "3":
+    status: in-progress
+    updated_at: 2026-10-17
+    verification: .agent/tasks/3/verification.md

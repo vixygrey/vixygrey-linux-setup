@@ -1,0 +1,14 @@
+work_item: "3"
+tasks:
+  - id: local-verifier
+    status: done
+    risk: P1
+    verify: ./scripts/verify
+  - id: workflow
+    status: done
+    risk: P1
+    verify: actionlint .github/workflows/test-build-release-python.yml
+  - id: hosted-run
+    status: pending
+    risk: P1
+    verify: GitHub Actions verify job passes on the pull request and main
