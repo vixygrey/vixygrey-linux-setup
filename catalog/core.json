@@ -1,5 +1,14 @@
 [
   {
+    "id": "discord",
+    "name": "Discord",
+    "method": "flatpak",
+    "package": "com.discordapp.Discord",
+    "source": "https://flathub.org/apps/com.discordapp.Discord",
+    "notes": "Flathub wrapper for Discord's proprietary desktop client, available on x86_64 only. Requires explicit source approval and your own sign-in. Sandbox limits Game Activity, file access, and Rich Presence; no permission overrides, autostart, or account configuration are applied. On aarch64, explicitly skip this entry and use Discord in your browser.",
+    "third_party": true
+  },
+  {
     "id": "flameshot",
     "name": "flameshot",
     "method": "flatpak",
