@@ -389,3 +389,8 @@ repeat planning, and preservation of an existing command, under home paths conta
 percent signs. These checks did not execute Linux binaries or validate Aurora's application menu.
 
 **The full application install, Linux binary execution, Vulkan device detection, and KDE desktop activation have not been run on an Aurora target.** A local Docker daemon was unavailable. Validate the plan on the intended machine before approving an apply run, and validate the desktop there before treating its appearance as verified.
+
+## License
+
+This repository is licensed under the [MIT License](LICENSE). Third-party applications and
+dependencies installed or used by this setup retain their own licenses.
