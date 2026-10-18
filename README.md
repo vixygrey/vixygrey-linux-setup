@@ -1,14 +1,14 @@
 # Vixygrey Linux Setup
 
-Personal setup for **Aurora Linux**, with Aurora DX's Docker Engine and the Dracula-Sakura appearance from the existing Mac setup.
+Personal setup for **Aurora Linux** as a graphical workstation with selected useful CLI and TUI tools, Aurora DX's Docker Engine, and the Dracula-Sakura appearance from the existing Mac setup.
 
-The catalog covers all 123 requested names as 122 distinct applications. `soffice` is part of LibreOffice. Docker Engine is the explicitly approved replacement for Docker Desktop. `mkcert` remains optional.
+The catalog explicitly lists the selected applications and their installation sources. `soffice` is part of LibreOffice. Docker Engine is the explicitly approved replacement for Docker Desktop. Notion is available through an official-web-app launcher; Zed and Bruno use pinned upstream Linux payloads. OMP remains the primary AI development tool alongside Kiro and Zed.
 
 ## Before using it
 
 - Run as your normal user, **never with `sudo`**.
 - Complete Aurora's normal provisioning first. Python 3.11+, Homebrew, and Flatpak must be available for the relevant selections. This repository does not bootstrap them with downloaded shell scripts.
-- The catalog has x86_64 and aarch64 vendor artifacts. Preview uses the current machine's architecture. Cfait has an official x86_64 binary; its aarch64 route builds the official crate and checks for C development headers.
+- The catalog includes architecture-specific x86_64 and aarch64 vendor artifacts. Preview uses the current machine's architecture.
 - The standard `~/.config` and `~/.local/share` locations are supported. Equivalent canonical paths, including Aurora's `/home` aliases, are accepted. A genuinely different XDG location is blocked rather than written incorrectly.
 - Review the catalog and the plan before applying. The setup is not an OS installer or a replacement for system backups.
 
@@ -37,8 +37,7 @@ Docker Engine is supplied by [Aurora DX](https://docs.getaurora.dev/dx/aurora-dx
 Profiles are checked-in canonical catalog IDs: `base`, `terminal`, `developer`, `cloud`,
 `security`, `desktop`, and `ai`. `--list` shows every profile containing each application.
 Use the staged order `base`, then `terminal` or `developer`, then only the domain profile you
-need. Every profile is selection only: optional applications still require `--only` or
-`--include-optional`, and third-party sources still require per-ID `--trust`.
+need. Profiles only select applications; third-party sources still require per-ID `--trust`.
 
 ```sh
 # Start with an explicit, reviewable profile. Profiles select apps but never trust sources.
@@ -46,10 +45,17 @@ need. Every profile is selection only: optional applications still require `--on
 ./setup.sh --apps-only --profile base,terminal --skip btop
 
 # Apply only after reviewing the plan and approving its reported third-party IDs.
-./setup.sh --apps-only --profile desktop --trust flameshot,ghostwriter,drawio --apply
+./setup.sh --apps-only --only notion,zed,bruno --trust notion,zed,bruno --apply
 
 # Individual IDs can refine a profile; --skip always wins.
-./setup.sh --apps-only --profile developer --only lazygit --skip gh
+./setup.sh --apps-only --profile developer --only git --skip gh
+```
+
+The `desktop` profile includes Notion, Zed, and Bruno; `developer` also includes Zed and Bruno.
+To preview only these additions without deploying the rest of the theme:
+
+```sh
+./setup.sh --apps-only --only notion,zed,bruno --trust notion,zed,bruno --format json
 ```
 
 A preview can run on this Mac; `--apply` requires Aurora and a non-root user. Read-only package
@@ -82,6 +88,9 @@ Keep the default text preview for interactive use. To attach a deterministic rev
 
 `--apply-plan` is an application mode. It accepts no additional selection or approval flags, checks the artifact schema, catalog digest, and canonical selection intent, then re-plans under the existing setup lock before mutation. The artifact records actions and preflight facts for review, but is never executed directly. A catalog edit invalidates it; mutable package and file state are checked again during the locked re-plan. Plan files are created only at an explicitly requested new path and can include local conflict metadata.
 
+Regenerate saved plans after a schema change. The catalog no longer has an optional selection
+tier; use profiles, `--only`, and `--skip` to choose applications.
+
 Third-party taps, registries, vendor artifacts, and catalog-marked Flatpaks need explicit source approval. Approval is per application and per invocation:
 
 ```sh
@@ -93,10 +102,7 @@ For the full catalog, omit `--only` and approve each reported third-party ID wit
 
 ```sh
 ./setup.sh --skip docker-engine
-./setup.sh --apps-only --only mkcert --apply
 ```
-
-`mkcert` is otherwise excluded unless `--include-optional` is passed. Installing its executable does **not** run `mkcert -install` or alter certificate trust.
 
 ### Theme and existing machines
 
@@ -113,9 +119,8 @@ For the full catalog, omit `--only` and approve each reported third-party ID wit
 Appearance files use the local Mac palette and wallpaper, with Linux-specific adaptations:
 
 - KDE colors and wallpaper; Kitty and JetBrainsMono Nerd Font settings.
-- Starship, Micro, Bat, btop, Yazi, Zellij, Lazygit, Lazydocker, Atuin, Posting, and Fastfetch.
-- Kiro editor and terminal colors; lnav, Trippy, Chawan, E1s, Claws, and Eilmeldung.
-- Cfait's supported built-in Dracula theme and Leaf's Micro editor handoff. Apps without a custom palette inherit terminal colors where supported; this does not claim to recolor every Flatpak or web interface.
+- Starship, Micro, Bat, btop, Yazi, Lazydocker, and Fastfetch.
+- Kiro editor and terminal colors, plus Trippy. Apps without a custom palette inherit terminal colors where supported; this does not claim to recolor every Flatpak or web interface.
 
 Missing files are installed; identical files are left unchanged. Different existing files are **preserved**, including on repeat runs. Symlink destinations and symlink ancestors are protected, even with replacement consent. No configuration merge is attempted.
 
@@ -144,9 +149,27 @@ If preserving an existing `.zshrc`, add this line yourself after reviewing the f
 source "$HOME/.config/vixygrey/setup.zsh"
 ```
 
-Start Zsh to use it. The setup does not call `chsh`. Shell integration includes stable Linuxbrew and user tool paths, the themed prompt, FZF colors, Atuin, direnv, mise, the Zsh plugins, and Granted's interactive `assume` alias. Interactive hooks require an actual terminal. Existing direnv/mise trust checks remain in force; nothing authorizes project scripts automatically.
+Start Zsh to use it. The setup does not call `chsh`. Shell integration includes stable Linuxbrew and user tool paths, the themed prompt, direnv, mise, the Zsh plugins, and Granted's interactive `assume` alias. Interactive hooks require an actual terminal. Existing direnv/mise trust checks remain in force; nothing authorizes project scripts automatically.
 
-Atuin cloud sync is disabled in the shipped config. An existing conflicting Atuin config is preserved, so its existing settings still govern behavior.
+Command aliases are enabled only in interactive Zsh shells with no `AI_AGENT` marker, and only
+when the target executable is available:
+
+| Command | Runs                           |
+| ------- | ------------------------------ |
+| `cat`   | `bat --paging=never`           |
+| `ls`    | `eza --icons`                  |
+| `ll`    | `eza -la --icons --git`        |
+| `la`    | `eza -a --icons`               |
+| `lt`    | `eza --tree --icons --level=3` |
+| `top`   | `btop`                         |
+| `dl`    | `aria2c`                       |
+| `y`     | `yazi`                         |
+| `ping`  | `gping`                        |
+| `dig`   | `doggo`                        |
+
+`ps`, `df`, `find`, and `grep` are not replaced. Use `rg`, `fd`, `ouch`, `rsync`, and `rclone`
+directly. Procs and duf are not included in the catalog. These aliases do not affect scripts or
+agent shells, and removing catalog entries does not uninstall tools already on a machine.
 
 ## Package behavior and important constraints
 
@@ -156,24 +179,27 @@ The complete source of truth is [`catalog/core.json`](catalog/core.json),
 the Mac Brewfile, installed configuration, existing Mac setup implementation, and upstream Linux
 documentation.
 
-| Route                 | Behavior                                                                                                                                                                                                                               |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Homebrew              | CLI formulas, never casks. Existing formulas are skipped. Missing manager prerequisites are planned explicitly. No automatic global upgrade or cleanup.                                                                                |
-| Flatpak               | Missing apps install per user from Flathub. An existing system installation is left in place. A conflicting user `flathub` URL blocks installation. LibreOffice/`soffice`, mpv, and VLC receive conflict-preserving CLI wrappers.      |
-| Vendor archives       | Versioned HTTPS downloads with catalog SHA256 checks. Payloads stay in versioned user directories, with executable wrappers and GUI launchers. No archive install hooks, device nodes, escaping paths, escaping links, or setuid bits. |
-| Go                    | Exact module versions, built into temporary staging before conflict-safe executable deployment. Clipse uses the Wayland build and `wl-clipboard`; no clipboard listener starts automatically.                                          |
-| uv / npm              | Exact top-level package versions in user-owned locations. Cheznav requests Python 3.14 through uv. Python tools may download a compatible managed interpreter.                                                                         |
-| Cfait source fallback | aarch64 uses Cargo with the upstream lockfile and a user-local build toolchain. Missing native C headers block preflight; no host layering is attempted.                                                                               |
-| `yaml-py`             | A private uv environment containing PyYAML, exposed as a Python interpreter command, matching the Mac helper rather than substituting a different YAML CLI.                                                                            |
+| Route           | Behavior                                                                                                                                                                                                                               |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Homebrew        | CLI formulas, never casks. Existing formulas are skipped. Missing manager prerequisites are planned explicitly. No automatic global upgrade or cleanup.                                                                                |
+| Flatpak         | Missing apps install per user from Flathub. An existing system installation is left in place. A conflicting user `flathub` URL blocks installation. LibreOffice/`soffice` and VLC receive conflict-preserving CLI wrappers.            |
+| Vendor archives | Versioned HTTPS downloads with catalog SHA256 checks. Payloads stay in versioned user directories, with executable wrappers and GUI launchers. No archive install hooks, device nodes, escaping paths, escaping links, or setuid bits. |
+| uv / npm        | Exact top-level package versions in user-owned locations. Cheznav requests Python 3.14 through uv. Python tools may download a compatible managed interpreter.                                                                         |
+| `yaml-py`       | A private uv environment containing PyYAML, exposed as a Python interpreter command, matching the Mac helper rather than substituting a different YAML CLI.                                                                            |
+| Web app         | Installs a menu launcher for the official HTTPS app in the configured default browser. Requires `xdg-open`; no unofficial native wrapper, browser profile changes, or automatic sign-in.                                               |
 
 ### Special applications
 
 - **llama.cpp:** the pinned upstream Vulkan bundle is used, not a CPU-only Homebrew substitute. Installation must detect a Vulkan device with `llama-cli --list-devices`. A working host Vulkan driver and compatible runtime libraries are required. No model downloads or server services are configured.
 - **Kiro:** the official portable Linux bundle is installed user-locally. It needs the host's normal Electron desktop libraries and unprivileged user namespaces. The setup never adds `--no-sandbox`, sets a root-owned sandbox helper, or disables OS security policy.
 - **AWS Session Manager Plugin:** the official versioned Debian payload is unpacked into a private application directory. No Debian maintainer scripts run and nothing is written to host `/usr` or `/etc`.
-- **Granted / AWS / ngrok / Bitwarden / OMP:** credentials, accounts, tokens, profiles, and login flows remain yours to configure. No credentials are imported from the Mac.
-- **Borg / borgmatic:** the tools are installed, but no repositories, remote destinations, passphrases, pruning policy, backup jobs, or timers are invented.
-- **Clipse / network diagnostics / Caligula:** no background clipboard capture, uinput permissions, network capabilities, or disk writes are enabled by setup. Privileged runtime actions remain explicit user decisions.
+- **DBeaver Community:** the desktop profile selects the publisher-listed Flathub package, with explicit `--trust dbeaver` approval. It replaces Harlequin, usql, and the standalone DuckDB CLI for graphical work. Configure a DuckDB connection and download its JDBC driver inside DBeaver. Dataset access may require Flatpak permissions, especially on additional drives. The retired command-line clients are not available to scripts or OMP through this setup.
+- **Notion:** the application-menu entry opens its [official web app](https://www.notion.com/help/notion-for-web) in your default browser. Notion does not provide a native Linux desktop download. Internet access, a supported browser, and your own sign-in are required; this is not an offline desktop client.
+- **Zed:** official versioned tarballs for both supported architectures are deployed user-locally, with `zed` and an application-menu entry. No downloaded installer script runs. A working Vulkan driver, desktop portals, and the host's normal Linux libraries remain prerequisites. This native route lets Zed use host development tools without a Flatpak sandbox.
+- **Bruno:** official versioned Debian payloads for both architectures are extracted user-locally, without maintainer scripts or host writes. The publisher-documented Flatpak is x86_64-only, so it is not used here. The native application requires compatible host Electron libraries and unprivileged user namespaces for Chromium sandboxing; the setup never adds `--no-sandbox`. Accounts, collections, environments, and credentials are not imported. The separate Bruno CLI is not installed.
+- **Granted / AWS / Bitwarden / OMP:** credentials, accounts, tokens, profiles, and login flows remain yours to configure. No credentials are imported from the Mac.
+- **Backups:** backup software and policy are outside this setup. Choose destinations, encryption, credentials, retention, and scheduling separately, then validate restoration using the machine commissioning runbook.
+- **Network diagnostics / Caligula:** no uinput permissions, network capabilities, or disk writes are enabled by setup. Privileged runtime actions remain explicit user decisions.
 
 ### Repeated runs, changes, and failure
 
@@ -218,7 +244,7 @@ For every catalog refresh:
 5. Run `./setup.sh --validate-catalog` and `./scripts/verify`, then preview the changed selection
    before any explicit `--apply`.
 
-Do not put cloud credentials, SSH keys, Bitwarden exports, shell history, Atuin databases, browser profiles, rclone remotes, backup secrets, or generated state in this repository.
+Do not put cloud credentials, SSH keys, Bitwarden exports, shell history, browser profiles, rclone remotes, backup secrets, or generated state in this repository.
 
 ## Verification
 
@@ -234,6 +260,13 @@ This canonical check requires Node 24.18.1, uv 0.13.1, Go 1.26+, Python 3.11+, Z
 
 The safety suite covers preservation, backups, symlink/traversal rejection, executable modes, archive links and setuid stripping, font filtering, Debian-container boundaries, invalid selections, source approval, and canonical home aliases.
 
-During development on the reference Mac, isolated smoke runs exercised actual theme deployment and repeat planning; Bat, Starship, lnav, Fastfetch, interactive Zsh, and the btop TUI; PyYAML installation and parsing; staged Clipse compilation; and checksum-verified AWS, Eilmeldung, Kitty, OMP, Nerd Font, and Kiro payload installation without executing the Linux binaries. A live local HTTPS fixture also verified executable deployment under a home path containing spaces and rejection of a changed download before any home writes.
+During development on the reference Mac, isolated smoke runs exercised actual theme deployment and repeat planning; Bat, Starship, lnav, Fastfetch, interactive Zsh, and the btop TUI; PyYAML installation and parsing; and checksum-verified AWS, Eilmeldung, Kitty, OMP, Nerd Font, and Kiro payload installation without executing the Linux binaries. A live local HTTPS fixture also verified executable deployment under a home path containing spaces and rejection of a changed download before any home writes. These historical checks do not establish current catalog support for removed applications.
+
+The Notion/Zed/Bruno additions were smoke-checked with both architecture previews and explicit
+source approval. Notion launcher provisioning and its URL handoff were exercised with an isolated
+browser handler. Both official Zed tarballs and Bruno Debian payloads passed checksum verification
+and deployment through a local HTTPS fixture, including relocated launchers/icons, receipt checks,
+repeat planning, and preservation of an existing command, under home paths containing spaces and
+percent signs. These checks did not execute Linux binaries or validate Aurora's application menu.
 
 **The full application install, Linux binary execution, Vulkan device detection, and KDE desktop activation have not been run on an Aurora target.** A local Docker daemon was unavailable. Validate the plan on the intended machine before approving an apply run, and validate the desktop there before treating its appearance as verified.

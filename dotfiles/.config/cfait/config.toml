@@ -1,9 +1,0 @@
-default_calendar = "local://default"
-enable_local_mode = true
-hide_completed = true
-strikethrough_completed = true
-show_inline_descriptions = true
-theme = "Dracula"
-description_editor = "micro"
-first_day_of_week = "monday"
-log_level = "Error"

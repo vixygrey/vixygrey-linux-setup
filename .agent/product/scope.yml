@@ -1,8 +1,11 @@
 core_value: Safe, preview-first provisioning of a personal Aurora Linux environment.
 summary: >
-  Vixygrey Linux Setup installs a curated catalog of user-level tools and deploys Dracula-Sakura
-  configuration without overwriting existing user files by default. The project prioritizes explicit
-  source approval, deterministic planning, and conflict preservation over unattended setup.
+  Vixygrey Linux Setup provisions a graphical Aurora Linux workstation with selected useful CLI
+  and TUI tools and deploys Dracula-Sakura configuration without overwriting existing user files
+  by default. The project prioritizes explicit source approval, deterministic planning, and
+  conflict preservation over unattended setup. Notion uses its official web app; Zed and Bruno
+  use pinned upstream Linux payloads. OMP remains the primary AI development tool alongside
+  Kiro and Zed.
 in_scope:
   - Catalog-controlled user-level application installation for Aurora Linux.
   - Conflict-preserving deployment of managed dotfiles and theme assets.

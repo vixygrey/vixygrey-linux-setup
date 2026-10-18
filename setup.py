@@ -14,6 +14,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from urllib.parse import urlsplit
 
 sys.dont_write_bytecode = True
 
@@ -28,12 +29,11 @@ METHODS = {
     "flatpak",
     "npm",
     "uv",
-    "go",
-    "cargo",
     "archive",
     "font",
     "python-helper",
     "system",
+    "web",
 }
 FLATHUB = "https://dl.flathub.org/repo/"
 PROFILE_PATH = ROOT / "profiles.json"
@@ -46,7 +46,7 @@ def profiles(entries: list[dict]) -> dict[str, list[str]]:
         raise SafetyError(f"Cannot read profiles: {error}") from None
     if not isinstance(values, dict) or not values:
         raise SafetyError("Profiles must be a non-empty object")
-    identifiers = {entry["id"]: entry for entry in entries}
+    identifiers = {entry["id"] for entry in entries}
     aliases = {
         name.lower().strip(): entry["id"]
         for entry in entries
@@ -69,8 +69,6 @@ def profiles(entries: list[dict]) -> dict[str, list[str]]:
                         f"{name}: profile members must use canonical IDs: {identifier}"
                     )
                 raise SafetyError(f"{name}: unknown profile member: {identifier}")
-            if identifiers[identifier].get("optional"):
-                raise SafetyError(f"{name}: optional app requires explicit --only: {identifier}")
     return values
 
 
@@ -98,8 +96,6 @@ def catalog() -> list[dict]:
     profiles(entries)
     seen = set()
     for entry in entries:
-        if entry["method"] == "cargo" and archives.machine_arch() in entry.get("artifacts", {}):
-            entry["method"] = "archive"
         identifier = entry["id"]
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", identifier) or identifier in seen:
             raise SafetyError(f"Duplicate or invalid catalog ID: {identifier}")
@@ -109,7 +105,7 @@ def catalog() -> list[dict]:
         package = entry["package"]
         if not package or package.startswith("-") or any(c.isspace() for c in package):
             raise SafetyError(f"Invalid package: {identifier}")
-        if entry["method"] in {"npm", "uv", "go", "cargo", "archive", "font", "python-helper"}:
+        if entry["method"] in {"npm", "uv", "archive", "font", "python-helper"}:
             if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.+_-]*", entry.get("version", "")):
                 raise SafetyError(f"An exact version is required: {identifier}")
         if entry["method"] in {"archive", "font"} or "artifacts" in entry:
@@ -141,7 +137,7 @@ def validate_catalog(entries: list[dict]) -> None:
     aliases = {}
     commands = {architecture: set() for architecture in ("x86_64", "aarch64")}
     required = {"id", "name", "method", "package", "source", "notes", "third_party"}
-    versioned = {"npm", "uv", "go", "cargo", "archive", "font", "python-helper"}
+    versioned = {"npm", "uv", "archive", "font", "python-helper"}
     for entry in entries:
         identifier = entry.get("id", "")
         missing = required - entry.keys()
@@ -151,6 +147,17 @@ def validate_catalog(entries: list[dict]) -> None:
             raise SafetyError(f"{identifier}: source must use HTTPS")
         if entry["method"] not in METHODS:
             raise SafetyError(f"{identifier}: unsupported method")
+        if entry["method"] == "web":
+            url = urlsplit(entry["package"])
+            if (
+                url.scheme != "https"
+                or not url.hostname
+                or any(character.isspace() for character in entry["package"])
+                or any(ord(character) < 32 for character in entry["name"])
+            ):
+                raise SafetyError(
+                    f"{identifier}: web app requires an HTTPS URL and single-line name"
+                )
         if entry["method"] in versioned and not re.fullmatch(
             r"[A-Za-z0-9][A-Za-z0-9.+_-]*", entry.get("version", "")
         ):
@@ -200,7 +207,7 @@ def tokens(values) -> set[str]:
     return {token.strip() for value in values for token in value.split(",") if token.strip()}
 
 
-PLAN_SCHEMA_VERSION = 2
+PLAN_SCHEMA_VERSION = 3
 
 
 def catalog_digest() -> str:
@@ -216,7 +223,6 @@ def intent(args) -> dict:
     return {
         "apps_only": args.apps_only,
         "desktop": args.desktop,
-        "include_optional": args.include_optional,
         "only": sorted(set(args.only)),
         "profiles": sorted(set(args.profile)),
         "replace": sorted({str(relative_path(value)) for value in args.replace}),
@@ -233,9 +239,7 @@ def select(entries: list[dict], value: dict, profile_ids: set[str]) -> list[dict
     return [
         entry
         for entry in entries
-        if (not requested or entry["id"] in requested)
-        and entry["id"] not in value["skip"]
-        and (not entry.get("optional") or value["include_optional"] or entry["id"] in requested)
+        if (not requested or entry["id"] in requested) and entry["id"] not in value["skip"]
     ]
 
 
@@ -330,7 +334,6 @@ def load_plan(path: str) -> dict:
     fields = {
         "apps_only",
         "desktop",
-        "include_optional",
         "only",
         "profiles",
         "replace",
@@ -349,7 +352,7 @@ def load_plan(path: str) -> dict:
     for name in fields:
         expected = (
             isinstance(value[name], bool)
-            if name in {"apps_only", "desktop", "include_optional", "theme_only"}
+            if name in {"apps_only", "desktop", "theme_only"}
             else isinstance(value[name], list)
             and value[name] == sorted(set(value[name]))
             and all(isinstance(item, str) for item in value[name])
@@ -372,7 +375,6 @@ class Setup:
         paths = [
             f"{home}/.local/bin",
             f"{home}/.local/share/vixygrey/npm/bin",
-            f"{home}/.cargo/bin",
             "/home/linuxbrew/.linuxbrew/bin",
             "/home/linuxbrew/.linuxbrew/sbin",
         ]
@@ -381,8 +383,6 @@ class Setup:
             HOMEBREW_NO_AUTO_UPDATE="1",
             HOMEBREW_NO_ANALYTICS="1",
             UV_TOOL_BIN_DIR=f"{home}/.local/bin",
-            GOBIN=f"{home}/.local/bin",
-            CARGO_HOME=f"{home}/.cargo",
             npm_config_update_notifier="false",
         )
         self.steps: list[tuple[str, object]] = []
@@ -442,6 +442,11 @@ class Setup:
 
     def is_installed(self, entry: dict) -> bool:
         method, package = entry["method"], entry["package"]
+        if method == "web":
+            return bool(self.executable("xdg-open")) and all(
+                self.files.status(name, data, mode) == "unchanged"
+                for name, data, mode in launchers(entry, self.files.home)
+            )
         if method == "system":
             docker = Path("/usr/bin/docker")
             if (
@@ -489,24 +494,6 @@ class Setup:
                 self.manager_packages[method] = result.stdout.splitlines()
             base = package.split("[")[0].lower().replace("_", "-")
             return f"{base} v{entry['version']}" in self.manager_packages[method]
-        if method == "cargo" and self.executable("cargo"):
-            if method not in self.manager_packages:
-                result = self.run(["cargo", "install", "--list"], capture=True)
-                if result.returncode:
-                    raise SafetyError("Cannot inspect Cargo installations")
-                self.manager_packages[method] = result.stdout.splitlines()
-            return f"{package} v{entry['version']}:" in self.manager_packages[method]
-        if method == "go" and self.executable("go"):
-            binary = self.files.target(".local/bin/" + package.rsplit("/", 1)[-1])
-            if not binary.is_file():
-                return False
-            result = self.run(["go", "version", "-m", str(binary)], capture=True)
-            version = entry["version"]
-            version = version if version.startswith("v") else "v" + version
-            return result.returncode == 0 and any(
-                line.split()[:3] == ["mod", entry.get("module", package.split("/cmd/")[0]), version]
-                for line in result.stdout.splitlines()
-            )
         return False
 
     def helper_paths(self, entry: dict):
@@ -576,9 +563,8 @@ class Setup:
             "flatpak": "flatpak",
             "npm": "npm",
             "uv": "uv",
-            "go": "go",
-            "cargo": "cargo",
             "python-helper": "uv",
+            "web": "xdg-open",
         }
         if method in managers and not self.executable(managers[method]):
             return {"id": identifier, "method": method, "state": "blocked"}
@@ -693,8 +679,6 @@ class Setup:
             return
         if method in {"archive", "font"}:
             archives.artifact_for(entry)
-        for command, formula in entry.get("runtime", {}).items():
-            self.manager(command, formula)
         if self.is_installed(entry):
             print(f"INSTALLED {identifier}")
             return
@@ -708,6 +692,12 @@ class Setup:
             self.blocks.append(
                 f"{identifier}: review {entry['source']} and explicitly --trust {identifier}"
             )
+        if method == "web":
+            if not self.executable("xdg-open"):
+                self.blocks.append(
+                    f"{identifier}: xdg-open is missing; configure a desktop browser"
+                )
+            return
         if method == "brew" and not self.executable("brew"):
             self.blocks.append(
                 f"{identifier}: Homebrew is missing; this tool never downloads and executes its installer"
@@ -737,26 +727,6 @@ class Setup:
             self.manager("npm", "node")
         if method in {"uv", "python-helper"}:
             self.manager("uv", "uv")
-        if method == "go":
-            self.manager("go", "go")
-        if method == "cargo":
-            self.manager("cargo", "rust")
-            for formula in ("llvm", "cmake", "ninja", "pkgconf"):
-                self.dependency(formula)
-            if sys.platform == "linux" and not Path("/usr/include/stdlib.h").is_file():
-                self.blocks.append(
-                    f"{identifier}: source build requires C development headers; use an Aurora DX development environment with headers, not host dnf layering"
-                )
-        if method == "go":
-            name = ".local/bin/" + package.rsplit("/", 1)[-1]
-            try:
-                target = self.files.target(name)
-                if target.exists() and name not in self.files.replacements:
-                    self.blocks.append(
-                        f"{identifier}: {name} exists; explicitly --replace it after review"
-                    )
-            except SafetyError as error:
-                self.blocks.append(str(error))
         if method == "python-helper":
             relative, base, marker, command, wrapper = self.helper_paths(entry)
             if base.exists() and (
@@ -860,51 +830,6 @@ class Setup:
             if entry.get("python"):
                 argv.extend(["--python", entry["python"]])
             self.command([*argv, f"{package}=={version}"])
-        elif method == "go":
-            version = version if version.startswith("v") else "v" + version
-            import tempfile
-
-            with tempfile.TemporaryDirectory(prefix="vixygrey-go-") as temporary:
-                previous = {key: self.env.get(key) for key in ("GOBIN", "CGO_ENABLED")}
-                try:
-                    self.env["GOBIN"] = temporary
-                    if "cgo" in entry:
-                        self.env["CGO_ENABLED"] = "1" if entry["cgo"] else "0"
-                    tags = (
-                        ["-tags", ",".join(entry["build_tags"])] if entry.get("build_tags") else []
-                    )
-                    self.command(["go", "install", *tags, f"{package}@{version}"])
-                finally:
-                    for key, value in previous.items():
-                        if value is None:
-                            self.env.pop(key, None)
-                        else:
-                            self.env[key] = value
-                name = package.rsplit("/", 1)[-1]
-                status = self.files.put(
-                    f".local/bin/{name}", (Path(temporary) / name).read_bytes(), 0o755
-                )
-                if status in {"preserve", "protected"}:
-                    raise SafetyError(f"Command conflict preserved: {name}")
-        elif method == "cargo":
-            result = self.run(["brew", "--prefix", "llvm"], capture=True)
-            if result.returncode:
-                raise SafetyError("Cannot locate the managed C toolchain")
-            compiler = Path(result.stdout.strip()) / "bin"
-            previous = {key: self.env.get(key) for key in ("CC", "CXX", "CMAKE_GENERATOR")}
-            try:
-                self.env.update(
-                    CC=str(compiler / "clang"),
-                    CXX=str(compiler / "clang++"),
-                    CMAKE_GENERATOR="Ninja",
-                )
-                self.command(["cargo", "install", "--locked", "--version", version, package])
-            finally:
-                for key, value in previous.items():
-                    if value is None:
-                        self.env.pop(key, None)
-                    else:
-                        self.env[key] = value
         elif method == "python-helper":
             relative, base, marker, command, wrapper = self.helper_paths(entry)
             self.files.directory(relative)
@@ -1085,9 +1010,6 @@ def main(argv=None) -> int:
         metavar="ID[,ID]",
         help="Approve the named third-party sources for this run",
     )
-    parser.add_argument(
-        "--include-optional", action="store_true", help="Include tentative requests such as mkcert"
-    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--apps-only", action="store_true")
     group.add_argument("--theme-only", action="store_true")
@@ -1118,7 +1040,6 @@ def main(argv=None) -> int:
                 args.profile,
                 args.skip,
                 args.trust,
-                args.include_optional,
                 args.apps_only,
                 args.theme_only,
                 args.replace,
@@ -1139,7 +1060,6 @@ def main(argv=None) -> int:
             args.only,
             args.skip,
             args.trust,
-            args.include_optional,
             args.profile,
             args.apps_only,
             args.theme_only,
@@ -1173,7 +1093,6 @@ def main(argv=None) -> int:
             args.skip,
             args.profile,
             args.trust,
-            args.include_optional,
             args.apps_only,
             args.theme_only,
             args.replace,
@@ -1197,9 +1116,7 @@ def main(argv=None) -> int:
         parser.error("--profile requires at least one profile")
     if args.desktop and args.apps_only:
         parser.error("--desktop cannot be used with --apps-only")
-    if args.theme_only and (
-        args.only or args.profile or args.skip or args.trust or args.include_optional
-    ):
+    if args.theme_only and (args.only or args.profile or args.skip or args.trust):
         parser.error("Application selection flags cannot be used with --theme-only")
     entries = catalog()
     profile_map = profiles(entries)
@@ -1232,7 +1149,7 @@ def main(argv=None) -> int:
                 else ""
             )
             print(
-                f"{entry['id']} [{entry['method']}{'; optional' if entry.get('optional') else ''}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
+                f"{entry['id']} [{entry['method']}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
             )
         return 0
     setup = Setup(args)

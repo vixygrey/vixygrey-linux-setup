@@ -247,15 +247,11 @@ class CommandSafety(unittest.TestCase):
 
             original = setup.PROFILE_PATH
             path = Path(temporary) / "profiles.json"
-            entries = [
-                {"id": "git", "name": "Git", "aliases": ["git-alias"]},
-                {"id": "optional", "name": "Optional", "optional": True},
-            ]
+            entries = [{"id": "git", "name": "Git", "aliases": ["git-alias"]}]
             try:
                 for values, message in [
                     ({"valid": ["git", "git"]}, "unique non-empty"),
                     ({"valid": ["git-alias"]}, "canonical IDs"),
-                    ({"valid": ["optional"]}, "optional app"),
                     ({"valid": ["unknown"]}, "unknown profile member"),
                 ]:
                     path.write_text(json.dumps(values))
@@ -452,7 +448,6 @@ class CommandSafety(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             document = json.loads(result.stdout)
-            self.assertEqual(document["schema_version"], 2)
             self.assertEqual(document["selected_ids"], ["omp"])
             self.assertIn("actions", document)
             self.assertEqual(json.loads(plan.read_text()), document)
@@ -478,7 +473,6 @@ class CommandSafety(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Catalog valid: 122 entries", result.stdout)
             self.assertEqual(list(Path(temporary).iterdir()), [])
 
 

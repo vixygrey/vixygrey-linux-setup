@@ -69,19 +69,18 @@ Do not make a path a repository default merely because it suits one machine.
 
 ## 4. Backup and restore
 
-`borg` and `borgmatic` in the catalog install tools only. They do not create repositories, configure
-credentials, write retention policy, enable timers, or run backups.
+Backup software is not installed or configured by this setup. Choose it separately; the installer
+does not configure credentials, write retention policy, enable timers, or run backups.
 
 Before relying on a machine:
 
-1. Choose an encrypted external or remote Borg repository outside the machine's internal storage.
+1. Choose an encrypted external or remote backup destination outside the machine's internal storage.
 2. Record privately which data is included, which reproducible caches are excluded, the retention
    policy, and where passphrases and recovery material are stored.
 3. Perform and record a restore drill for one representative configuration file and one workspace
    file. A completed backup job without a restore drill is not sufficient evidence.
 
-Keep the Borg repository address, credentials, passphrases, and restore evidence out of this
-repository.
+Keep backup destination details, credentials, passphrases, and restore evidence out of this repository.
 
 ## 5. Aurora and developer prerequisites
 
