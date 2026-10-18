@@ -229,3 +229,15 @@ tasks:
     limitations: Apply smoke used a recording Flatpak executable and overridden host eligibility; actual Aurora installation, sign-in, and GUI operation remain unverified.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 43 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  deployment-receipt-identity:
+    status: done
+    updated_at: 2026-10-18
+    issue: https://github.com/vixygrey/vixygrey-linux-setup/issues/34
+    scope: Version archive and font deployment identity; exclude descriptive metadata and migrate compatible legacy receipts only during explicit locked apply.
+    verification:
+      - "Failing-before font regression downloaded twice after notes changed; repaired cache recovery downloads only once."
+      - "CLI smoke verified read-only migration preview, guarded receipt-only replacement with private backup, an unchanged runnable wrapper, and metadata-only apply without downloads."
+      - "Font smoke preserved retired provenance and pending cache failure across legacy migration, then recovered after a notes edit without another download."
+    limitations: Smoke used local artifact response and cache executable fixtures with host eligibility overridden; real vendor installations and Aurora GUI behavior remain unverified.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 60 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."

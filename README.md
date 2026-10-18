@@ -231,6 +231,37 @@ Exit codes:
 | 3    | Existing configuration or launcher conflicts were intentionally preserved      |
 | 130  | Interrupted; completed changes remain                                          |
 
+### Receipt identity and migration
+
+Archive and font receipts use deployment identity version 1 (`spec_version: 1`). Their `spec`
+digest covers the application ID, method, version, selected artifact URL and checksum, and the
+route's deployment parameters. Archive identity also covers the selected architecture, effective
+extraction format, raw destination filename when applicable, and effective command mapping.
+Defaults and relative paths are normalized to match deployment semantics. Fonts use the shared
+ZIP layout without an architecture-specific identity.
+
+Notes, display names, aliases, human-facing source documentation, approval classification, and
+inactive-architecture artifact edits do not invalidate a versioned receipt. Deployed-file hashes
+and executable permissions are still checked. Required downloads still need the same source
+approval; receipt identity does not grant new trust or replacement permission. GUI launchers
+remain subject to their independent planning and conflict safeguards.
+
+Legacy receipts hash the whole catalog entry. If that hash still matches the current entry and
+the artifact checksum and deployed files are intact, preview reports a `receipt-migrate` action.
+Status and preview never migrate receipts. Explicit apply revalidates under the setup lock and
+replaces only the receipt, with a private backup and no payload download or rewrite. Font retired
+provenance and pending cache work are preserved; pending cache work follows migration as a
+separate cache-only action.
+
+If the legacy hash already mismatches, the receipt stays stale and may need one final approved
+refresh. Its opaque hash cannot prove that only documentation changed. The installer does not
+accept it solely because the old artifact and recorded files still match, since a new command
+mapping could require a wrapper that is not present. Unsupported identity versions and malformed
+or protected receipts fail closed.
+
+Saved review plans still use the strict whole-catalog digest. A catalog edit can invalidate a
+saved plan even when it no longer invalidates an intact application installation.
+
 ### Font upgrades and recovery
 
 Fonts stay in `~/.local/share/fonts/JetBrainsMonoNerd`; existing installations do not need a
