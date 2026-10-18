@@ -129,6 +129,30 @@ Appearance files use the local Mac palette, with Linux-specific adaptations. You
 
 Missing files are installed; identical files are left unchanged. Different existing files are **preserved**, including on repeat runs. Symlink destinations and symlink ancestors are protected, even with replacement consent. No configuration merge is attempted.
 
+Inspect an exact managed configuration path before deciding whether to replace it:
+
+```sh
+./setup.sh --theme-only --diff .config/kitty/kitty.conf
+./setup.sh --theme-only --diff .zshrc --diff .config/starship.toml
+```
+
+`--diff` is a dedicated read-only comparison mode. It supports selected managed dotfiles and
+generated launchers, not arbitrary home files, receipts, or downloaded application payloads.
+It does not query package managers, download, lock, migrate receipts, back up, or write files.
+Repeated paths are shown once. A successful comparison, including ordinary differences, exits
+0; invalid or unsuitable requests exit 2 without printing a partial diff.
+
+Only printable UTF-8 text and newline characters are eligible. Binary data, invalid UTF-8,
+other control characters (including tabs and carriage returns), symlinks, and nonstandard XDG
+locations are refused. Each current or desired file is limited to 64 KiB, and the complete output
+is limited to 256 KiB. Every requested path is validated before content is printed.
+
+**Explicit diff output can contain personal secrets.** Review it before sharing or redirecting
+it; there is no automatic redaction. Normal preview, status, JSON, and saved-plan artifacts stay
+content-free. Diff mode cannot be combined with apply, saved-plan application/output, JSON,
+status/doctor reports, listing/catalog validation, desktop activation, or replacement consent.
+A comparison never approves replacement; use a separate explicit `--replace` invocation below.
+
 To replace one particular regular file after reviewing it, use its exact path relative to your home:
 
 ```sh
@@ -339,6 +363,19 @@ export PATH="$(go env GOPATH)/bin:$PATH"
 ```
 
 This canonical check requires Node 24.18.1, uv 0.13.1, Go 1.26+, Python 3.11+, Zsh, and ShellCheck. Run `npm ci` and `uv sync --locked --group dev` after cloning or changing their lockfiles. Node, Prettier, uv, Ruff, Go, and shfmt are development-only tooling; the installer runtime remains Python standard library. The check validates Prettier, Ruff, and explicitly-dialected Bash/Zsh shfmt formatting; runs the safety suite; validates the catalog with `--list`; checks managed shell files; and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools. `scripts/format-shell --check` verifies `setup.sh`, the repository Bash helper scripts, and the two managed Zsh files; `--write` is the opt-in normalization command. It uses two-space indentation and does not enable shfmt simplification.
+
+The same gate also runs Ruff correctness linting with the explicit `E9` and `F` rule families.
+Linting does not enable auto-fixes, import sorting, or broader modernization rules. Its scope is
+the installer modules, the development palette validator, and tests, matching Python formatting.
+
+`python3 -B scripts/validate-palette.py` checks the explicit managed theme inventory against
+`theme/palette.json`, including required roles, Starship's palette, ANSI assignments, encoded
+KDE/Trippy colors, and theme-name references. `--root PATH` supports isolated fixture copies for
+validation. Application files remain explicit, with no generated colors or runtime palette
+dependency. Existing app-specific line highlights and active line-number choices are preserved;
+pure white is allowed only in Kitty and Kiro's ANSI bright-white slots. The shell's custom Bat
+default is checked, but upstream Vivid/LS_COLORS behavior is outside this palette contract.
+These static checks do not prove application rendering, contrast, or KDE activation.
 
 The safety suite covers preservation, backups, symlink/traversal rejection, executable modes, archive links and setuid stripping, font filtering and staged upgrades, exact-path font replacement, retirement provenance, cache-only recovery, Debian-container boundaries, invalid selections, source approval, and canonical home aliases. Font deployment tests use isolated homes with local ZIP fixtures and recording cache executables; they do not validate Linux fontconfig or actual rendering.
 

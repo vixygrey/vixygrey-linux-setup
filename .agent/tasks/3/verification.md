@@ -40,3 +40,7 @@
 
 The GitHub-hosted verification job must pass on this pull request and again after merge to `main`
 before issue 3 is complete.
+
+## Hosted verification resolution (2026-10-18)
+
+The pending hosted evidence above is resolved. [PR #9](https://github.com/vixygrey/vixygrey-linux-setup/pull/9) merged final head `c495c0a2753efce0b46ac951667339a928113922` as `5d148386ac861260d266c9471b1c2519be789be1` on `main`. Its [pull-request run](https://github.com/vixygrey/vixygrey-linux-setup/actions/runs/38997308323) (`pull_request`, final head) and [post-merge main run](https://github.com/vixygrey/vixygrey-linux-setup/actions/runs/38997472649) (`push`, merge commit) both concluded success; the respective [PR verify job](https://github.com/vixygrey/vixygrey-linux-setup/actions/runs/38997308323/job/117292573552) and [main verify job](https://github.com/vixygrey/vixygrey-linux-setup/actions/runs/38997472649/job/117293068934) each concluded success, including the `./scripts/verify` step. The earlier Act dry run remains limited: hosted success does not imply local Docker testing or Aurora, GUI, fontconfig, Vulkan, or KDE acceptance.

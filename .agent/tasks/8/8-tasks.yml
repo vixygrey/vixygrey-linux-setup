@@ -13,6 +13,6 @@ tasks:
     risk: P1
     verify: actionlint .github/workflows/test-build-release-python.yml
   - id: hosted-run
-    status: pending
+    status: done
     risk: P1
     verify: GitHub Actions verify job passes on the pull request and main
