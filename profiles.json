@@ -1,8 +1,18 @@
 {
   "ai": ["llama-cpp-vulkan"],
-  "base": ["micro", "bat", "eza", "git", "starship", "fzf", "ripgrep", "fd", "jq"],
-  "cloud": ["aws-cli", "granted", "aws-sam-cli", "cfn-lint", "s5cmd", "chamber"],
-  "desktop": ["flameshot", "ghostwriter", "libreoffice", "drawio", "obsidian", "bitwarden"],
+  "base": ["micro", "bat", "eza", "git", "starship", "ripgrep", "fd", "jq"],
+  "cloud": ["aws-cli", "granted", "aws-sam-cli", "cfn-lint", "chamber"],
+  "desktop": [
+    "flameshot",
+    "ghostwriter",
+    "libreoffice",
+    "drawio",
+    "bitwarden",
+    "dbeaver",
+    "notion",
+    "zed",
+    "bruno"
+  ],
   "developer": [
     "direnv",
     "mise",
@@ -13,10 +23,10 @@
     "shfmt",
     "pre-commit",
     "ast-grep",
-    "delta",
-    "difft",
-    "gh"
+    "gh",
+    "zed",
+    "bruno"
   ],
   "security": ["trivy", "semgrep", "gitleaks", "cosign", "checkov", "iamlive", "ssh-audit"],
-  "terminal": ["procs", "btop", "atuin", "zellij", "fastfetch", "vivid", "yazi", "ouch", "duf"]
+  "terminal": ["btop", "fastfetch", "vivid", "yazi", "ouch"]
 }
