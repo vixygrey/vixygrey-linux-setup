@@ -185,3 +185,24 @@ tasks:
     verify_command: ./scripts/verify
     limitations: Linux GUI execution, Vulkan rendering, desktop portals, Electron host libraries, and Aurora menu activation remain unexercised on this Mac.
     gate_result: "./scripts/verify passed all 26 safety tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  desktop-background-removal:
+    status: done
+    updated_at: 2026-10-18
+    scope: Remove the bundled desktop wallpaper and its deployment, activation, and doctor requirements; preserve all other custom themes.
+    verification:
+      - "Isolated deployment smoke: preview writes no theme files; apply deploys every retained dotfile and invokes only the recording KDE color command without wallpaper tooling."
+    limitations: Real KDE GUI activation remains unexercised on macOS.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 26 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  saved-profile-plan:
+    status: done
+    updated_at: 2026-10-18
+    issue: https://github.com/vixygrey/vixygrey-linux-setup/issues/36
+    scope: Restore saved profiles into the argparse profile destination without changing the saved-plan schema or eligibility and replanning safeguards.
+    verification:
+      - "Regression failed before the fix with a selection-intent mismatch; passed after the fix and deployed only the selected Notion launcher."
+      - "Subprocess smoke saved and applied a base-profile plan through locked replanning with an isolated Homebrew fixture; all eight reviewed IDs retained and plan bytes unchanged."
+      - "Native macOS application still rejected by the Aurora/non-root eligibility safeguard."
+    limitations: Apply smokes override host eligibility; actual Aurora package installation remains unexercised.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 27 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
