@@ -217,3 +217,15 @@ tasks:
     limitations: Smoke transport used an in-memory HTTPS response fixture and a recording cache executable with host eligibility overridden; real Aurora fonts, fontconfig discovery, and rendering remain unverified.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 43 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  discord:
+    status: done
+    updated_at: 2026-10-18
+    scope: Add Discord through the existing per-user Flatpak route to the default catalog and desktop profile, preserving explicit source approval and all other configuration.
+    source: https://flathub.org/apps/com.discordapp.Discord
+    architecture: Flathub metadata restricts the package to x86_64; aarch64 users must explicitly skip Discord and use the browser client.
+    verification:
+      - "Isolated CLI smoke: unapproved Discord blocked, approved preview wrote nothing, desktop selection included Discord, and explicit skip excluded it."
+      - "Recording Flatpak smoke: eligible apply requested only the per-user Discord package, repeat skipped reinstall, and status reported installed."
+    limitations: Apply smoke used a recording Flatpak executable and overridden host eligibility; actual Aurora installation, sign-in, and GUI operation remain unverified.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 43 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."

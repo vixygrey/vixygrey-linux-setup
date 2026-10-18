@@ -3,6 +3,7 @@
   "base": ["micro", "bat", "eza", "git", "starship", "ripgrep", "fd", "jq"],
   "cloud": ["aws-cli", "granted", "aws-sam-cli", "cfn-lint", "chamber"],
   "desktop": [
+    "discord",
     "flameshot",
     "ghostwriter",
     "libreoffice",

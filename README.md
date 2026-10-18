@@ -199,12 +199,20 @@ documentation.
 - **Kiro:** the official portable Linux bundle is installed user-locally. It needs the host's normal Electron desktop libraries and unprivileged user namespaces. The setup never adds `--no-sandbox`, sets a root-owned sandbox helper, or disables OS security policy.
 - **AWS Session Manager Plugin:** the official versioned Debian payload is unpacked into a private application directory. No Debian maintainer scripts run and nothing is written to host `/usr` or `/etc`.
 - **DBeaver Community:** the desktop profile selects the publisher-listed Flathub package, with explicit `--trust dbeaver` approval. It replaces Harlequin, usql, and the standalone DuckDB CLI for graphical work. Configure a DuckDB connection and download its JDBC driver inside DBeaver. Dataset access may require Flatpak permissions, especially on additional drives. The retired command-line clients are not available to scripts or OMP through this setup.
+- **Discord:** included in the default catalog and `desktop` profile through [Flathub's `com.discordapp.Discord` wrapper](https://flathub.org/apps/com.discordapp.Discord), with explicit `--trust discord` approval. The package is [x86_64-only](https://github.com/flathub/com.discordapp.Discord/blob/master/flathub.json); on aarch64, use `--skip discord` and the browser client instead. Game Activity, file access, and Rich Presence have sandbox limitations. The setup does not import accounts, configure autostart, or broaden sandbox permissions.
 - **Notion:** the application-menu entry opens its [official web app](https://www.notion.com/help/notion-for-web) in your default browser. Notion does not provide a native Linux desktop download. Internet access, a supported browser, and your own sign-in are required; this is not an offline desktop client.
 - **Zed:** official versioned tarballs for both supported architectures are deployed user-locally, with `zed` and an application-menu entry. No downloaded installer script runs. A working Vulkan driver, desktop portals, and the host's normal Linux libraries remain prerequisites. This native route lets Zed use host development tools without a Flatpak sandbox.
 - **Bruno:** official versioned Debian payloads for both architectures are extracted user-locally, without maintainer scripts or host writes. The publisher-documented Flatpak is x86_64-only, so it is not used here. The native application requires compatible host Electron libraries and unprivileged user namespaces for Chromium sandboxing; the setup never adds `--no-sandbox`. Accounts, collections, environments, and credentials are not imported. The separate Bruno CLI is not installed.
 - **Granted / AWS / Bitwarden / OMP:** credentials, accounts, tokens, profiles, and login flows remain yours to configure. No credentials are imported from the Mac.
 - **Backups:** backup software and policy are outside this setup. Choose destinations, encryption, credentials, retention, and scheduling separately, then validate restoration using the machine commissioning runbook.
 - **Network diagnostics / Caligula:** no uinput permissions, network capabilities, or disk writes are enabled by setup. Privileged runtime actions remain explicit user decisions.
+
+To preview or install Discord alone on an eligible x86_64 Aurora machine:
+
+```sh
+./setup.sh --apps-only --only discord --trust discord
+./setup.sh --apps-only --only discord --trust discord --apply
+```
 
 ### Repeated runs, changes, and failure
 
