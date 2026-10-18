@@ -64,8 +64,9 @@ queries may use package managers' own caches or locks.
 ### Status and readiness
 
 `--status` inspects selected applications and managed files without writing to your home. It reports
-installed, missing, blocked, stale-receipt, command-conflict, preserved, and protected states. Use
-JSON when another tool needs a stable record:
+installed, missing, blocked, stale-receipt, command-conflict, cache-pending, preserved, and protected
+states. Font status separates current payload files, retained retired fonts, and cache readiness.
+Use JSON when another tool needs a stable record:
 
 ```sh
 ./setup.sh --status --apps-only --only omp --trust omp --format json
@@ -222,6 +223,44 @@ Exit codes:
 | 3    | Existing configuration or launcher conflicts were intentionally preserved      |
 | 130  | Interrupted; completed changes remain                                          |
 
+### Font upgrades and recovery
+
+Fonts stay in `~/.local/share/fonts/JetBrainsMonoNerd`; existing installations do not need a
+directory migration. Source approval still requires `--trust jetbrains-mono-nerd-font` when
+downloading a release.
+
+Offline preview inspects recorded current and retired font paths, reporting missing, modified,
+or protected files without downloads or home writes. It cannot produce a complete target-file
+diff because the catalog pins the ZIP checksum, not its member inventory. JSON install actions
+include `font_readiness` with `payload_preflight_required: true`.
+
+During apply, the complete checksum-verified font archive is validated and staged in temporary
+files. Every destination and the receipt are checked before font deployment. A known conflict
+stops deployment without changing installed fonts or the receipt, even when some other paths
+have replacement approval. Review the reported paths and approve each intended replacement
+with `--replace .local/share/fonts/JetBrainsMonoNerd/<filename>`. Original bytes are backed up
+using the same private backup mechanism as other managed files. Receipt ownership never grants
+permission to overwrite fonts, and symlinks remain protected even with explicit consent.
+
+Fonts removed from a new upstream release are **retained**, not deleted. Their original recorded
+hashes remain in a separate retired inventory across upgrades. Text status labels them
+`RETAINED FONT`; JSON status exposes `retired_fonts`. Editing or removing a retired font does not
+invalidate the current release. Review any variants you no longer want and remove them manually;
+retained variants remain available to the font system and may affect selection.
+
+After deployment, the receipt records pending cache work before running `fc-cache -f` on the
+font directory. A failed or unavailable `fc-cache` leaves the payload intact and reports
+`cache-pending`. Once the tool is available or its error resolved, rerun the same selection with
+`--apply`: an intact payload gets a cache-only retry, without downloading or redeploying fonts.
+Successful cache work clears pending state. Legacy receipts without cache metadata do not force
+a rebuild. This preflight is not a transaction: I/O failures or external filesystem changes after
+preflight can still interrupt deployment, and the installer stops rather than bypassing safeguards.
+
+```sh
+./setup.sh --apps-only --only jetbrains-mono-nerd-font --trust jetbrains-mono-nerd-font
+./setup.sh --status --apps-only --only jetbrains-mono-nerd-font --format json
+```
+
 ## Security model
 
 Review this repository and its catalog before execution. Homebrew core and the Flathub remote are baseline package sources; catalog-marked additional sources require explicit approval. Package-manager builds, package install scripts, application binaries, and shell initialization hooks still execute code as your user. **Approval is not sandboxing or a security audit.**
@@ -262,7 +301,7 @@ export PATH="$(go env GOPATH)/bin:$PATH"
 
 This canonical check requires Node 24.18.1, uv 0.13.1, Go 1.26+, Python 3.11+, Zsh, and ShellCheck. Run `npm ci` and `uv sync --locked --group dev` after cloning or changing their lockfiles. Node, Prettier, uv, Ruff, Go, and shfmt are development-only tooling; the installer runtime remains Python standard library. The check validates Prettier, Ruff, and explicitly-dialected Bash/Zsh shfmt formatting; runs the safety suite; validates the catalog with `--list`; checks managed shell files; and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools. `scripts/format-shell --check` verifies `setup.sh`, the repository Bash helper scripts, and the two managed Zsh files; `--write` is the opt-in normalization command. It uses two-space indentation and does not enable shfmt simplification.
 
-The safety suite covers preservation, backups, symlink/traversal rejection, executable modes, archive links and setuid stripping, font filtering, Debian-container boundaries, invalid selections, source approval, and canonical home aliases.
+The safety suite covers preservation, backups, symlink/traversal rejection, executable modes, archive links and setuid stripping, font filtering and staged upgrades, exact-path font replacement, retirement provenance, cache-only recovery, Debian-container boundaries, invalid selections, source approval, and canonical home aliases. Font deployment tests use isolated homes with local ZIP fixtures and recording cache executables; they do not validate Linux fontconfig or actual rendering.
 
 During development on the reference Mac, isolated smoke runs exercised actual theme deployment and repeat planning; Bat, Starship, lnav, Fastfetch, interactive Zsh, and the btop TUI; PyYAML installation and parsing; and checksum-verified AWS, Eilmeldung, Kitty, OMP, Nerd Font, and Kiro payload installation without executing the Linux binaries. A live local HTTPS fixture also verified executable deployment under a home path containing spaces and rejection of a changed download before any home writes. These historical checks do not establish current catalog support for removed applications.
 

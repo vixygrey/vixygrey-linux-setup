@@ -206,3 +206,14 @@ tasks:
     limitations: Apply smokes override host eligibility; actual Aurora package installation remains unexercised.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 27 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  staged-font-upgrades:
+    status: done
+    updated_at: 2026-10-18
+    issue: https://github.com/vixygrey/vixygrey-linux-setup/issues/35
+    scope: Stage and preflight complete font payloads; preserve exact-path consent, retired provenance, and pending cache recovery without a font directory migration.
+    verification:
+      - "Failing-before setup regressions captured missing cache-pending state, ignored absent fc-cache, and incomplete modified-font preview."
+      - "CLI smoke exercised real parsing, approval, locked apply, checksum verification, blocked-upgrade preservation, exact-path replacement backups, retirement status, cache failure and download-free retry."
+    limitations: Smoke transport used an in-memory HTTPS response fixture and a recording cache executable with host eligibility overridden; real Aurora fonts, fontconfig discovery, and rendering remain unverified.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 43 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."

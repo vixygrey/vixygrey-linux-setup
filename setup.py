@@ -246,7 +246,7 @@ def select(entries: list[dict], value: dict, profile_ids: set[str]) -> list[dict
 def action_records(setup) -> list[dict]:
     records = []
     for kind, payload in setup.steps:
-        if kind == "app":
+        if kind in {"app", "font-cache"}:
             records.append(
                 {
                     "id": payload["id"],
@@ -257,6 +257,10 @@ def action_records(setup) -> list[dict]:
                     "version": payload.get("version", ""),
                 }
             )
+            if payload["method"] == "font":
+                records[-1]["font_readiness"] = setup.font_details(payload) | {
+                    "payload_preflight_required": kind == "app"
+                }
         elif kind == "file":
             name, data, mode = payload
             records.append({"digest": digest(data), "kind": kind, "mode": mode, "path": name})
@@ -293,6 +297,12 @@ def print_report(document: dict, format_name: str):
     if document["kind"] == "status":
         for entry in document["apps"]:
             print(f"APP {entry['state']} {entry['id']} [{entry['method']}]")
+            for record in entry.get("font_files", []):
+                print(f"FONT {record['state']} {record['path']}")
+            for record in entry.get("retired_fonts", []):
+                print(f"RETAINED FONT {record['state']} {record['path']}")
+            if entry.get("cache_pending") and not entry["cache_available"]:
+                print("FONT CACHE fc-cache unavailable; cache remains pending")
         for entry in document["files"]:
             print(f"FILE {entry['state']} {entry['path']}")
         return
@@ -526,17 +536,75 @@ class Setup:
         )
         return result.returncode == 0 and result.stdout.strip() == entry["version"]
 
+    def font_details(self, entry: dict) -> dict:
+        receipt = archives.font_receipt(entry, self.files)
+        details = {
+            "cache_pending": receipt.get("cache_pending", False),
+            "cache_available": bool(self.executable("fc-cache")),
+        }
+        for field, output in (("files", "font_files"), ("retired", "retired_fonts")):
+            records = []
+            for name, record in sorted(receipt.get(field, {}).items()):
+                try:
+                    path = self.files.target(name)
+                    if not path.exists():
+                        state = "missing"
+                    elif not path.is_file():
+                        state = "protected"
+                    else:
+                        state = (
+                            "unchanged"
+                            if digest(self.files.read(path)) == record["sha256"]
+                            else "modified"
+                        )
+                except SafetyError:
+                    state = "protected"
+                records.append({"path": name, "state": state})
+            details[output] = records
+        return details
+
+    def cache_font(self, entry: dict):
+        receipt = archives.font_receipt(entry, self.files)
+        if not receipt.get("cache_pending", False):
+            return
+        if not self.executable("fc-cache"):
+            raise SafetyError(
+                f"{entry['id']}: fc-cache unavailable; font payload installed, cache remains pending"
+            )
+        try:
+            self.command(["fc-cache", "-f", str(self.files.home / archives.FONT_DIRECTORY)])
+        except (SafetyError, OSError, subprocess.SubprocessError) as error:
+            raise SafetyError(
+                f"{entry['id']}: font cache remains pending; rerun to retry without downloading: "
+                f"{error}"
+            ) from error
+        receipt["cache_pending"] = False
+        archives.save_font_receipt(entry, self.files, receipt)
+
     def app_status(self, entry: dict) -> dict:
         identifier, method = entry["id"], entry["method"]
         if method in {"archive", "font"}:
             try:
                 if self.is_installed(entry):
+                    if method == "font":
+                        details = self.font_details(entry)
+                        return {
+                            "id": identifier,
+                            "method": method,
+                            "state": "cache-pending" if details["cache_pending"] else "installed",
+                            **details,
+                        }
                     return {"id": identifier, "method": method, "state": "installed"}
             except (OSError, ValueError, SafetyError, subprocess.SubprocessError):
                 pass
             try:
                 if self.files.target(archives.receipt_path(entry)).exists():
-                    return {"id": identifier, "method": method, "state": "stale-receipt"}
+                    return {
+                        "id": identifier,
+                        "method": method,
+                        "state": "stale-receipt",
+                        **(self.font_details(entry) if method == "font" else {}),
+                    }
             except SafetyError:
                 return {"id": identifier, "method": method, "state": "stale-receipt"}
         else:
@@ -677,7 +745,18 @@ class Setup:
             return
         if method in {"archive", "font"}:
             archives.artifact_for(entry)
+        details = self.font_details(entry) if method == "font" else {}
+        if method == "font":
+            for record in details["font_files"]:
+                if record["state"] != "unchanged":
+                    print(f"FONT {identifier}: {record['path']} {record['state']}")
+            for record in details["retired_fonts"]:
+                print(f"RETAINED FONT {record['path']} {record['state']}")
         if self.is_installed(entry):
+            if method == "font" and details["cache_pending"]:
+                print(f"FONT {identifier}: cache pending; retry without downloading")
+                self.steps.append(("font-cache", entry))
+                return
             print(f"INSTALLED {identifier}")
             return
         if method == "brew" and package in self.dependencies:
@@ -690,6 +769,17 @@ class Setup:
             self.blocks.append(
                 f"{identifier}: review {entry['source']} and explicitly --trust {identifier}"
             )
+        if method == "font":
+            print(
+                f"FONT {identifier}: offline preview is incomplete; downloaded payload will be "
+                "validated and all destinations checked before font deployment"
+            )
+            try:
+                destination = self.files.target(archives.FONT_DIRECTORY)
+                if destination.exists() and not destination.is_dir():
+                    raise SafetyError(f"Not a directory: {destination}")
+            except SafetyError as error:
+                self.blocks.append(f"{identifier}: {error}")
         if method == "web":
             if not self.executable("xdg-open"):
                 self.blocks.append(
@@ -845,14 +935,8 @@ class Setup:
                 raise SafetyError(
                     "Archive installation preserved conflicts: " + ", ".join(preserved)
                 )
-            if method == "font" and self.executable("fc-cache"):
-                self.command(
-                    [
-                        "fc-cache",
-                        "-f",
-                        str(self.files.home / ".local/share/fonts/JetBrainsMonoNerd"),
-                    ]
-                )
+            if method == "font":
+                self.cache_font(entry)
         else:
             raise SafetyError(f"No installer for method: {method}")
         if method == "python-helper":
@@ -912,6 +996,8 @@ class Setup:
                     )
                 elif kind == "app":
                     self.install_app(payload)
+                elif kind == "font-cache":
+                    self.cache_font(payload)
                 elif kind == "file":
                     name, data, mode = payload
                     status = self.files.put(name, data, mode)

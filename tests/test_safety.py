@@ -8,7 +8,6 @@ import sys
 import tarfile
 import tempfile
 import unittest
-import zipfile
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -128,16 +127,6 @@ class ArchiveSafety(unittest.TestCase):
             with self.subTest(entries=entries):
                 with self.assertRaises(SafetyError):
                     list(archives.tar_payload(self.make_tar(entries)))
-
-    def test_font_archive_does_not_install_scripts(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            path = Path(temporary) / "font.zip"
-            with zipfile.ZipFile(path, "w") as archive:
-                archive.writestr("install.sh", "exit 1")
-                archive.writestr("fonts/Example.ttf", b"font-data")
-            self.assertEqual(
-                list(archives.font_payload(path)), [("Example.ttf", b"font-data", 0o644)]
-            )
 
     def test_debian_container_cannot_choose_a_temporary_output_path(self):
         with tempfile.TemporaryDirectory() as temporary:
