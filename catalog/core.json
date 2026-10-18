@@ -1,5 +1,14 @@
 [
   {
+    "id": "discord",
+    "name": "Discord",
+    "method": "flatpak",
+    "package": "com.discordapp.Discord",
+    "source": "https://flathub.org/apps/com.discordapp.Discord",
+    "notes": "Flathub wrapper for Discord's proprietary desktop client, available on x86_64 only. Requires explicit source approval and your own sign-in. Sandbox limits Game Activity, file access, and Rich Presence; no permission overrides, autostart, or account configuration are applied. On aarch64, explicitly skip this entry and use Discord in your browser.",
+    "third_party": true
+  },
+  {
     "id": "flameshot",
     "name": "flameshot",
     "method": "flatpak",
@@ -24,6 +33,15 @@
     "package": "com.google.Chrome",
     "source": "https://flathub.org/apps/com.google.Chrome",
     "notes": "Flathub package for Google's proprietary Chrome build; this is a vendor/noncore application.",
+    "third_party": true
+  },
+  {
+    "id": "notion",
+    "name": "Notion (Web)",
+    "method": "web",
+    "package": "https://www.notion.so/",
+    "source": "https://www.notion.com/help/notion-for-web",
+    "notes": "Official web app opened through an application-menu launcher in the configured default browser. Requires xdg-open, a supported browser, internet access and your own sign-in. No official native Linux desktop app or unofficial wrapper is installed; browser profiles and credentials remain untouched.",
     "third_party": true
   },
   {
@@ -97,6 +115,30 @@
     "third_party": true
   },
   {
+    "id": "zed",
+    "name": "Zed",
+    "method": "archive",
+    "package": "Zed",
+    "version": "1.24.2",
+    "source": "https://github.com/zed-industries/zed/releases/tag/v1.24.2",
+    "notes": "Official pinned Linux tarballs; computed SHA-256 values match the upstream release digests. zed.app/bin/zed is the CLI and desktop launcher; zed.app/libexec/zed-editor is the GUI executable. Requires a Vulkan 1.3 driver, glibc >= 2.31 on x86_64 or >= 2.35 on aarch64, and XDG FileChooser, OpenURI, and Secret or Secrets portals. Zed Agent terminal sandboxing additionally requires a non-setuid bwrap on PATH and working unprivileged user namespaces; without it Zed may warn and run agent commands unsandboxed. This setup does not install host packages or disable sandboxing.",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/zed-industries/zed/releases/download/v1.24.2/zed-linux-x86_64.tar.gz",
+        "sha256": "020a3b02a9f4bb5e0015bad7cc644262bf4ea32cd7ef6f7f4691946d43af0f89"
+      },
+      "aarch64": {
+        "url": "https://github.com/zed-industries/zed/releases/download/v1.24.2/zed-linux-aarch64.tar.gz",
+        "sha256": "96a54806a7e286452078bdfc94b63c7bf6b8324ffcb16c5c60ff1fd96743ea45"
+      }
+    },
+    "commands": {
+      "zed": "zed.app/bin/zed",
+      "zed-editor": "zed.app/libexec/zed-editor"
+    },
+    "third_party": true
+  },
+  {
     "id": "bat",
     "name": "bat",
     "method": "brew",
@@ -120,15 +162,6 @@
     "method": "brew",
     "package": "aria2",
     "source": "https://aria2.github.io/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "procs",
-    "name": "procs",
-    "method": "brew",
-    "package": "procs",
-    "source": "https://github.com/dalance/procs",
     "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
     "third_party": false
   },
@@ -175,24 +208,6 @@
     "third_party": false
   },
   {
-    "id": "atuin",
-    "name": "atuin",
-    "method": "brew",
-    "package": "atuin",
-    "source": "https://atuin.sh/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "zellij",
-    "name": "zellij",
-    "method": "brew",
-    "package": "zellij",
-    "source": "https://zellij.dev/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
     "id": "direnv",
     "name": "direnv",
     "method": "brew",
@@ -229,22 +244,6 @@
     "third_party": false
   },
   {
-    "id": "clipse",
-    "name": "clipse",
-    "method": "go",
-    "package": "github.com/savedra1/clipse",
-    "version": "v1.2.1",
-    "source": "https://github.com/savedra1/clipse",
-    "notes": "Builds the upstream Wayland backend with CGO disabled and installs wl-clipboard through Homebrew if its commands are missing. Clipboard listening, auto-paste and uinput permissions are never enabled automatically.",
-    "build_tags": ["wayland"],
-    "cgo": false,
-    "runtime": {
-      "wl-copy": "wl-clipboard",
-      "wl-paste": "wl-clipboard"
-    },
-    "third_party": true
-  },
-  {
     "id": "zsh-autosuggestions",
     "name": "zsh-authsuggestions",
     "method": "brew",
@@ -261,24 +260,6 @@
     "package": "zsh-syntax-highlighting",
     "source": "https://github.com/zsh-users/zsh-syntax-highlighting",
     "notes": "Homebrew core installs the portable Zsh plugin source on Linux.",
-    "third_party": false
-  },
-  {
-    "id": "duf",
-    "name": "duf",
-    "method": "brew",
-    "package": "duf",
-    "source": "https://github.com/muesli/duf",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "fzf",
-    "name": "fzf",
-    "method": "brew",
-    "package": "fzf",
-    "source": "https://junegunn.github.io/fzf/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
     "third_party": false
   },
   {
@@ -372,42 +353,6 @@
     "third_party": false
   },
   {
-    "id": "jc",
-    "name": "jc",
-    "method": "brew",
-    "package": "jc",
-    "source": "https://github.com/kellyjonbrazil/jc",
-    "notes": "Homebrew core builds the portable Python CLI from source on Linux; a Linux bottle is not currently published.",
-    "third_party": false
-  },
-  {
-    "id": "fx",
-    "name": "fx",
-    "method": "brew",
-    "package": "fx",
-    "source": "https://fx.wtf/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "jnv",
-    "name": "jnv",
-    "method": "brew",
-    "package": "jnv",
-    "source": "https://github.com/ynqa/jnv",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "jqp",
-    "name": "jqp",
-    "method": "brew",
-    "package": "jqp",
-    "source": "https://github.com/noahgorstein/jqp",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
     "id": "git",
     "name": "git",
     "method": "brew",
@@ -426,120 +371,11 @@
     "third_party": false
   },
   {
-    "id": "lazygit",
-    "name": "lazygit",
-    "method": "brew",
-    "package": "lazygit",
-    "source": "https://github.com/jesseduffield/lazygit",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "delta",
-    "name": "delta",
-    "method": "brew",
-    "package": "git-delta",
-    "source": "https://dandavison.github.io/delta/",
-    "notes": "The delta executable is provided by the git-delta Homebrew core formula, with Linux bottles for both supported architectures.",
-    "aliases": ["git-delta"],
-    "third_party": false
-  },
-  {
-    "id": "difft",
-    "name": "difft",
-    "method": "brew",
-    "package": "difftastic",
-    "source": "https://difftastic.wilfred.me.uk/",
-    "notes": "The difft executable is provided by the difftastic Homebrew core formula, with Linux bottles for both supported architectures.",
-    "aliases": ["difftastic"],
-    "third_party": false
-  },
-  {
-    "id": "git-absorb",
-    "name": "git-absorb",
-    "method": "brew",
-    "package": "git-absorb",
-    "source": "https://github.com/tummychow/git-absorb",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
     "id": "pre-commit",
     "name": "pre-commit",
     "method": "brew",
     "package": "pre-commit",
     "source": "https://pre-commit.com/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "xh",
-    "name": "xh",
-    "method": "brew",
-    "package": "xh",
-    "source": "https://github.com/ducaale/xh",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "hurl",
-    "name": "hurl",
-    "method": "brew",
-    "package": "hurl",
-    "source": "https://hurl.dev/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "posting",
-    "name": "posting",
-    "method": "uv",
-    "package": "posting",
-    "version": "2.11.1",
-    "source": "https://github.com/darrenburns/posting",
-    "notes": "The official Python package installs the Posting terminal HTTP client on Linux.",
-    "third_party": true
-  },
-  {
-    "id": "ngrok",
-    "name": "ngrok",
-    "method": "archive",
-    "package": "ngrok",
-    "version": "3.39.11",
-    "source": "https://ngrok.com/download/linux",
-    "notes": "Official versioned zero-dependency Linux tarballs; SHA-256 values were computed from the vendor artifacts. Authentication is deliberately not configured.",
-    "artifacts": {
-      "x86_64": {
-        "url": "https://bin.equinox.io/a/5Mrhp7gRDVb/ngrok-v3-3.39.11-linux-amd64.tar.gz",
-        "sha256": "cec0b4997fcc5f529dfc74bac89050354d11a915f968720600039738fdf330cf"
-      },
-      "aarch64": {
-        "url": "https://bin.equinox.io/a/dg26hrkwY2F/ngrok-v3-3.39.11-linux-arm64.tar.gz",
-        "sha256": "3b6ba05a9d9585c34157fa0819fa95cdb13839f5b506b9e63204705cf7f79e29"
-      }
-    },
-    "commands": {
-      "ngrok": "ngrok"
-    },
-    "third_party": true
-  },
-  {
-    "id": "mkcert",
-    "name": "mkcert?",
-    "method": "brew",
-    "package": "mkcert",
-    "source": "https://github.com/FiloSottile/mkcert",
-    "notes": "Optional local development CA tool; Homebrew core publishes Linux bottles for both x86_64 and arm64. Running mkcert -install changes the trust store and is not automatic.",
-    "aliases": ["mkcert"],
-    "optional": true,
-    "third_party": false
-  },
-  {
-    "id": "chawan",
-    "name": "chawan",
-    "method": "brew",
-    "package": "chawan",
-    "source": "https://sr.ht/~bptato/chawan/",
     "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
     "third_party": false
   },
@@ -599,31 +435,12 @@
     "third_party": false
   },
   {
-    "id": "duckdb",
-    "name": "duckdb",
-    "method": "brew",
-    "package": "duckdb",
-    "source": "https://www.duckdb.org/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "harlequin",
-    "name": "harlequin",
-    "method": "brew",
-    "package": "harlequin",
-    "source": "https://harlequin.sh/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
-  },
-  {
-    "id": "usql",
-    "name": "usql",
-    "method": "go",
-    "package": "github.com/xo/usql",
-    "version": "v0.21.6",
-    "source": "https://github.com/xo/usql",
-    "notes": "The upstream Go command module supplies usql on Linux; there is no Homebrew core formula under this name.",
+    "id": "dbeaver",
+    "name": "DBeaver Community",
+    "method": "flatpak",
+    "package": "io.dbeaver.DBeaverCommunity",
+    "source": "https://dbeaver.io/download/",
+    "notes": "The publisher lists this Flathub package for Linux. Replaces Harlequin, usql, and the standalone DuckDB CLI for graphical database work. Configure DuckDB and download its JDBC driver inside DBeaver; local datasets must be accessible through Flatpak permissions. Explicit source approval is required.",
     "third_party": true
   },
   {

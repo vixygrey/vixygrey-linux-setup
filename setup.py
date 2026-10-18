@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import difflib
 import fcntl
 import json
 import os
@@ -14,6 +15,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from urllib.parse import urlsplit
 
 sys.dont_write_bytecode = True
 
@@ -28,15 +30,45 @@ METHODS = {
     "flatpak",
     "npm",
     "uv",
-    "go",
-    "cargo",
     "archive",
     "font",
     "python-helper",
     "system",
+    "web",
 }
 FLATHUB = "https://dl.flathub.org/repo/"
 PROFILE_PATH = ROOT / "profiles.json"
+DIFF_FILE_LIMIT = 64 * 1024
+DIFF_OUTPUT_LIMIT = 256 * 1024
+
+
+def dotfile_sources():
+    if (ROOT / "dotfiles").is_symlink():
+        raise SafetyError("Repository dotfiles directory must not be a symlink")
+    for source in sorted((ROOT / "dotfiles").rglob("*")):
+        if source.is_symlink():
+            raise SafetyError(f"Repository dotfile must not be a symlink: {str(source)!r}")
+        if source.is_file():
+            yield str(source.relative_to(ROOT / "dotfiles")), source
+
+
+def diff_text(data: bytes, name: str) -> str:
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        raise SafetyError(f"Unsuitable non-UTF-8 content: {name}") from None
+    if any(character != "\n" and not character.isprintable() for character in text):
+        raise SafetyError(f"Unsuitable binary or control-character content: {name}")
+    return text
+
+
+def safe_diff_name(name: str) -> str:
+    if any(not 32 <= ord(character) <= 126 for character in name):
+        raise SafetyError("Unsafe --diff path (non-printable or non-ASCII character)")
+    path = relative_path(name)
+    if str(path) != name:
+        raise SafetyError("Unsafe --diff path (use an exact home-relative path)")
+    return name
 
 
 def profiles(entries: list[dict]) -> dict[str, list[str]]:
@@ -46,7 +78,7 @@ def profiles(entries: list[dict]) -> dict[str, list[str]]:
         raise SafetyError(f"Cannot read profiles: {error}") from None
     if not isinstance(values, dict) or not values:
         raise SafetyError("Profiles must be a non-empty object")
-    identifiers = {entry["id"]: entry for entry in entries}
+    identifiers = {entry["id"] for entry in entries}
     aliases = {
         name.lower().strip(): entry["id"]
         for entry in entries
@@ -69,8 +101,6 @@ def profiles(entries: list[dict]) -> dict[str, list[str]]:
                         f"{name}: profile members must use canonical IDs: {identifier}"
                     )
                 raise SafetyError(f"{name}: unknown profile member: {identifier}")
-            if identifiers[identifier].get("optional"):
-                raise SafetyError(f"{name}: optional app requires explicit --only: {identifier}")
     return values
 
 
@@ -98,8 +128,6 @@ def catalog() -> list[dict]:
     profiles(entries)
     seen = set()
     for entry in entries:
-        if entry["method"] == "cargo" and archives.machine_arch() in entry.get("artifacts", {}):
-            entry["method"] = "archive"
         identifier = entry["id"]
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", identifier) or identifier in seen:
             raise SafetyError(f"Duplicate or invalid catalog ID: {identifier}")
@@ -109,7 +137,7 @@ def catalog() -> list[dict]:
         package = entry["package"]
         if not package or package.startswith("-") or any(c.isspace() for c in package):
             raise SafetyError(f"Invalid package: {identifier}")
-        if entry["method"] in {"npm", "uv", "go", "cargo", "archive", "font", "python-helper"}:
+        if entry["method"] in {"npm", "uv", "archive", "font", "python-helper"}:
             if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.+_-]*", entry.get("version", "")):
                 raise SafetyError(f"An exact version is required: {identifier}")
         if entry["method"] in {"archive", "font"} or "artifacts" in entry:
@@ -141,7 +169,7 @@ def validate_catalog(entries: list[dict]) -> None:
     aliases = {}
     commands = {architecture: set() for architecture in ("x86_64", "aarch64")}
     required = {"id", "name", "method", "package", "source", "notes", "third_party"}
-    versioned = {"npm", "uv", "go", "cargo", "archive", "font", "python-helper"}
+    versioned = {"npm", "uv", "archive", "font", "python-helper"}
     for entry in entries:
         identifier = entry.get("id", "")
         missing = required - entry.keys()
@@ -151,6 +179,17 @@ def validate_catalog(entries: list[dict]) -> None:
             raise SafetyError(f"{identifier}: source must use HTTPS")
         if entry["method"] not in METHODS:
             raise SafetyError(f"{identifier}: unsupported method")
+        if entry["method"] == "web":
+            url = urlsplit(entry["package"])
+            if (
+                url.scheme != "https"
+                or not url.hostname
+                or any(character.isspace() for character in entry["package"])
+                or any(ord(character) < 32 for character in entry["name"])
+            ):
+                raise SafetyError(
+                    f"{identifier}: web app requires an HTTPS URL and single-line name"
+                )
         if entry["method"] in versioned and not re.fullmatch(
             r"[A-Za-z0-9][A-Za-z0-9.+_-]*", entry.get("version", "")
         ):
@@ -200,7 +239,7 @@ def tokens(values) -> set[str]:
     return {token.strip() for value in values for token in value.split(",") if token.strip()}
 
 
-PLAN_SCHEMA_VERSION = 2
+PLAN_SCHEMA_VERSION = 3
 
 
 def catalog_digest() -> str:
@@ -216,7 +255,6 @@ def intent(args) -> dict:
     return {
         "apps_only": args.apps_only,
         "desktop": args.desktop,
-        "include_optional": args.include_optional,
         "only": sorted(set(args.only)),
         "profiles": sorted(set(args.profile)),
         "replace": sorted({str(relative_path(value)) for value in args.replace}),
@@ -233,16 +271,14 @@ def select(entries: list[dict], value: dict, profile_ids: set[str]) -> list[dict
     return [
         entry
         for entry in entries
-        if (not requested or entry["id"] in requested)
-        and entry["id"] not in value["skip"]
-        and (not entry.get("optional") or value["include_optional"] or entry["id"] in requested)
+        if (not requested or entry["id"] in requested) and entry["id"] not in value["skip"]
     ]
 
 
 def action_records(setup) -> list[dict]:
     records = []
     for kind, payload in setup.steps:
-        if kind == "app":
+        if kind in {"app", "font-cache", "receipt-migrate"}:
             records.append(
                 {
                     "id": payload["id"],
@@ -253,6 +289,10 @@ def action_records(setup) -> list[dict]:
                     "version": payload.get("version", ""),
                 }
             )
+            if payload["method"] == "font":
+                records[-1]["font_readiness"] = setup.font_details(payload) | {
+                    "payload_preflight_required": kind == "app"
+                }
         elif kind == "file":
             name, data, mode = payload
             records.append({"digest": digest(data), "kind": kind, "mode": mode, "path": name})
@@ -289,6 +329,12 @@ def print_report(document: dict, format_name: str):
     if document["kind"] == "status":
         for entry in document["apps"]:
             print(f"APP {entry['state']} {entry['id']} [{entry['method']}]")
+            for record in entry.get("font_files", []):
+                print(f"FONT {record['state']} {record['path']}")
+            for record in entry.get("retired_fonts", []):
+                print(f"RETAINED FONT {record['state']} {record['path']}")
+            if entry.get("cache_pending") and not entry["cache_available"]:
+                print("FONT CACHE fc-cache unavailable; cache remains pending")
         for entry in document["files"]:
             print(f"FILE {entry['state']} {entry['path']}")
         return
@@ -330,7 +376,6 @@ def load_plan(path: str) -> dict:
     fields = {
         "apps_only",
         "desktop",
-        "include_optional",
         "only",
         "profiles",
         "replace",
@@ -349,7 +394,7 @@ def load_plan(path: str) -> dict:
     for name in fields:
         expected = (
             isinstance(value[name], bool)
-            if name in {"apps_only", "desktop", "include_optional", "theme_only"}
+            if name in {"apps_only", "desktop", "theme_only"}
             else isinstance(value[name], list)
             and value[name] == sorted(set(value[name]))
             and all(isinstance(item, str) for item in value[name])
@@ -372,7 +417,6 @@ class Setup:
         paths = [
             f"{home}/.local/bin",
             f"{home}/.local/share/vixygrey/npm/bin",
-            f"{home}/.cargo/bin",
             "/home/linuxbrew/.linuxbrew/bin",
             "/home/linuxbrew/.linuxbrew/sbin",
         ]
@@ -381,8 +425,6 @@ class Setup:
             HOMEBREW_NO_AUTO_UPDATE="1",
             HOMEBREW_NO_ANALYTICS="1",
             UV_TOOL_BIN_DIR=f"{home}/.local/bin",
-            GOBIN=f"{home}/.local/bin",
-            CARGO_HOME=f"{home}/.cargo",
             npm_config_update_notifier="false",
         )
         self.steps: list[tuple[str, object]] = []
@@ -442,6 +484,11 @@ class Setup:
 
     def is_installed(self, entry: dict) -> bool:
         method, package = entry["method"], entry["package"]
+        if method == "web":
+            return bool(self.executable("xdg-open")) and all(
+                self.files.status(name, data, mode) == "unchanged"
+                for name, data, mode in launchers(entry, self.files.home)
+            )
         if method == "system":
             docker = Path("/usr/bin/docker")
             if (
@@ -489,24 +536,6 @@ class Setup:
                 self.manager_packages[method] = result.stdout.splitlines()
             base = package.split("[")[0].lower().replace("_", "-")
             return f"{base} v{entry['version']}" in self.manager_packages[method]
-        if method == "cargo" and self.executable("cargo"):
-            if method not in self.manager_packages:
-                result = self.run(["cargo", "install", "--list"], capture=True)
-                if result.returncode:
-                    raise SafetyError("Cannot inspect Cargo installations")
-                self.manager_packages[method] = result.stdout.splitlines()
-            return f"{package} v{entry['version']}:" in self.manager_packages[method]
-        if method == "go" and self.executable("go"):
-            binary = self.files.target(".local/bin/" + package.rsplit("/", 1)[-1])
-            if not binary.is_file():
-                return False
-            result = self.run(["go", "version", "-m", str(binary)], capture=True)
-            version = entry["version"]
-            version = version if version.startswith("v") else "v" + version
-            return result.returncode == 0 and any(
-                line.split()[:3] == ["mod", entry.get("module", package.split("/cmd/")[0]), version]
-                for line in result.stdout.splitlines()
-            )
         return False
 
     def helper_paths(self, entry: dict):
@@ -539,17 +568,75 @@ class Setup:
         )
         return result.returncode == 0 and result.stdout.strip() == entry["version"]
 
+    def font_details(self, entry: dict) -> dict:
+        receipt = archives.font_receipt(entry, self.files)
+        details = {
+            "cache_pending": receipt.get("cache_pending", False),
+            "cache_available": bool(self.executable("fc-cache")),
+        }
+        for field, output in (("files", "font_files"), ("retired", "retired_fonts")):
+            records = []
+            for name, record in sorted(receipt.get(field, {}).items()):
+                try:
+                    path = self.files.target(name)
+                    if not path.exists():
+                        state = "missing"
+                    elif not path.is_file():
+                        state = "protected"
+                    else:
+                        state = (
+                            "unchanged"
+                            if digest(self.files.read(path)) == record["sha256"]
+                            else "modified"
+                        )
+                except SafetyError:
+                    state = "protected"
+                records.append({"path": name, "state": state})
+            details[output] = records
+        return details
+
+    def cache_font(self, entry: dict):
+        receipt = archives.font_receipt(entry, self.files)
+        if not receipt.get("cache_pending", False):
+            return
+        if not self.executable("fc-cache"):
+            raise SafetyError(
+                f"{entry['id']}: fc-cache unavailable; font payload installed, cache remains pending"
+            )
+        try:
+            self.command(["fc-cache", "-f", str(self.files.home / archives.FONT_DIRECTORY)])
+        except (SafetyError, OSError, subprocess.SubprocessError) as error:
+            raise SafetyError(
+                f"{entry['id']}: font cache remains pending; rerun to retry without downloading: "
+                f"{error}"
+            ) from error
+        receipt["cache_pending"] = False
+        archives.save_font_receipt(entry, self.files, receipt)
+
     def app_status(self, entry: dict) -> dict:
         identifier, method = entry["id"], entry["method"]
         if method in {"archive", "font"}:
             try:
                 if self.is_installed(entry):
+                    if method == "font":
+                        details = self.font_details(entry)
+                        return {
+                            "id": identifier,
+                            "method": method,
+                            "state": "cache-pending" if details["cache_pending"] else "installed",
+                            **details,
+                        }
                     return {"id": identifier, "method": method, "state": "installed"}
             except (OSError, ValueError, SafetyError, subprocess.SubprocessError):
                 pass
             try:
                 if self.files.target(archives.receipt_path(entry)).exists():
-                    return {"id": identifier, "method": method, "state": "stale-receipt"}
+                    return {
+                        "id": identifier,
+                        "method": method,
+                        "state": "stale-receipt",
+                        **(self.font_details(entry) if method == "font" else {}),
+                    }
             except SafetyError:
                 return {"id": identifier, "method": method, "state": "stale-receipt"}
         else:
@@ -576,9 +663,8 @@ class Setup:
             "flatpak": "flatpak",
             "npm": "npm",
             "uv": "uv",
-            "go": "go",
-            "cargo": "cargo",
             "python-helper": "uv",
+            "web": "xdg-open",
         }
         if method in managers and not self.executable(managers[method]):
             return {"id": identifier, "method": method, "state": "blocked"}
@@ -590,12 +676,8 @@ class Setup:
             for name, data, mode in launchers(entry, self.files.home):
                 records[name] = (data, mode)
         if not self.args.apps_only:
-            for source in sorted((ROOT / "dotfiles").rglob("*")):
-                if source.is_file():
-                    records[str(source.relative_to(ROOT / "dotfiles"))] = (
-                        source.read_bytes(),
-                        0o600,
-                    )
+            for name, source in dotfile_sources():
+                records[name] = (source.read_bytes(), 0o600)
         states = {
             "create": "missing",
             "mode": "unchanged",
@@ -645,15 +727,13 @@ class Setup:
             "ready" if self.is_installed(docker) else "blocked",
             "Provision Aurora DX, run ujust dx-group, then log out and back in.",
         )
-        plasma = (
-            "KDE" in os.environ.get("XDG_CURRENT_DESKTOP", "").upper()
-            and self.executable("plasma-apply-colorscheme")
-            and self.executable("plasma-apply-wallpaperimage")
+        plasma = "KDE" in os.environ.get("XDG_CURRENT_DESKTOP", "").upper() and self.executable(
+            "plasma-apply-colorscheme"
         )
         check(
             "plasma",
             "ready" if plasma else "blocked",
-            "Use an active KDE Plasma session with both plasma apply commands available.",
+            "Use an active KDE Plasma session with plasma-apply-colorscheme available.",
         )
         llama = self.executable("llama-cli")
         if llama:
@@ -693,9 +773,22 @@ class Setup:
             return
         if method in {"archive", "font"}:
             archives.artifact_for(entry)
-        for command, formula in entry.get("runtime", {}).items():
-            self.manager(command, formula)
+        details = self.font_details(entry) if method == "font" else {}
+        if method == "font":
+            for record in details["font_files"]:
+                if record["state"] != "unchanged":
+                    print(f"FONT {identifier}: {record['path']} {record['state']}")
+            for record in details["retired_fonts"]:
+                print(f"RETAINED FONT {record['path']} {record['state']}")
         if self.is_installed(entry):
+            if method in {"archive", "font"} and archives.needs_receipt_migration(
+                entry, self.files
+            ):
+                self.steps.append(("receipt-migrate", entry))
+            if method == "font" and details["cache_pending"]:
+                print(f"FONT {identifier}: cache pending; retry without downloading")
+                self.steps.append(("font-cache", entry))
+                return
             print(f"INSTALLED {identifier}")
             return
         if method == "brew" and package in self.dependencies:
@@ -708,6 +801,23 @@ class Setup:
             self.blocks.append(
                 f"{identifier}: review {entry['source']} and explicitly --trust {identifier}"
             )
+        if method == "font":
+            print(
+                f"FONT {identifier}: offline preview is incomplete; downloaded payload will be "
+                "validated and all destinations checked before font deployment"
+            )
+            try:
+                destination = self.files.target(archives.FONT_DIRECTORY)
+                if destination.exists() and not destination.is_dir():
+                    raise SafetyError(f"Not a directory: {destination}")
+            except SafetyError as error:
+                self.blocks.append(f"{identifier}: {error}")
+        if method == "web":
+            if not self.executable("xdg-open"):
+                self.blocks.append(
+                    f"{identifier}: xdg-open is missing; configure a desktop browser"
+                )
+            return
         if method == "brew" and not self.executable("brew"):
             self.blocks.append(
                 f"{identifier}: Homebrew is missing; this tool never downloads and executes its installer"
@@ -737,26 +847,6 @@ class Setup:
             self.manager("npm", "node")
         if method in {"uv", "python-helper"}:
             self.manager("uv", "uv")
-        if method == "go":
-            self.manager("go", "go")
-        if method == "cargo":
-            self.manager("cargo", "rust")
-            for formula in ("llvm", "cmake", "ninja", "pkgconf"):
-                self.dependency(formula)
-            if sys.platform == "linux" and not Path("/usr/include/stdlib.h").is_file():
-                self.blocks.append(
-                    f"{identifier}: source build requires C development headers; use an Aurora DX development environment with headers, not host dnf layering"
-                )
-        if method == "go":
-            name = ".local/bin/" + package.rsplit("/", 1)[-1]
-            try:
-                target = self.files.target(name)
-                if target.exists() and name not in self.files.replacements:
-                    self.blocks.append(
-                        f"{identifier}: {name} exists; explicitly --replace it after review"
-                    )
-            except SafetyError as error:
-                self.blocks.append(str(error))
         if method == "python-helper":
             relative, base, marker, command, wrapper = self.helper_paths(entry)
             if base.exists() and (
@@ -796,14 +886,8 @@ class Setup:
                 self.blocks.append(
                     f"{variable} is nonstandard; refusing to deploy configuration to the wrong location"
                 )
-        for source in sorted((ROOT / "dotfiles").rglob("*")):
-            if source.is_symlink():
-                raise SafetyError(f"Repository dotfile must not be a symlink: {source}")
-            if not source.is_file():
-                continue
-            name = str(source.relative_to(ROOT / "dotfiles"))
-            data = source.read_bytes()
-            self.plan_file(name, data)
+        for name, source in dotfile_sources():
+            self.plan_file(name, source.read_bytes())
         if self.executable("bat") or any(entry["id"] == "bat" for entry in self.selected):
             self.steps.append(("bat-cache", None))
         if self.args.desktop:
@@ -817,15 +901,84 @@ class Setup:
             source = ROOT / "dotfiles" / scheme
             if self.files.status(scheme, source.read_bytes()) in {"preserve", "protected"}:
                 self.blocks.append("Cannot apply a preserved/conflicting KDE color scheme")
-            wallpaper = ".local/share/wallpapers/DraculaSakura.jpg"
-            if not self.executable("plasma-apply-wallpaperimage"):
-                self.blocks.append("--desktop requires plasma-apply-wallpaperimage")
-            if self.files.status(wallpaper, (ROOT / "dotfiles" / wallpaper).read_bytes()) in {
-                "preserve",
-                "protected",
-            }:
-                self.blocks.append("Cannot apply a preserved/conflicting wallpaper")
             self.steps.append(("desktop", None))
+
+    def diff(self, requested: list[str]) -> None:
+        names = list(dict.fromkeys(safe_diff_name(name) for name in requested))
+        for variable, suffix in (
+            ("XDG_CONFIG_HOME", ".config"),
+            ("XDG_DATA_HOME", ".local/share"),
+        ):
+            if (
+                os.environ.get(variable)
+                and Path(os.environ[variable]).resolve() != (self.files.home / suffix).resolve()
+            ):
+                raise SafetyError(f"{variable} is nonstandard; refusing configuration diffs")
+
+        inventory: dict[str, bytes | Path] = {}
+        for entry in self.selected:
+            for name, data, _ in launchers(entry, self.files.home):
+                inventory[name] = data
+        if not self.args.apps_only:
+            inventory.update(dotfile_sources())
+        for name in names:
+            if name not in inventory:
+                raise SafetyError(f"Unmanaged or unselected --diff path: {name}")
+
+        output = []
+        size = 0
+
+        def append(text: str) -> None:
+            nonlocal size
+            size += len(text.encode("utf-8"))
+            if size > DIFF_OUTPUT_LIMIT:
+                raise SafetyError(f"Diff output exceeds {DIFF_OUTPUT_LIMIT} bytes")
+            output.append(text)
+
+        append(
+            "Read-only comparison; replacement requires separate --apply with exact --replace.\n"
+        )
+        for name in names:
+            source = inventory[name]
+            try:
+                if isinstance(source, Path):
+                    parent = source
+                    while parent != ROOT:
+                        if parent.is_symlink():
+                            raise SafetyError("Repository source is symlink-protected")
+                        parent = parent.parent
+                    desired = Files.read_bounded(source, DIFF_FILE_LIMIT)
+                else:
+                    desired = source
+                    if len(desired) > DIFF_FILE_LIMIT:
+                        raise SafetyError(f"Desired file exceeds {DIFF_FILE_LIMIT} bytes")
+                target = self.files.target(name)
+                try:
+                    target.lstat()
+                except FileNotFoundError:
+                    current = None
+                else:
+                    current = Files.read_bounded(target, DIFF_FILE_LIMIT)
+            except (OSError, SafetyError) as error:
+                raise SafetyError(
+                    f"Protected or unsuitable --diff path: {name} ({type(error).__name__})"
+                ) from None
+            desired_text = diff_text(desired, name)
+            current_text = diff_text(current, name) if current is not None else ""
+            if current is not None and current == desired:
+                append(f"UNCHANGED {name}\n")
+                continue
+            append(f"{'MISSING (new)' if current is None else 'DIFF'} {name}\n")
+            for line in difflib.unified_diff(
+                current_text.splitlines(keepends=True),
+                desired_text.splitlines(keepends=True),
+                fromfile=f"current/{name}",
+                tofile=f"desired/{name}",
+            ):
+                append(line)
+                if not line.endswith("\n"):
+                    append("\n\\ No newline at end of file\n")
+        print("".join(output), end="")
 
     def install_app(self, entry: dict):
         method, package = entry["method"], entry["package"]
@@ -860,51 +1013,6 @@ class Setup:
             if entry.get("python"):
                 argv.extend(["--python", entry["python"]])
             self.command([*argv, f"{package}=={version}"])
-        elif method == "go":
-            version = version if version.startswith("v") else "v" + version
-            import tempfile
-
-            with tempfile.TemporaryDirectory(prefix="vixygrey-go-") as temporary:
-                previous = {key: self.env.get(key) for key in ("GOBIN", "CGO_ENABLED")}
-                try:
-                    self.env["GOBIN"] = temporary
-                    if "cgo" in entry:
-                        self.env["CGO_ENABLED"] = "1" if entry["cgo"] else "0"
-                    tags = (
-                        ["-tags", ",".join(entry["build_tags"])] if entry.get("build_tags") else []
-                    )
-                    self.command(["go", "install", *tags, f"{package}@{version}"])
-                finally:
-                    for key, value in previous.items():
-                        if value is None:
-                            self.env.pop(key, None)
-                        else:
-                            self.env[key] = value
-                name = package.rsplit("/", 1)[-1]
-                status = self.files.put(
-                    f".local/bin/{name}", (Path(temporary) / name).read_bytes(), 0o755
-                )
-                if status in {"preserve", "protected"}:
-                    raise SafetyError(f"Command conflict preserved: {name}")
-        elif method == "cargo":
-            result = self.run(["brew", "--prefix", "llvm"], capture=True)
-            if result.returncode:
-                raise SafetyError("Cannot locate the managed C toolchain")
-            compiler = Path(result.stdout.strip()) / "bin"
-            previous = {key: self.env.get(key) for key in ("CC", "CXX", "CMAKE_GENERATOR")}
-            try:
-                self.env.update(
-                    CC=str(compiler / "clang"),
-                    CXX=str(compiler / "clang++"),
-                    CMAKE_GENERATOR="Ninja",
-                )
-                self.command(["cargo", "install", "--locked", "--version", version, package])
-            finally:
-                for key, value in previous.items():
-                    if value is None:
-                        self.env.pop(key, None)
-                    else:
-                        self.env[key] = value
         elif method == "python-helper":
             relative, base, marker, command, wrapper = self.helper_paths(entry)
             self.files.directory(relative)
@@ -930,14 +1038,8 @@ class Setup:
                 raise SafetyError(
                     "Archive installation preserved conflicts: " + ", ".join(preserved)
                 )
-            if method == "font" and self.executable("fc-cache"):
-                self.command(
-                    [
-                        "fc-cache",
-                        "-f",
-                        str(self.files.home / ".local/share/fonts/JetBrainsMonoNerd"),
-                    ]
-                )
+            if method == "font":
+                self.cache_font(entry)
         else:
             raise SafetyError(f"No installer for method: {method}")
         if method == "python-helper":
@@ -997,6 +1099,10 @@ class Setup:
                     )
                 elif kind == "app":
                     self.install_app(payload)
+                elif kind == "font-cache":
+                    self.cache_font(payload)
+                elif kind == "receipt-migrate":
+                    archives.migrate_receipt(payload, self.files)
                 elif kind == "file":
                     name, data, mode = payload
                     status = self.files.put(name, data, mode)
@@ -1005,12 +1111,6 @@ class Setup:
                         self.preserved.append(name)
                 elif kind == "desktop":
                     self.command(["plasma-apply-colorscheme", "DraculaSakura"])
-                    self.command(
-                        [
-                            "plasma-apply-wallpaperimage",
-                            str(self.files.home / ".local/share/wallpapers/DraculaSakura.jpg"),
-                        ]
-                    )
                 elif kind == "bat-cache":
                     self.command(["bat", "cache", "--build"])
 
@@ -1046,6 +1146,13 @@ def main(argv=None) -> int:
     )
     parser.add_argument("--apply-plan", metavar="FILE", help="Apply a reviewed JSON plan")
     parser.add_argument("--format", choices=("text", "json"), default=None)
+    parser.add_argument(
+        "--diff",
+        action="append",
+        default=[],
+        metavar="RELATIVE_PATH",
+        help="Show an opt-in read-only diff for an exactly selected managed file",
+    )
     parser.add_argument("--plan-out", metavar="FILE", help="Write the JSON plan artifact")
     parser.add_argument(
         "--list", action="store_true", help="Print catalog with install methods, notes, and sources"
@@ -1085,9 +1192,6 @@ def main(argv=None) -> int:
         metavar="ID[,ID]",
         help="Approve the named third-party sources for this run",
     )
-    parser.add_argument(
-        "--include-optional", action="store_true", help="Include tentative requests such as mkcert"
-    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--apps-only", action="store_true")
     group.add_argument("--theme-only", action="store_true")
@@ -1101,9 +1205,27 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--desktop",
         action="store_true",
-        help="Activate KDE colors and wallpaper, preserving other desktop settings",
+        help="Activate KDE colors, preserving the wallpaper and other desktop settings",
     )
     args = parser.parse_args(argv)
+    if args.diff and any(
+        (
+            args.apply,
+            args.apply_plan,
+            args.format == "json",
+            args.plan_out,
+            args.status,
+            args.doctor,
+            args.list,
+            args.validate_catalog,
+            args.desktop,
+            args.replace,
+        )
+    ):
+        parser.error(
+            "--diff cannot be combined with apply, JSON, plan output, reports, "
+            "listing, desktop, or replacement"
+        )
     if args.validate_catalog:
         if any(
             (
@@ -1118,7 +1240,6 @@ def main(argv=None) -> int:
                 args.profile,
                 args.skip,
                 args.trust,
-                args.include_optional,
                 args.apps_only,
                 args.theme_only,
                 args.replace,
@@ -1139,7 +1260,6 @@ def main(argv=None) -> int:
             args.only,
             args.skip,
             args.trust,
-            args.include_optional,
             args.profile,
             args.apps_only,
             args.theme_only,
@@ -1173,7 +1293,6 @@ def main(argv=None) -> int:
             args.skip,
             args.profile,
             args.trust,
-            args.include_optional,
             args.apps_only,
             args.theme_only,
             args.replace,
@@ -1189,7 +1308,7 @@ def main(argv=None) -> int:
     approved = load_plan(args.apply_plan) if args.apply_plan else None
     if approved:
         for name, value in approved["intent"].items():
-            setattr(args, name, value)
+            setattr(args, "profile" if name == "profiles" else name, value)
         args.apply = True
     if args.only and not tokens(args.only):
         parser.error("--only requires at least one application")
@@ -1197,9 +1316,7 @@ def main(argv=None) -> int:
         parser.error("--profile requires at least one profile")
     if args.desktop and args.apps_only:
         parser.error("--desktop cannot be used with --apps-only")
-    if args.theme_only and (
-        args.only or args.profile or args.skip or args.trust or args.include_optional
-    ):
+    if args.theme_only and (args.only or args.profile or args.skip or args.trust):
         parser.error("Application selection flags cannot be used with --theme-only")
     entries = catalog()
     profile_map = profiles(entries)
@@ -1232,12 +1349,15 @@ def main(argv=None) -> int:
                 else ""
             )
             print(
-                f"{entry['id']} [{entry['method']}{'; optional' if entry.get('optional') else ''}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
+                f"{entry['id']} [{entry['method']}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
             )
         return 0
     setup = Setup(args)
     value = intent(args)
     setup.selected = select(entries, value, selected_profile_ids(profile_map, args.profile))
+    if args.diff:
+        setup.diff(args.diff)
+        return 0
     if args.doctor:
         print_report(setup.doctor_document(), args.format)
         return 0

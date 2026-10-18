@@ -1,22 +1,22 @@
 workflow_mode: solo-git
 active_flow: execute_group
-active_task: "12"
+active_task: "37"
 active_group: null
-phase: execute
+phase: verify
 group_cycle:
   mode: checkpoint
-  current_step: develop-tdd
-  completed_steps: [kickoff-branch]
+  current_step: verify-work
+  completed_steps: [develop-tdd]
 bug_cycle:
   current_step: null
   completed_steps: []
 git:
-  branch: feat/12-shfmt-format
-  hash: 25e9e91
+  branch: main
+  hash: 318715edb3fe5cd82fb89e869d8d7f38e5c6b8ef
 handoff:
   next_skill: verify-work
   last_step_completed: develop-tdd
-  context: Local shell formatter checks passed. Hosted pull-request and main CI evidence remain pending. The TrueNorth writer lock routing defect is tracked externally in truenorth-mcp#550.
+  context: Issue 37 implementation is locally verified on main; ./scripts/verify passed all 72 tests plus correctness linting and palette validation. Exact-path diff, lint probes, and palette mutation smokes passed. Changes remain uncommitted; issue 37 PR and hosted CI are pending. Prior issues 3, 8, 11, and 12 have linked successful final-head PR and post-merge main verification. Aurora, GUI, fontconfig, Docker, Vulkan, and KDE target acceptance remains unexercised.
   open_decisions: []
   required_reading:
     - .agent/product/scope.yml

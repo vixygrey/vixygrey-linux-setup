@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import platform
@@ -16,6 +17,195 @@ from safe_files import Files, SafetyError, digest, relative_path
 
 MAX_DOWNLOAD = 512 * 1024 * 1024
 MAX_EXPANDED = 2 * 1024 * 1024 * 1024
+FONT_DIRECTORY = ".local/share/fonts/JetBrainsMonoNerd"
+
+SPEC_VERSION = 1
+
+
+def _sha256(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def deployment_spec(entry: dict) -> str:
+    identity = {
+        "id": entry["id"],
+        "method": entry["method"],
+        "version": entry.get("version", ""),
+    }
+    if entry["method"] == "font":
+        identity.update(url=entry["url"], sha256=entry["sha256"], layout="font-zip")
+    else:
+        artifact = artifact_for(entry)
+        format_name = artifact.get("format", "tar")
+        identity.update(
+            architecture=machine_arch(),
+            url=artifact["url"],
+            sha256=artifact["sha256"],
+            format=format_name,
+            commands={
+                command: str(relative_path(member))
+                for command, member in commands_for(entry).items()
+            },
+        )
+        if format_name == "raw":
+            identity["filename"] = str(relative_path(artifact["filename"]))
+    return digest(json.dumps(identity, sort_keys=True, separators=(",", ":")).encode())
+
+
+def _archive_name(entry: dict, name: object) -> bool:
+    if not isinstance(name, str):
+        return False
+    base = f".local/share/vixygrey/apps/{entry['id']}/"
+    if name.startswith(base):
+        suffix = name[len(base) :]
+        parts = suffix.split("/")
+        return len(parts) >= 2 and all(part not in {"", ".", ".."} for part in parts)
+    prefix = ".local/bin/"
+    return (
+        name.startswith(prefix)
+        and name[len(prefix) :] not in {"", ".", ".."}
+        and "/" not in name[len(prefix) :]
+    )
+
+
+def read_receipt(entry: dict, files: Files) -> dict:
+    if entry["method"] == "font":
+        return font_receipt(entry, files)
+    path = files.target(receipt_path(entry))
+    if not path.exists():
+        return {}
+    try:
+        receipt = json.loads(files.read(path))
+    except (ValueError, UnicodeError) as error:
+        raise SafetyError(f"Invalid archive receipt: {path}") from error
+    if (
+        not isinstance(receipt, dict)
+        or not _sha256(receipt.get("sha256"))
+        or not _sha256(receipt.get("spec"))
+        or not isinstance(receipt.get("files"), dict)
+    ):
+        raise SafetyError(f"Invalid archive receipt: {path}")
+    _receipt_version(receipt)
+    for name, record in receipt["files"].items():
+        if not _archive_name(entry, name) or not _file_record(record):
+            raise SafetyError(f"Invalid archive receipt: {path}")
+    return receipt
+
+
+def _receipt_version(receipt: dict) -> int:
+    version = receipt.get("spec_version", 0)
+    if (
+        type(version) is not int
+        or version not in {0, SPEC_VERSION}
+        or (version == 0 and "spec_version" in receipt)
+    ):
+        raise SafetyError("Unsupported receipt identity version")
+    return version
+
+
+def _file_record(record: object) -> bool:
+    return (
+        isinstance(record, dict)
+        and _sha256(record.get("sha256"))
+        and type(record.get("mode")) is int
+        and 0 <= record["mode"] <= 0o777
+    )
+
+
+def _receipt_identity_matches(entry: dict, receipt: dict) -> bool:
+    expected = (
+        deployment_spec(entry)
+        if _receipt_version(receipt) == SPEC_VERSION
+        else digest(json.dumps(entry, sort_keys=True).encode())
+    )
+    return receipt["sha256"] == artifact_for(entry)["sha256"] and receipt["spec"] == expected
+
+
+def _deployed_files_match(receipt: dict, files: Files) -> bool:
+    return bool(receipt["files"]) and all(
+        files.target(name).is_file()
+        and digest(files.read(files.target(name))) == record["sha256"]
+        and (
+            not record["mode"] & 0o111
+            or files.target(name).stat().st_mode & 0o111 == record["mode"] & 0o111
+        )
+        for name, record in receipt["files"].items()
+    )
+
+
+def _font_name(path: str) -> bool:
+    if not isinstance(path, str):
+        return False
+    prefix = FONT_DIRECTORY + "/"
+    return (
+        path.startswith(prefix)
+        and "/" not in path[len(prefix) :]
+        and path[len(prefix) :] not in {"", ".", ".."}
+        and path.lower().endswith((".ttf", ".otf"))
+    )
+
+
+def font_receipt(entry: dict, files: Files) -> dict:
+    path = files.target(receipt_path(entry))
+    if not path.exists():
+        return {}
+    try:
+        receipt = json.loads(files.read(path))
+    except (ValueError, UnicodeError) as error:
+        raise SafetyError(f"Invalid font receipt: {path}") from error
+    if not isinstance(receipt, dict) or not all(
+        _sha256(receipt.get(field)) for field in ("sha256", "spec")
+    ):
+        raise SafetyError(f"Invalid font receipt: {path}")
+    _receipt_version(receipt)
+    if (
+        not isinstance(receipt.get("files"), dict)
+        or not isinstance(receipt.get("retired", {}), dict)
+        or type(receipt.get("cache_pending", False)) is not bool
+    ):
+        raise SafetyError(f"Invalid font receipt: {path}")
+    for inventory in (receipt["files"], receipt.get("retired", {})):
+        for name, record in inventory.items():
+            if not _font_name(name) or not _file_record(record):
+                raise SafetyError(f"Invalid font receipt: {path}")
+    if receipt["files"].keys() & receipt.get("retired", {}).keys():
+        raise SafetyError(f"Invalid font receipt: {path}")
+    return receipt
+
+
+def _receipt_bytes(receipt: dict) -> bytes:
+    return json.dumps(receipt, sort_keys=True).encode() + b"\n"
+
+
+def _save_receipt(entry: dict, files: Files, receipt: dict, original: bytes | None) -> None:
+    relative = receipt_path(entry)
+    path = files.target(relative)
+    if original is None:
+        if path.exists():
+            raise SafetyError(f"Receipt changed during deployment: {relative}")
+    elif files.read(path) != original:
+        raise SafetyError(f"Receipt changed during deployment: {relative}")
+    added = original is not None and relative not in files.replacements
+    if added:
+        files.replacements.add(relative)
+    try:
+        status = files.put(relative, _receipt_bytes(receipt))
+    finally:
+        if added:
+            files.replacements.remove(relative)
+    if status in {"preserve", "protected"}:
+        raise SafetyError(f"Protected receipt: {relative}")
+
+
+def save_font_receipt(entry: dict, files: Files, receipt: dict) -> None:
+    relative = receipt_path(entry)
+    font_receipt(entry, files)
+    path = files.target(relative)
+    _save_receipt(entry, files, receipt, files.read(path) if path.exists() else None)
 
 
 def machine_arch() -> str:
@@ -43,23 +233,40 @@ def receipt_path(entry: dict) -> str:
 
 
 def installed(entry: dict, files: Files) -> bool:
-    path = files.target(receipt_path(entry))
-    if not path.is_file():
-        return False
-    receipt = json.loads(files.read(path))
-    if receipt.get("sha256") != artifact_for(entry)["sha256"] or receipt.get("spec") != digest(
-        json.dumps(entry, sort_keys=True).encode()
-    ):
-        return False
-    return bool(receipt.get("files")) and all(
-        files.target(name).is_file()
-        and digest(files.read(files.target(name))) == record["sha256"]
-        and (
-            not record["mode"] & 0o111
-            or files.target(name).stat().st_mode & 0o111 == record["mode"] & 0o111
-        )
-        for name, record in receipt["files"].items()
+    receipt = read_receipt(entry, files)
+    return (
+        bool(receipt)
+        and _receipt_identity_matches(entry, receipt)
+        and _deployed_files_match(receipt, files)
     )
+
+
+def needs_receipt_migration(entry: dict, files: Files) -> bool:
+    receipt = read_receipt(entry, files)
+    return (
+        bool(receipt)
+        and _receipt_version(receipt) == 0
+        and _receipt_identity_matches(entry, receipt)
+        and _deployed_files_match(receipt, files)
+    )
+
+
+def migrate_receipt(entry: dict, files: Files) -> None:
+    receipt = read_receipt(entry, files)
+    relative = receipt_path(entry)
+    original = files.read(files.target(relative)) if receipt else None
+    if original is not None and json.loads(original) != receipt:
+        raise SafetyError(f"Receipt changed during migration: {relative}")
+    if (
+        not receipt
+        or not _receipt_identity_matches(entry, receipt)
+        or not _deployed_files_match(receipt, files)
+    ):
+        raise SafetyError(f"Incompatible receipt: {relative}")
+    if _receipt_version(receipt) == SPEC_VERSION:
+        return
+    updated = {**receipt, "spec_version": SPEC_VERSION, "spec": deployment_spec(entry)}
+    _save_receipt(entry, files, updated, original)
 
 
 def download(artifact: dict, destination: Path) -> None:
@@ -131,25 +338,6 @@ def tar_payload(path: Path):
             yield name, data, 0o755 if target.mode & 0o111 else 0o600
 
 
-def font_payload(path: Path):
-    with zipfile.ZipFile(path) as archive:
-        total = sum(info.file_size for info in archive.infolist())
-        if total > MAX_EXPANDED:
-            raise SafetyError("Font archive exceeds expanded size limit")
-        seen = set()
-        for info in archive.infolist():
-            if info.is_dir() or not info.filename.lower().endswith((".ttf", ".otf")):
-                continue
-            relative_path(info.filename)
-            name = PurePosixPath(info.filename).name
-            if name in seen:
-                raise SafetyError(f"Duplicate font filename: {name}")
-            seen.add(name)
-            yield name, archive.read(info), 0o644
-        if not seen:
-            raise SafetyError("Font archive contains no font files")
-
-
 def payload_for(path: Path, artifact: dict):
     format_name = artifact.get("format", "tar")
     if format_name == "raw":
@@ -195,7 +383,87 @@ def wrappers(entry: dict, home: Path) -> dict[str, bytes]:
     }
 
 
+def _install_font(entry: dict, files: Files) -> list[str]:
+    artifact = artifact_for(entry)
+    relative = receipt_path(entry)
+    receipt_protected = files.status(relative, b"") == "protected"
+    old = {} if receipt_protected else font_receipt(entry, files)
+    with tempfile.TemporaryDirectory(prefix="vixygrey-font-") as temporary:
+        root = Path(temporary)
+        source = root / "artifact"
+        download(artifact, source)
+        staged = root / "staged"
+        staged.mkdir()
+        outputs = {}
+        with zipfile.ZipFile(source) as archive:
+            if sum(info.file_size for info in archive.infolist()) > MAX_EXPANDED:
+                raise SafetyError("Font archive exceeds expanded size limit")
+            expanded = 0
+            for info in archive.infolist():
+                if info.is_dir() or not info.filename.lower().endswith((".ttf", ".otf")):
+                    continue
+                relative_path(info.filename)
+                name = PurePosixPath(info.filename).name
+                destination = f"{FONT_DIRECTORY}/{name}"
+                if destination in outputs:
+                    raise SafetyError(f"Duplicate font filename: {name}")
+                checksum = hashlib.sha256()
+                with archive.open(info) as incoming, (staged / name).open("xb") as outgoing:
+                    while chunk := incoming.read(1024 * 1024):
+                        expanded += len(chunk)
+                        if expanded > MAX_EXPANDED:
+                            raise SafetyError("Font archive exceeds expanded size limit")
+                        checksum.update(chunk)
+                        outgoing.write(chunk)
+                outputs[destination] = {"sha256": checksum.hexdigest(), "mode": 0o644}
+        if not outputs:
+            raise SafetyError("Font archive contains no font files")
+        retired = {
+            name: record
+            for name, record in {**old.get("retired", {}), **old.get("files", {})}.items()
+            if name not in outputs
+        }
+        receipt = {
+            "sha256": artifact["sha256"],
+            "spec_version": SPEC_VERSION,
+            "spec": deployment_spec(entry),
+            "files": outputs,
+            "retired": retired,
+            "cache_pending": True,
+        }
+        conflicts = []
+        for destination in sorted(outputs):
+            name = PurePosixPath(destination).name
+            status = files.status(destination, (staged / name).read_bytes(), 0o644)
+            if status in {"preserve", "protected"}:
+                conflicts.append((destination, status))
+        receipt_status = files.status(relative, _receipt_bytes(receipt))
+        if receipt_status == "protected" or (receipt_status == "preserve" and not old):
+            conflicts.append((relative, receipt_status))
+        if conflicts:
+            for name, status in conflicts:
+                advice = (
+                    "protected path; remove the symlink or obstruction before retrying"
+                    if status == "protected"
+                    else f"approve exactly --replace {name}"
+                )
+                print(f"CONFLICT {name}: {advice}")
+            return [name for name, _ in conflicts]
+        for destination in sorted(outputs):
+            name = PurePosixPath(destination).name
+            status = files.put(destination, (staged / name).read_bytes(), 0o644)
+            if status in {"preserve", "protected"}:
+                raise SafetyError(f"Font destination changed during deployment: {destination}")
+        save_font_receipt(entry, files, receipt)
+    return []
+
+
 def install(entry: dict, files: Files) -> list[str]:
+    if entry["method"] == "font":
+        return _install_font(entry, files)
+    existing = read_receipt(entry, files)
+    receipt_file = files.target(receipt_path(entry))
+    original = files.read(receipt_file) if existing else None
     artifact = artifact_for(entry)
     outputs = {}
     preserved = []
@@ -207,12 +475,8 @@ def install(entry: dict, files: Files) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="vixygrey-download-") as temporary:
         path = Path(temporary) / "artifact"
         download(artifact, path)
-        payload = font_payload(path) if entry["method"] == "font" else payload_for(path, artifact)
-        base = (
-            ".local/share/fonts/JetBrainsMonoNerd"
-            if entry["method"] == "font"
-            else (f".local/share/vixygrey/apps/{entry['id']}/{entry['version']}")
-        )
+        payload = payload_for(path, artifact)
+        base = f".local/share/vixygrey/apps/{entry['id']}/{entry['version']}"
         members = set()
         expanded = 0
         for name, data, mode in payload:
@@ -235,21 +499,11 @@ def install(entry: dict, files: Files) -> list[str]:
             else:
                 outputs[name] = {"sha256": digest(data), "mode": 0o755}
     if not preserved:
-        receipt = (
-            json.dumps(
-                {
-                    "sha256": artifact["sha256"],
-                    "spec": digest(json.dumps(entry, sort_keys=True).encode()),
-                    "files": outputs,
-                },
-                sort_keys=True,
-            ).encode()
-            + b"\n"
-        )
-        relative = receipt_path(entry)
-        # Only an installer-owned receipt is automatically updated, never app configuration.
-        previous = files.target(relative)
-        if previous.exists():
-            files.replacements.add(relative)
-        files.put(relative, receipt)
+        receipt = {
+            "sha256": artifact["sha256"],
+            "spec_version": SPEC_VERSION,
+            "spec": deployment_spec(entry),
+            "files": outputs,
+        }
+        _save_receipt(entry, files, receipt, original)
     return preserved

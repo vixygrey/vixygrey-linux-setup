@@ -4,18 +4,253 @@ tasks:
     updated_at: 2026-10-17
     verification: .agent/tasks/2/verification.md
   "3":
-    status: in-progress
-    updated_at: 2026-10-17
+    status: done
+    updated_at: 2026-10-18
     verification: .agent/tasks/3/verification.md
   "8":
-    status: in-progress
-    updated_at: 2026-10-17
+    status: done
+    updated_at: 2026-10-18
     verification: .agent/tasks/8/verification.md
   "11":
-    status: in-progress
-    updated_at: 2026-10-17
+    status: done
+    updated_at: 2026-10-18
     verification: .agent/tasks/11/verification.md
   "12":
-    status: in-progress
-    updated_at: 2026-10-17
+    status: done
+    updated_at: 2026-10-18
     verification: .agent/tasks/12/verification.md
+  file-tools:
+    status: done
+    updated_at: 2026-10-18
+    verification:
+      - "./scripts/verify: passed; 21 safety tests, formatting, shell checks, catalog validation, and no-write previews."
+      - "Isolated Zsh smoke: eight aliases loaded in human interactive shells; cat exercised bat against a sample file."
+      - "Noninteractive, AI_AGENT-marked, and missing-tool shells retained standard commands without replacement aliases."
+    scope: Remove procs and duf; retain other reviewed file tools and add interactive-only aliases.
+  approved-tool-cuts:
+    status: done
+    updated_at: 2026-10-18
+    scope: >
+      Remove the 21 approved applications, their managed configuration, Atuin and fzf
+      shell integration, and unused Cargo and Clipse build support. Preserve all
+      retained applications and the interactive file aliases.
+    removed:
+      - obsidian
+      - emeraldian
+      - cfait
+      - croft-ide
+      - herald
+      - posting
+      - chawan
+      - cliamp
+      - clipse
+      - leaf
+      - jc
+      - fx
+      - jnv
+      - jqp
+      - lazygit
+      - delta
+      - difft
+      - git-absorb
+      - atuin
+      - fzf
+      - zellij
+    verification:
+      - "CLI smoke: all 21 retired IDs rejected without home writes or selection fallback; retained catalog IDs present."
+      - "Theme smoke: retained files deployed under a temporary home; existing Kitty and retired Atuin configuration preserved; removed configurations not created."
+      - "Interactive TTY smoke: Starship and file aliases loaded; standard Ctrl+R, Ctrl+T, and Up Arrow bindings restored without Atuin or fzf hooks."
+      - "Go smoke: pinned e2c v0.5.0 built, deployed privately, executed with --help, and confirmed installed; GOBIN restored."
+    pending_additions: [notion, zed, bruno]
+    next_audit: API and local web development tools.
+    verify_command: ./scripts/verify
+    gate_result: Passed all 21 safety tests, formatting, compilation, shell checks, catalog validation, and no-write previews.
+  api-tool-cuts:
+    status: done
+    updated_at: 2026-10-18
+    scope: Remove xh, Hurl, ngrok, and mkcert; remove the unused optional selection flag and intent field.
+    removed: [xh, hurl, ngrok, mkcert]
+    verification:
+      - "CLI smoke: all four removed IDs and the obsolete flag rejected without home writes."
+      - "Plan smoke: retained OMP preview serialized and loaded; old schema and obsolete intent field rejected before mutation."
+    verify_command: ./scripts/verify
+    pending_additions: [notion, zed, bruno]
+    next_audit: Network diagnostics and SSH tools.
+    gate_result: Passed all 21 safety tests, formatting, compilation, shell checks, catalog validation, and no-write previews.
+  network-tools:
+    status: done
+    updated_at: 2026-10-18
+    scope: Retain all six reviewed networking tools and add guarded interactive ping and dig aliases.
+    retained: [trippy, gping, doggo, nmap, ssh-audit, lazyssh]
+    aliases: { ping: gping, dig: doggo }
+    verify_command: ./scripts/verify
+    next_audit: Container tooling.
+    verification:
+      - "Interactive smoke: ping and dig invoked actual gping and doggo help without network requests."
+      - "Guard smoke: noninteractive, AI_AGENT-marked, and missing-tool shells retained standard command resolution."
+      - "./scripts/verify: passed all 21 safety tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  container-tools:
+    status: done
+    updated_at: 2026-10-18
+    scope: Retain Aurora DX Docker Engine integration, lazydocker, dive, and hadolint without runtime changes.
+    retained: [docker-engine, lazydocker, dive, hadolint]
+    next_audit: Database and SQL tools.
+  database-client:
+    status: done
+    updated_at: 2026-10-18
+    retained: [dbeaver]
+    removed: [duckdb, harlequin, usql]
+    verification: "Preview selected DBeaver with source approval and blocked absent Flatpak; retired IDs rejected without home writes. Aurora GUI validation remains unexercised."
+    next_audit: Development runtimes and environment tools.
+    gate_result: "./scripts/verify passed all 21 safety tests and repository checks."
+  development-environment:
+    status: done
+    updated_at: 2026-10-18
+    scope: Retain all six reviewed development runtime and environment tools without installation or shell changes.
+    retained: [mise, uv, typescript, tsx, yaml-py, direnv]
+    next_audit: Code quality and automation tools.
+  quality-tools:
+    status: done
+    updated_at: 2026-10-18
+    removed: [act]
+    retained: [ruff, shellcheck, shfmt, actionlint, typos, ast-grep, pre-commit, just]
+    next_audit: Security and secrets tooling.
+    verification: "Removed act selection rejected without home writes; all eight retained tools present. ./scripts/verify passed all 21 safety tests and repository checks."
+  security-tools:
+    status: done
+    updated_at: 2026-10-18
+    scope: Retain all eight reviewed security and secrets tools without installation or configuration changes.
+    retained: [trivy, semgrep, gitleaks, checkov, cosign, age, iamlive, chamber]
+    next_audit: AWS development and resource management tools.
+  aws-tools:
+    status: done
+    updated_at: 2026-10-18
+    removed: [claws, e1s, e2c, stu, s5cmd]
+    retained: [aws-cli, granted, aws-cdk-cli, aws-sam-cli, cfn-lint, session-manager-plugin]
+    scope: Remove five AWS tools, their managed themes, and the unused Go application installation route.
+    next_audit: Backups and dotfile management.
+    verification:
+      - "Manager-isolated previews rejected five removed IDs, selected six retained AWS tools, omitted retired themes, and left HOME unchanged."
+      - "Interactive shell smoke retained approved aliases without injecting GOBIN."
+      - "./scripts/verify passed all 21 safety tests and repository checks."
+  backup-tools:
+    status: done
+    updated_at: 2026-10-18
+    removed: [borg, borgmatic, lazyrsync]
+    retained: [chezmoi, cheznav, rsync, rclone]
+    scope: Remove backup and transfer wrappers; preserve independent backup and restore requirements without prescribing backup software.
+    next_audit: Media tools.
+    verification: "Removed IDs and borgbackup alias rejected; four retained tools selectable without home writes. ./scripts/verify passed all 21 safety tests and repository checks."
+  media-player:
+    status: done
+    updated_at: 2026-10-18
+    removed: [mpv]
+    retained: [vlc]
+    scope: Remove mpv from the catalog and managed launcher generation; no mpv configuration was shipped.
+    next_audit: ImageMagick, oxipng, and jpegoptim.
+    verification: "mpv selection rejected; VLC and its CLI wrapper planned without home writes. ./scripts/verify passed all 21 safety tests and repository checks. Aurora playback remains unexercised."
+  image-tools:
+    status: done
+    updated_at: 2026-10-18
+    scope: Retain ImageMagick, oxipng, and jpegoptim without installation or configuration changes.
+    retained: [imagemagick, oxipng, jpegoptim]
+    next_audit: Log viewers and remaining terminal applications.
+  remaining-terminal-apps:
+    status: done
+    updated_at: 2026-10-18
+    removed: [lnav, nerdlog, lazynpm, eilmeldung]
+    retained: [caligula]
+    scope: Remove four terminal applications and their managed configuration and themes; retain Caligula.
+    next_audit: Browser, terminal, font, gum, and watchexec.
+    verification: "Removed IDs rejected; trusted Caligula preview passed; retired themes absent and isolated HOME unchanged. ./scripts/verify passed all 21 safety tests and repository checks. No disk imaging performed."
+  final-catalog-audit:
+    status: done
+    updated_at: 2026-10-18
+    scope: Retain all five remaining reviewed tools without installation or configuration changes; the existing catalog keep/remove audit is complete.
+    retained: [google-chrome, kitty, jetbrains-mono-nerd-font, gum, watchexec]
+    pending_additions: []
+    next_step: Review the three-app plan and validate GUI execution on the target Aurora workstation.
+  workstation-additions:
+    status: done
+    updated_at: 2026-10-18
+    added: [notion, zed, bruno]
+    routes:
+      notion: Official web app via a conflict-preserving menu launcher and xdg-open.
+      zed: Official pinned v1.24.2 tarballs for x86_64 and aarch64.
+      bruno: Official pinned v4.2.1 Debian payloads for x86_64 and aarch64, extracted without package scripts.
+    verification:
+      - "Both architecture previews selected all three apps and launchers without home writes; each unapproved source blocked."
+      - "Notion provisioned without opening a browser; its Exec URL handoff, repeat planning, and preservation of personal edits passed."
+      - "Both Zed and Bruno payload architectures passed checksum-verified HTTPS fixture deployment, icon and command path checks, receipts, idempotence, and existing-command conflict protection."
+    verify_command: ./scripts/verify
+    limitations: Linux GUI execution, Vulkan rendering, desktop portals, Electron host libraries, and Aurora menu activation remain unexercised on this Mac.
+    gate_result: "./scripts/verify passed all 26 safety tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  desktop-background-removal:
+    status: done
+    updated_at: 2026-10-18
+    scope: Remove the bundled desktop wallpaper and its deployment, activation, and doctor requirements; preserve all other custom themes.
+    verification:
+      - "Isolated deployment smoke: preview writes no theme files; apply deploys every retained dotfile and invokes only the recording KDE color command without wallpaper tooling."
+    limitations: Real KDE GUI activation remains unexercised on macOS.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 26 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  saved-profile-plan:
+    status: done
+    updated_at: 2026-10-18
+    issue: https://github.com/vixygrey/vixygrey-linux-setup/issues/36
+    scope: Restore saved profiles into the argparse profile destination without changing the saved-plan schema or eligibility and replanning safeguards.
+    verification:
+      - "Regression failed before the fix with a selection-intent mismatch; passed after the fix and deployed only the selected Notion launcher."
+      - "Subprocess smoke saved and applied a base-profile plan through locked replanning with an isolated Homebrew fixture; all eight reviewed IDs retained and plan bytes unchanged."
+      - "Native macOS application still rejected by the Aurora/non-root eligibility safeguard."
+    limitations: Apply smokes override host eligibility; actual Aurora package installation remains unexercised.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 27 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  staged-font-upgrades:
+    status: done
+    updated_at: 2026-10-18
+    issue: https://github.com/vixygrey/vixygrey-linux-setup/issues/35
+    scope: Stage and preflight complete font payloads; preserve exact-path consent, retired provenance, and pending cache recovery without a font directory migration.
+    verification:
+      - "Failing-before setup regressions captured missing cache-pending state, ignored absent fc-cache, and incomplete modified-font preview."
+      - "CLI smoke exercised real parsing, approval, locked apply, checksum verification, blocked-upgrade preservation, exact-path replacement backups, retirement status, cache failure and download-free retry."
+    limitations: Smoke transport used an in-memory HTTPS response fixture and a recording cache executable with host eligibility overridden; real Aurora fonts, fontconfig discovery, and rendering remain unverified.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 43 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  discord:
+    status: done
+    updated_at: 2026-10-18
+    scope: Add Discord through the existing per-user Flatpak route to the default catalog and desktop profile, preserving explicit source approval and all other configuration.
+    source: https://flathub.org/apps/com.discordapp.Discord
+    architecture: Flathub metadata restricts the package to x86_64; aarch64 users must explicitly skip Discord and use the browser client.
+    verification:
+      - "Isolated CLI smoke: unapproved Discord blocked, approved preview wrote nothing, desktop selection included Discord, and explicit skip excluded it."
+      - "Recording Flatpak smoke: eligible apply requested only the per-user Discord package, repeat skipped reinstall, and status reported installed."
+    limitations: Apply smoke used a recording Flatpak executable and overridden host eligibility; actual Aurora installation, sign-in, and GUI operation remain unverified.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 43 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  deployment-receipt-identity:
+    status: done
+    updated_at: 2026-10-18
+    issue: https://github.com/vixygrey/vixygrey-linux-setup/issues/34
+    scope: Version archive and font deployment identity; exclude descriptive metadata and migrate compatible legacy receipts only during explicit locked apply.
+    verification:
+      - "Failing-before font regression downloaded twice after notes changed; repaired cache recovery downloads only once."
+      - "CLI smoke verified read-only migration preview, guarded receipt-only replacement with private backup, an unchanged runnable wrapper, and metadata-only apply without downloads."
+      - "Font smoke preserved retired provenance and pending cache failure across legacy migration, then recovered after a notes edit without another download."
+    limitations: Smoke used local artifact response and cache executable fixtures with host eligibility overridden; real vendor installations and Aurora GUI behavior remain unverified.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 60 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  "37":
+    status: done
+    updated_at: 2026-10-18
+    issue: https://github.com/vixygrey/vixygrey-linux-setup/issues/37
+    scope: Add correctness linting, reconcile prior hosted workflow evidence, validate palette consistency without visual changes, and provide safe read-only exact-path configuration diffs.
+    verification:
+      - "Configured Ruff probes accepted valid code and rejected undefined names, tuple assertions, and duplicate dictionary keys."
+      - "Tasks 3, 8, 11, and 12 have final-head PR and post-merge main verify jobs linked in their existing verification records; historical observations and target limits retained."
+      - "Palette smoke accepted existing adaptations and bright-white exceptions; rejected off-palette and wrong-role colors, missing roles, broken theme references, altered Starship palette, and malformed KDE/Trippy encodings."
+      - "CLI diff smoke showed a deduplicated exact-path unified diff with missing-final-newline markers, no home writes or package calls, and no private content in ordinary preview or JSON/status output."
+    limitations: Static palette checks do not prove app rendering or contrast. Aurora, GUI, fontconfig, Docker, Vulkan, and KDE target acceptance remain unexercised; issue 37 hosted CI is not yet run.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 72 tests, correctness linting, palette validation, formatting, compilation, shell checks, catalog validation, and no-write previews."

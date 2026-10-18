@@ -1,2 +1,4 @@
-vision: A reviewable Aurora Linux setup that makes personal tooling and theme deployment predictable
-  without taking ownership of the operating system or user secrets.
+vision: A reviewable graphical Aurora Linux workstation setup with selected useful terminal tools,
+  predictable theme deployment, and OMP as the primary AI development tool alongside Kiro and
+  Zed, without taking ownership of the operating system or user secrets. Notion uses the official
+  web app, and Bruno supplies the graphical API workspace.

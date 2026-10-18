@@ -46,3 +46,7 @@ The existing external gate diagnostic defect remains tracked in [vixygrey/trueno
 ## Pending evidence
 
 The GitHub-hosted verification job must pass on this pull request and again after merge to `main` before issue 12 is complete.
+
+## Hosted verification and external blocker resolution (2026-10-18)
+
+The pending hosted evidence above is resolved. [PR #14](https://github.com/vixygrey/vixygrey-linux-setup/pull/14) merged final head `3020eae5e8c879e812b9d95d381183262ee21342` as `0d56af05297d24d83a62e216c4bbc4877427f23b` on `main`. Its [pull-request run](https://github.com/vixygrey/vixygrey-linux-setup/actions/runs/38998804863) (`pull_request`, final head) and [post-merge main run](https://github.com/vixygrey/vixygrey-linux-setup/actions/runs/38998866292) (`push`, merge commit) both concluded success; the [PR verify job](https://github.com/vixygrey/vixygrey-linux-setup/actions/runs/38998804863/job/117297153731) and [main verify job](https://github.com/vixygrey/vixygrey-linux-setup/actions/runs/38998866292/job/117297339733) each concluded success, including the `./scripts/verify` step. External [#552](https://github.com/vixygrey/truenorth-mcp/issues/552) is closed as completed; the historical TrueNorth failure was not rerun or reclassified as success. External writer-lock routing [#550](https://github.com/vixygrey/truenorth-mcp/issues/550) is also closed as completed. Aurora, GUI, fontconfig, Docker, Vulkan, and KDE target acceptance remains unexercised.

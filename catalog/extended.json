@@ -50,52 +50,6 @@
     "third_party": false
   },
   {
-    "id": "s5cmd",
-    "name": "s5cmd",
-    "method": "brew",
-    "package": "s5cmd",
-    "source": "https://github.com/peak/s5cmd",
-    "notes": "Parallel S3 and local filesystem tool from Homebrew core.",
-    "third_party": false
-  },
-  {
-    "id": "stu",
-    "name": "stu",
-    "method": "brew",
-    "package": "stu",
-    "source": "https://github.com/lusingander/stu",
-    "notes": "Amazon S3 TUI from Homebrew core.",
-    "third_party": false
-  },
-  {
-    "id": "e1s",
-    "name": "e1s",
-    "method": "brew",
-    "package": "e1s",
-    "source": "https://github.com/keidarcy/e1s",
-    "notes": "AWS ECS terminal UI from Homebrew core.",
-    "third_party": false
-  },
-  {
-    "id": "e2c",
-    "name": "e2c",
-    "method": "go",
-    "package": "github.com/nlamirault/e2c/cmd/e2c",
-    "source": "https://github.com/nlamirault/e2c",
-    "notes": "Cross-platform ECS command-line client installed from its Go module.",
-    "version": "0.5.0",
-    "third_party": true
-  },
-  {
-    "id": "claws",
-    "name": "claws",
-    "method": "brew",
-    "package": "clawscli/tap/claws",
-    "source": "https://github.com/clawscli/claws",
-    "notes": "AWS resource-management TUI; its official tap explicitly publishes amd64 and arm64 Linux artifacts.",
-    "third_party": true
-  },
-  {
     "id": "iamlive",
     "name": "iamlive",
     "method": "brew",
@@ -163,15 +117,6 @@
     "package": "just",
     "source": "https://github.com/casey/just",
     "notes": "Command runner from Homebrew core.",
-    "third_party": false
-  },
-  {
-    "id": "act",
-    "name": "act",
-    "method": "brew",
-    "package": "act",
-    "source": "https://github.com/nektos/act",
-    "notes": "Local GitHub Actions runner from Homebrew core.",
     "third_party": false
   },
   {
@@ -290,35 +235,6 @@
     "third_party": true
   },
   {
-    "id": "borg",
-    "name": "borg",
-    "method": "brew",
-    "package": "borgbackup",
-    "source": "https://github.com/borgbackup/borg",
-    "notes": "Deduplicating backup tool; Homebrew formula borgbackup installs the borg command.",
-    "aliases": ["borgbackup"],
-    "third_party": false
-  },
-  {
-    "id": "borgmatic",
-    "name": "borgmatic",
-    "method": "brew",
-    "package": "borgmatic",
-    "source": "https://projects.torsion.org/borgmatic-collective/borgmatic",
-    "notes": "Borg automation wrapper from Homebrew core.",
-    "third_party": false
-  },
-  {
-    "id": "leaf",
-    "name": "leaf",
-    "method": "brew",
-    "package": "leaf-markdown-viewer",
-    "source": "https://github.com/RivoLink/leaf",
-    "notes": "Terminal Markdown viewer; Homebrew core Linux bottles install the leaf executable.",
-    "aliases": ["leaf-markdown-viewer"],
-    "third_party": false
-  },
-  {
     "id": "libreoffice",
     "name": "libreoffice",
     "method": "flatpak",
@@ -368,15 +284,6 @@
     "third_party": false
   },
   {
-    "id": "mpv",
-    "name": "mpv",
-    "method": "flatpak",
-    "package": "io.mpv.Mpv",
-    "source": "https://mpv.io/",
-    "notes": "Cross-platform media player via its Flathub desktop package.",
-    "third_party": true
-  },
-  {
     "id": "vlc",
     "name": "VLC",
     "method": "flatpak",
@@ -385,51 +292,6 @@
     "notes": "VLC media player via Flathub.",
     "aliases": ["vlc"],
     "third_party": true
-  },
-  {
-    "id": "lnav",
-    "name": "lnav",
-    "method": "brew",
-    "package": "lnav",
-    "source": "https://lnav.org/",
-    "notes": "Log-file navigator from Homebrew core.",
-    "third_party": false
-  },
-  {
-    "id": "nerdlog",
-    "name": "nerdlog",
-    "method": "brew",
-    "package": "nerdlog",
-    "source": "https://github.com/dimonomid/nerdlog",
-    "notes": "Remote-first TUI log viewer from Homebrew core.",
-    "third_party": false
-  },
-  {
-    "id": "cliamp",
-    "name": "cliamp",
-    "method": "brew",
-    "package": "bjarneo/cliamp/cliamp",
-    "source": "https://github.com/bjarneo/cliamp",
-    "notes": "Terminal music player; its tap explicitly provides amd64 and arm64 Linux binaries.",
-    "third_party": true
-  },
-  {
-    "id": "lazynpm",
-    "name": "lazynpm",
-    "method": "brew",
-    "package": "jesseduffield/lazynpm/lazynpm",
-    "source": "https://github.com/jesseduffield/lazynpm",
-    "notes": "npm TUI; its tap formula explicitly provides x86_64 and arm64 Linux artifacts.",
-    "third_party": true
-  },
-  {
-    "id": "lazyrsync",
-    "name": "lazyrsync",
-    "method": "brew",
-    "package": "lazyrsync",
-    "source": "https://github.com/westpoint-io/lazyrsync",
-    "notes": "rsync TUI from Homebrew core with Linux bottles.",
-    "third_party": false
   },
   {
     "id": "caligula",
@@ -459,84 +321,6 @@
     "third_party": true
   },
   {
-    "id": "emeraldian",
-    "name": "emeraldian",
-    "method": "archive",
-    "package": "emeraldian",
-    "source": "https://github.com/iamrohithrnair/emeraldian",
-    "notes": "Official checksum-pinned Linux release archives avoid a Rust 1.90 source build and need no host build dependencies.",
-    "version": "0.6.0",
-    "artifacts": {
-      "x86_64": {
-        "url": "https://github.com/iamrohithrnair/emeraldian/releases/download/v0.6.0/emeraldian-x86_64-unknown-linux-gnu.tar.gz",
-        "sha256": "033dbd0cd9f9f19d15469f726fe5d17ec3798a8c8ca68c16a3cd26fe374cab6d",
-        "commands": {
-          "emeraldian": "emeraldian-x86_64-unknown-linux-gnu/emeraldian"
-        }
-      },
-      "aarch64": {
-        "url": "https://github.com/iamrohithrnair/emeraldian/releases/download/v0.6.0/emeraldian-aarch64-unknown-linux-gnu.tar.gz",
-        "sha256": "3d88a2eaf8157b4bef84b1888149129cd207b9076d58997c701974f20b0c9f7d",
-        "commands": {
-          "emeraldian": "emeraldian-aarch64-unknown-linux-gnu/emeraldian"
-        }
-      }
-    },
-    "third_party": true
-  },
-  {
-    "id": "obsidian",
-    "name": "obsidian",
-    "method": "flatpak",
-    "package": "md.obsidian.Obsidian",
-    "source": "https://obsidian.md/",
-    "notes": "Officially verified Obsidian package on Flathub.",
-    "aliases": ["Obsidian"],
-    "third_party": false
-  },
-  {
-    "id": "eilmeldung",
-    "name": "eilmeldung",
-    "method": "archive",
-    "package": "eilmeldung",
-    "source": "https://github.com/christo-auer/eilmeldung",
-    "notes": "Official checksum-pinned static-musl Linux release archives avoid upstream's Fedora native source-build prerequisites.",
-    "version": "1.9.0",
-    "artifacts": {
-      "x86_64": {
-        "url": "https://github.com/christo-auer/eilmeldung/releases/download/1.9.0/eilmeldung-x86_64-unknown-linux-musl-1.9.0.tar.gz",
-        "sha256": "03088b672c8195aebe32dfc8646f5e1e14096e64ad28e223cf5ae717085e7cf7"
-      },
-      "aarch64": {
-        "url": "https://github.com/christo-auer/eilmeldung/releases/download/1.9.0/eilmeldung-aarch64-unknown-linux-musl-1.9.0.tar.gz",
-        "sha256": "65532eaa2d17b1ff65d4a521c363920cdb3e11625f530073eb597a72fc8d6dad"
-      }
-    },
-    "commands": {
-      "eilmeldung": "eilmeldung/eilmeldung"
-    },
-    "third_party": true
-  },
-  {
-    "id": "cfait",
-    "name": "cfait",
-    "method": "cargo",
-    "package": "cfait",
-    "source": "https://git.disroot.org/trougnouf/cfait",
-    "notes": "The requested terminal UI, not the GUI-only Flatpak. Use the official pinned x86_64 bundle when available; aarch64 builds the official crate using Homebrew Rust, LLVM, CMake, Ninja and pkgconf and requires C development headers. The SHA256 was computed from the versioned official download.",
-    "version": "1.2.0",
-    "artifacts": {
-      "x86_64": {
-        "url": "https://git.disroot.org/trougnouf/cfait/releases/download/v1.2.0/cfait-linux-v1.2.0.tar.xz",
-        "sha256": "b3ce304c9abdb9299df7d8992f8c5be1df4e0099c1472ab2ab54b1e49b431937",
-        "commands": {
-          "cfait": "cfait-linux-1.2.0/cfait"
-        }
-      }
-    },
-    "third_party": true
-  },
-  {
     "id": "chamber",
     "name": "chamber",
     "method": "brew",
@@ -544,42 +328,6 @@
     "source": "https://github.com/segmentio/chamber",
     "notes": "AWS SSM Parameter Store secrets CLI from Homebrew core.",
     "third_party": false
-  },
-  {
-    "id": "croft-ide",
-    "name": "croft IDE",
-    "method": "archive",
-    "package": "croft",
-    "source": "https://github.com/vitali87/croft",
-    "notes": "Official checksum-pinned static-musl Linux release archives avoid Croft's native Rust source-build toolchain.",
-    "aliases": ["croft"],
-    "version": "0.2.32",
-    "artifacts": {
-      "x86_64": {
-        "url": "https://github.com/vitali87/croft/releases/download/v0.2.32/croft-x86_64-unknown-linux-musl.tar.gz",
-        "sha256": "6b71e75387b2e316b6274412d1c29127c3a02fa6bd34c8b6549af1924961fb9f",
-        "commands": {
-          "croft": "croft-x86_64-unknown-linux-musl/croft"
-        }
-      },
-      "aarch64": {
-        "url": "https://github.com/vitali87/croft/releases/download/v0.2.32/croft-aarch64-unknown-linux-musl.tar.gz",
-        "sha256": "27b626cedeb6830545956a1991c5c2e6a212274449dd4b604623d10d72fd8d2b",
-        "commands": {
-          "croft": "croft-aarch64-unknown-linux-musl/croft"
-        }
-      }
-    },
-    "third_party": true
-  },
-  {
-    "id": "herald",
-    "name": "herald",
-    "method": "brew",
-    "package": "herald-email/herald/herald",
-    "source": "https://github.com/herald-email/herald-mail-app",
-    "notes": "Terminal email client; its official tap explicitly publishes amd64 and arm64 Linux artifacts.",
-    "third_party": true
   },
   {
     "id": "kitty",
@@ -614,6 +362,31 @@
     "notes": "Officially verified Bitwarden desktop package on Flathub.",
     "aliases": ["Bitwarden"],
     "third_party": false
+  },
+  {
+    "id": "bruno",
+    "name": "Bruno",
+    "method": "archive",
+    "package": "bruno",
+    "source": "https://docs.usebruno.com/get-started/bruno-basics/download",
+    "notes": "Official pinned Debian desktop payloads for x86_64 and aarch64, extracted user-locally without maintainer scripts or host writes; unlike the publisher-documented Flatpak, which currently supports only x86_64, the native payload uses host libraries and can access local collections and host tooling.",
+    "version": "4.2.1",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/usebruno/bruno/releases/download/v4.2.1/bruno_4.2.1_amd64_linux.deb",
+        "sha256": "7c36f0d7f15899bb48ab298d362da2741edc392c702faf13dd96ee12afd47a88",
+        "format": "deb"
+      },
+      "aarch64": {
+        "url": "https://github.com/usebruno/bruno/releases/download/v4.2.1/bruno_4.2.1_arm64_linux.deb",
+        "sha256": "ea55359c8cd4e48d20cae7c5f01ed3b6e1c6f242d1d8900c8eea2b64510c4893",
+        "format": "deb"
+      }
+    },
+    "commands": {
+      "bruno": "opt/Bruno/bruno"
+    },
+    "third_party": true
   },
   {
     "id": "jetbrains-mono-nerd-font",
