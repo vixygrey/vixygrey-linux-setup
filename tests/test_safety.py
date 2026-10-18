@@ -1,3 +1,4 @@
+import contextlib
 import json
 import io
 import os
@@ -8,6 +9,7 @@ import tarfile
 import tempfile
 import unittest
 import zipfile
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.dont_write_bytecode = True
@@ -419,6 +421,60 @@ class CommandSafety(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("--status cannot be combined", result.stderr)
             self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_saved_profile_plan_applies_the_reviewed_selection(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary) / "home"
+            home.mkdir()
+            binary = home / ".local/bin"
+            binary.mkdir(parents=True)
+            opener = binary / "xdg-open"
+            opener.write_text("#!/bin/sh\nexit 1\n")
+            opener.chmod(0o755)
+            plan = Path(temporary) / "plan.json"
+            excluded = set(setup.profiles(setup.catalog())["desktop"]) - {"notion"}
+            environment = {
+                "HOME": str(home),
+                "PATH": str(binary),
+                "PYTHONDONTWRITEBYTECODE": "1",
+            }
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "setup.py"),
+                    "--apps-only",
+                    "--profile",
+                    "desktop",
+                    "--skip",
+                    ",".join(sorted(excluded)),
+                    "--trust",
+                    "notion",
+                    "--format",
+                    "json",
+                    "--plan-out",
+                    str(plan),
+                ],
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            reviewed = plan.read_bytes()
+            self.assertEqual(json.loads(reviewed)["selected_ids"], ["notion"])
+            launcher = home / ".local/share/applications/vixygrey-notion.desktop"
+            self.assertFalse(launcher.exists())
+            with (
+                patch.dict(os.environ, environment, clear=True),
+                patch.object(setup, "aurora", return_value=True),
+                patch.object(setup.os, "geteuid", return_value=1000),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                self.assertEqual(setup.main(["--apply-plan", str(plan)]), 0)
+            self.assertIn("https://www.notion.so", launcher.read_text())
+            self.assertEqual(plan.read_bytes(), reviewed)
+            self.assertFalse((home / ".config").exists())
+            self.assertEqual(list(launcher.parent.iterdir()), [launcher])
 
     def test_json_plan_serialization_and_tamper_rejection(self):
         with tempfile.TemporaryDirectory() as temporary:

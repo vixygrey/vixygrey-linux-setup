@@ -631,15 +631,13 @@ class Setup:
             "ready" if self.is_installed(docker) else "blocked",
             "Provision Aurora DX, run ujust dx-group, then log out and back in.",
         )
-        plasma = (
-            "KDE" in os.environ.get("XDG_CURRENT_DESKTOP", "").upper()
-            and self.executable("plasma-apply-colorscheme")
-            and self.executable("plasma-apply-wallpaperimage")
+        plasma = "KDE" in os.environ.get("XDG_CURRENT_DESKTOP", "").upper() and self.executable(
+            "plasma-apply-colorscheme"
         )
         check(
             "plasma",
             "ready" if plasma else "blocked",
-            "Use an active KDE Plasma session with both plasma apply commands available.",
+            "Use an active KDE Plasma session with plasma-apply-colorscheme available.",
         )
         llama = self.executable("llama-cli")
         if llama:
@@ -787,14 +785,6 @@ class Setup:
             source = ROOT / "dotfiles" / scheme
             if self.files.status(scheme, source.read_bytes()) in {"preserve", "protected"}:
                 self.blocks.append("Cannot apply a preserved/conflicting KDE color scheme")
-            wallpaper = ".local/share/wallpapers/DraculaSakura.jpg"
-            if not self.executable("plasma-apply-wallpaperimage"):
-                self.blocks.append("--desktop requires plasma-apply-wallpaperimage")
-            if self.files.status(wallpaper, (ROOT / "dotfiles" / wallpaper).read_bytes()) in {
-                "preserve",
-                "protected",
-            }:
-                self.blocks.append("Cannot apply a preserved/conflicting wallpaper")
             self.steps.append(("desktop", None))
 
     def install_app(self, entry: dict):
@@ -930,12 +920,6 @@ class Setup:
                         self.preserved.append(name)
                 elif kind == "desktop":
                     self.command(["plasma-apply-colorscheme", "DraculaSakura"])
-                    self.command(
-                        [
-                            "plasma-apply-wallpaperimage",
-                            str(self.files.home / ".local/share/wallpapers/DraculaSakura.jpg"),
-                        ]
-                    )
                 elif kind == "bat-cache":
                     self.command(["bat", "cache", "--build"])
 
@@ -1023,7 +1007,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--desktop",
         action="store_true",
-        help="Activate KDE colors and wallpaper, preserving other desktop settings",
+        help="Activate KDE colors, preserving the wallpaper and other desktop settings",
     )
     args = parser.parse_args(argv)
     if args.validate_catalog:
@@ -1108,7 +1092,7 @@ def main(argv=None) -> int:
     approved = load_plan(args.apply_plan) if args.apply_plan else None
     if approved:
         for name, value in approved["intent"].items():
-            setattr(args, name, value)
+            setattr(args, "profile" if name == "profiles" else name, value)
         args.apply = True
     if args.only and not tokens(args.only):
         parser.error("--only requires at least one application")

@@ -88,6 +88,10 @@ Keep the default text preview for interactive use. To attach a deterministic rev
 
 `--apply-plan` is an application mode. It accepts no additional selection or approval flags, checks the artifact schema, catalog digest, and canonical selection intent, then re-plans under the existing setup lock before mutation. The artifact records actions and preflight facts for review, but is never executed directly. A catalog edit invalidates it; mutable package and file state are checked again during the locked re-plan. Plan files are created only at an explicitly requested new path and can include local conflict metadata.
 
+Profile selections are saved in the plan too. For example, create a base-profile plan with
+`./setup.sh --apps-only --profile base --format json --plan-out base-plan.json`, then apply it
+with `./setup.sh --apply-plan base-plan.json`. Do not repeat profile or approval flags when applying.
+
 Regenerate saved plans after a schema change. The catalog no longer has an optional selection
 tier; use profiles, `--only`, and `--skip` to choose applications.
 
@@ -111,14 +115,14 @@ For the full catalog, omit `--only` and approve each reported third-party ID wit
 ./setup.sh --theme-only
 ./setup.sh --theme-only --apply
 
-# Also activate the KDE color scheme and wallpaper in an active Plasma session.
+# Also activate the KDE color scheme in an active Plasma session.
 ./setup.sh --theme-only --desktop
 ./setup.sh --theme-only --desktop --apply
 ```
 
-Appearance files use the local Mac palette and wallpaper, with Linux-specific adaptations:
+Appearance files use the local Mac palette, with Linux-specific adaptations. Your desktop wallpaper is left unchanged.
 
-- KDE colors and wallpaper; Kitty and JetBrainsMono Nerd Font settings.
+- KDE colors; Kitty and JetBrainsMono Nerd Font settings.
 - Starship, Micro, Bat, btop, Yazi, Lazydocker, and Fastfetch.
 - Kiro editor and terminal colors, plus Trippy. Apps without a custom palette inherit terminal colors where supported; this does not claim to recolor every Flatpak or web interface.
 
