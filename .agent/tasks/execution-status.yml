@@ -4,20 +4,20 @@ tasks:
     updated_at: 2026-10-17
     verification: .agent/tasks/2/verification.md
   "3":
-    status: in-progress
-    updated_at: 2026-10-17
+    status: done
+    updated_at: 2026-10-18
     verification: .agent/tasks/3/verification.md
   "8":
-    status: in-progress
-    updated_at: 2026-10-17
+    status: done
+    updated_at: 2026-10-18
     verification: .agent/tasks/8/verification.md
   "11":
-    status: in-progress
-    updated_at: 2026-10-17
+    status: done
+    updated_at: 2026-10-18
     verification: .agent/tasks/11/verification.md
   "12":
-    status: in-progress
-    updated_at: 2026-10-17
+    status: done
+    updated_at: 2026-10-18
     verification: .agent/tasks/12/verification.md
   file-tools:
     status: done
@@ -241,3 +241,16 @@ tasks:
     limitations: Smoke used local artifact response and cache executable fixtures with host eligibility overridden; real vendor installations and Aurora GUI behavior remain unverified.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 60 tests, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  "37":
+    status: done
+    updated_at: 2026-10-18
+    issue: https://github.com/vixygrey/vixygrey-linux-setup/issues/37
+    scope: Add correctness linting, reconcile prior hosted workflow evidence, validate palette consistency without visual changes, and provide safe read-only exact-path configuration diffs.
+    verification:
+      - "Configured Ruff probes accepted valid code and rejected undefined names, tuple assertions, and duplicate dictionary keys."
+      - "Tasks 3, 8, 11, and 12 have final-head PR and post-merge main verify jobs linked in their existing verification records; historical observations and target limits retained."
+      - "Palette smoke accepted existing adaptations and bright-white exceptions; rejected off-palette and wrong-role colors, missing roles, broken theme references, altered Starship palette, and malformed KDE/Trippy encodings."
+      - "CLI diff smoke showed a deduplicated exact-path unified diff with missing-final-newline markers, no home writes or package calls, and no private content in ordinary preview or JSON/status output."
+    limitations: Static palette checks do not prove app rendering or contrast. Aurora, GUI, fontconfig, Docker, Vulkan, and KDE target acceptance remain unexercised; issue 37 hosted CI is not yet run.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 72 tests, correctness linting, palette validation, formatting, compilation, shell checks, catalog validation, and no-write previews."

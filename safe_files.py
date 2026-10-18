@@ -61,6 +61,21 @@ class Files:
                 raise SafetyError(f"Not a regular file: {path}")
             return stream.read()
 
+    @staticmethod
+    def read_bounded(path: Path, limit: int) -> bytes:
+        """Read only regular files, without following links or blocking on special files."""
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd, "rb") as stream:
+            info = os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode):
+                raise SafetyError(f"Not a regular file: {path}")
+            if info.st_size > limit:
+                raise SafetyError(f"File exceeds {limit} bytes: {path}")
+            data = stream.read(limit + 1)
+            if len(data) > limit:
+                raise SafetyError(f"File exceeds {limit} bytes: {path}")
+            return data
+
     def directory(self, relative: str) -> Path:
         path = self.target(relative)
         path.mkdir(mode=0o700, parents=True, exist_ok=True)

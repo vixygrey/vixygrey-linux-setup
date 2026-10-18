@@ -11,10 +11,10 @@ fi
 
 case "${1:-}" in
 --check)
-  "$RUFF" format --check "$ROOT/setup.py" "$ROOT/archives.py" "$ROOT/safe_files.py" "$ROOT/app_files.py" "$ROOT/tests"
+  "$RUFF" format --check "$ROOT/setup.py" "$ROOT/archives.py" "$ROOT/safe_files.py" "$ROOT/app_files.py" "$ROOT/scripts/validate-palette.py" "$ROOT/tests"
   ;;
 --write)
-  "$RUFF" format "$ROOT/setup.py" "$ROOT/archives.py" "$ROOT/safe_files.py" "$ROOT/app_files.py" "$ROOT/tests"
+  "$RUFF" format "$ROOT/setup.py" "$ROOT/archives.py" "$ROOT/safe_files.py" "$ROOT/app_files.py" "$ROOT/scripts/validate-palette.py" "$ROOT/tests"
   ;;
 *)
   printf '%s\n' "Usage: $0 --check|--write" >&2

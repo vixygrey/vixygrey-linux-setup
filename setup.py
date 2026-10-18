@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import difflib
 import fcntl
 import json
 import os
@@ -37,6 +38,37 @@ METHODS = {
 }
 FLATHUB = "https://dl.flathub.org/repo/"
 PROFILE_PATH = ROOT / "profiles.json"
+DIFF_FILE_LIMIT = 64 * 1024
+DIFF_OUTPUT_LIMIT = 256 * 1024
+
+
+def dotfile_sources():
+    if (ROOT / "dotfiles").is_symlink():
+        raise SafetyError("Repository dotfiles directory must not be a symlink")
+    for source in sorted((ROOT / "dotfiles").rglob("*")):
+        if source.is_symlink():
+            raise SafetyError(f"Repository dotfile must not be a symlink: {str(source)!r}")
+        if source.is_file():
+            yield str(source.relative_to(ROOT / "dotfiles")), source
+
+
+def diff_text(data: bytes, name: str) -> str:
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        raise SafetyError(f"Unsuitable non-UTF-8 content: {name}") from None
+    if any(character != "\n" and not character.isprintable() for character in text):
+        raise SafetyError(f"Unsuitable binary or control-character content: {name}")
+    return text
+
+
+def safe_diff_name(name: str) -> str:
+    if any(not 32 <= ord(character) <= 126 for character in name):
+        raise SafetyError("Unsafe --diff path (non-printable or non-ASCII character)")
+    path = relative_path(name)
+    if str(path) != name:
+        raise SafetyError("Unsafe --diff path (use an exact home-relative path)")
+    return name
 
 
 def profiles(entries: list[dict]) -> dict[str, list[str]]:
@@ -644,12 +676,8 @@ class Setup:
             for name, data, mode in launchers(entry, self.files.home):
                 records[name] = (data, mode)
         if not self.args.apps_only:
-            for source in sorted((ROOT / "dotfiles").rglob("*")):
-                if source.is_file():
-                    records[str(source.relative_to(ROOT / "dotfiles"))] = (
-                        source.read_bytes(),
-                        0o600,
-                    )
+            for name, source in dotfile_sources():
+                records[name] = (source.read_bytes(), 0o600)
         states = {
             "create": "missing",
             "mode": "unchanged",
@@ -858,14 +886,8 @@ class Setup:
                 self.blocks.append(
                     f"{variable} is nonstandard; refusing to deploy configuration to the wrong location"
                 )
-        for source in sorted((ROOT / "dotfiles").rglob("*")):
-            if source.is_symlink():
-                raise SafetyError(f"Repository dotfile must not be a symlink: {source}")
-            if not source.is_file():
-                continue
-            name = str(source.relative_to(ROOT / "dotfiles"))
-            data = source.read_bytes()
-            self.plan_file(name, data)
+        for name, source in dotfile_sources():
+            self.plan_file(name, source.read_bytes())
         if self.executable("bat") or any(entry["id"] == "bat" for entry in self.selected):
             self.steps.append(("bat-cache", None))
         if self.args.desktop:
@@ -880,6 +902,83 @@ class Setup:
             if self.files.status(scheme, source.read_bytes()) in {"preserve", "protected"}:
                 self.blocks.append("Cannot apply a preserved/conflicting KDE color scheme")
             self.steps.append(("desktop", None))
+
+    def diff(self, requested: list[str]) -> None:
+        names = list(dict.fromkeys(safe_diff_name(name) for name in requested))
+        for variable, suffix in (
+            ("XDG_CONFIG_HOME", ".config"),
+            ("XDG_DATA_HOME", ".local/share"),
+        ):
+            if (
+                os.environ.get(variable)
+                and Path(os.environ[variable]).resolve() != (self.files.home / suffix).resolve()
+            ):
+                raise SafetyError(f"{variable} is nonstandard; refusing configuration diffs")
+
+        inventory: dict[str, bytes | Path] = {}
+        for entry in self.selected:
+            for name, data, _ in launchers(entry, self.files.home):
+                inventory[name] = data
+        if not self.args.apps_only:
+            inventory.update(dotfile_sources())
+        for name in names:
+            if name not in inventory:
+                raise SafetyError(f"Unmanaged or unselected --diff path: {name}")
+
+        output = []
+        size = 0
+
+        def append(text: str) -> None:
+            nonlocal size
+            size += len(text.encode("utf-8"))
+            if size > DIFF_OUTPUT_LIMIT:
+                raise SafetyError(f"Diff output exceeds {DIFF_OUTPUT_LIMIT} bytes")
+            output.append(text)
+
+        append(
+            "Read-only comparison; replacement requires separate --apply with exact --replace.\n"
+        )
+        for name in names:
+            source = inventory[name]
+            try:
+                if isinstance(source, Path):
+                    parent = source
+                    while parent != ROOT:
+                        if parent.is_symlink():
+                            raise SafetyError("Repository source is symlink-protected")
+                        parent = parent.parent
+                    desired = Files.read_bounded(source, DIFF_FILE_LIMIT)
+                else:
+                    desired = source
+                    if len(desired) > DIFF_FILE_LIMIT:
+                        raise SafetyError(f"Desired file exceeds {DIFF_FILE_LIMIT} bytes")
+                target = self.files.target(name)
+                try:
+                    target.lstat()
+                except FileNotFoundError:
+                    current = None
+                else:
+                    current = Files.read_bounded(target, DIFF_FILE_LIMIT)
+            except (OSError, SafetyError) as error:
+                raise SafetyError(
+                    f"Protected or unsuitable --diff path: {name} ({type(error).__name__})"
+                ) from None
+            desired_text = diff_text(desired, name)
+            current_text = diff_text(current, name) if current is not None else ""
+            if current is not None and current == desired:
+                append(f"UNCHANGED {name}\n")
+                continue
+            append(f"{'MISSING (new)' if current is None else 'DIFF'} {name}\n")
+            for line in difflib.unified_diff(
+                current_text.splitlines(keepends=True),
+                desired_text.splitlines(keepends=True),
+                fromfile=f"current/{name}",
+                tofile=f"desired/{name}",
+            ):
+                append(line)
+                if not line.endswith("\n"):
+                    append("\n\\ No newline at end of file\n")
+        print("".join(output), end="")
 
     def install_app(self, entry: dict):
         method, package = entry["method"], entry["package"]
@@ -1047,6 +1146,13 @@ def main(argv=None) -> int:
     )
     parser.add_argument("--apply-plan", metavar="FILE", help="Apply a reviewed JSON plan")
     parser.add_argument("--format", choices=("text", "json"), default=None)
+    parser.add_argument(
+        "--diff",
+        action="append",
+        default=[],
+        metavar="RELATIVE_PATH",
+        help="Show an opt-in read-only diff for an exactly selected managed file",
+    )
     parser.add_argument("--plan-out", metavar="FILE", help="Write the JSON plan artifact")
     parser.add_argument(
         "--list", action="store_true", help="Print catalog with install methods, notes, and sources"
@@ -1102,6 +1208,24 @@ def main(argv=None) -> int:
         help="Activate KDE colors, preserving the wallpaper and other desktop settings",
     )
     args = parser.parse_args(argv)
+    if args.diff and any(
+        (
+            args.apply,
+            args.apply_plan,
+            args.format == "json",
+            args.plan_out,
+            args.status,
+            args.doctor,
+            args.list,
+            args.validate_catalog,
+            args.desktop,
+            args.replace,
+        )
+    ):
+        parser.error(
+            "--diff cannot be combined with apply, JSON, plan output, reports, "
+            "listing, desktop, or replacement"
+        )
     if args.validate_catalog:
         if any(
             (
@@ -1231,6 +1355,9 @@ def main(argv=None) -> int:
     setup = Setup(args)
     value = intent(args)
     setup.selected = select(entries, value, selected_profile_ids(profile_map, args.profile))
+    if args.diff:
+        setup.diff(args.diff)
+        return 0
     if args.doctor:
         print_report(setup.doctor_document(), args.format)
         return 0
