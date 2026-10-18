@@ -70,6 +70,8 @@ class FontSetupSafety(unittest.TestCase):
         self.assertTrue(setup.archives.installed(self.entry, self.app.files))
         self.assertEqual(self.app.app_status(self.entry)["state"], "cache-pending")
         self.assertTrue(json.loads(self.receipt.read_text())["cache_pending"])
+        self.entry = self.entry | {"notes": "Reworded documentation"}
+        self.app.selected = [self.entry]
         self.set_cache_exit(0)
         self.apply()
         self.assertEqual(self.downloads, 1)

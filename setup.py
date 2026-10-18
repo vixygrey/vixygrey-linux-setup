@@ -246,7 +246,7 @@ def select(entries: list[dict], value: dict, profile_ids: set[str]) -> list[dict
 def action_records(setup) -> list[dict]:
     records = []
     for kind, payload in setup.steps:
-        if kind in {"app", "font-cache"}:
+        if kind in {"app", "font-cache", "receipt-migrate"}:
             records.append(
                 {
                     "id": payload["id"],
@@ -753,6 +753,10 @@ class Setup:
             for record in details["retired_fonts"]:
                 print(f"RETAINED FONT {record['path']} {record['state']}")
         if self.is_installed(entry):
+            if method in {"archive", "font"} and archives.needs_receipt_migration(
+                entry, self.files
+            ):
+                self.steps.append(("receipt-migrate", entry))
             if method == "font" and details["cache_pending"]:
                 print(f"FONT {identifier}: cache pending; retry without downloading")
                 self.steps.append(("font-cache", entry))
@@ -998,6 +1002,8 @@ class Setup:
                     self.install_app(payload)
                 elif kind == "font-cache":
                     self.cache_font(payload)
+                elif kind == "receipt-migrate":
+                    archives.migrate_receipt(payload, self.files)
                 elif kind == "file":
                     name, data, mode = payload
                     status = self.files.put(name, data, mode)
