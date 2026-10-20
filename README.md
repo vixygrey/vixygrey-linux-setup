@@ -58,6 +58,21 @@ To preview only these additions without deploying the rest of the theme:
 ./setup.sh --apps-only --only notion,zed,bruno --trust notion,zed,bruno --format json
 ```
 
+The `developer` profile also includes gitlogue, oxker, grex, Kondo, Worktrunk, and the
+existing Mike Farah yq entry. `terminal` adds VisiData and croc, `cloud` adds dnsglobe,
+and `ai` adds llmfit. All use Homebrew core, without extra taps or per-ID source approval.
+Both catalog files participate in the default full selection; `extended` does not mean opt-in.
+Preview this group without deploying configuration:
+
+```sh
+./setup.sh --apps-only \
+  --only gitlogue,visidata,dnsglobe,oxker,llmfit,croc,grex,kondo,worktrunk,yq \
+  --format json
+```
+
+`vd` and `wt` are selection aliases for VisiData and Worktrunk. Catalog and profile edits
+invalidate saved plans; regenerate them before applying.
+
 A preview can run on this Mac; `--apply` requires Aurora and a non-root user. Read-only package
 queries may use package managers' own caches or locks.
 
@@ -230,6 +245,16 @@ documentation.
 - **Granted / AWS / Bitwarden / OMP:** credentials, accounts, tokens, profiles, and login flows remain yours to configure. No credentials are imported from the Mac.
 - **Backups:** backup software and policy are outside this setup. Choose destinations, encryption, credentials, retention, and scheduling separately, then validate restoration using the machine commissioning runbook.
 - **Network diagnostics / Caligula:** no uinput permissions, network capabilities, or disk writes are enabled by setup. Privileged runtime actions remain explicit user decisions.
+- **gitlogue:** replays local Git history and requires Git plus a repository with commits. Setup does not set its theme or start watch mode.
+- **VisiData:** Homebrew manages the Python environment and supplies `vd` and `visidata`. Optional formats such as XLSX and Parquet need dependencies in that environment; setup does not add them or promise every upstream format.
+- **dnsglobe:** queries public DNS resolvers, including direct DNS on port 53, which restricted networks may block. Displayed resolver regions are not independent probes physically running in those regions. Setup does not change firewall rules or configure EDNS Client Subnet.
+- **oxker:** can control containers through an accessible Docker daemon. Socket access can be root-equivalent; setup does not change Docker groups, sockets, services, or contexts. Lazydocker remains available.
+- **llmfit:** recommends models from detected hardware; GPU detection depends on host drivers and probes. Recommendations do not prove Vulkan llama.cpp compatibility. Setup does not download models, configure providers, or start services.
+- **croc:** encrypted transfers can use public relays. Protect transfer codes and use trusted endpoints. Setup does not configure a relay, open firewall ports, or start transfers.
+- **grex:** generates candidate regular expressions from examples. Review unintended matches and compatibility with the intended regex engine.
+- **Kondo:** installs only the `kondo` CLI. Cleanup deletes dependencies and build artifacts; upstream describes it as essentially `rm -rf` with a prompt. Back up projects and review targets. Setup never runs cleanup or installs `kondo-ui`.
+- **Worktrunk:** installs `wt` for Git worktree management. Homebrew conflicts with `wiredtiger`, which also supplies `wt`; resolve conflicts explicitly rather than forcing links. Directory-changing integration is an optional user step, `wt config shell install`, which modifies shell configuration and is never run by setup. Project hooks, agent plugins, LLM providers, and existing worktrees are not configured or changed.
+- **yq:** the existing entry is Mike Farah's Go implementation, not Python yq. Homebrew conflicts with `python-yq`; setup does not force replacement. The separate `yaml-py` interpreter helper remains available.
 
 To preview or install Discord alone on an eligible x86_64 Aurora machine:
 

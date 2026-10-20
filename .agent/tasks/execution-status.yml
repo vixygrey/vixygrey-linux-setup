@@ -254,3 +254,15 @@ tasks:
     limitations: Static palette checks do not prove app rendering or contrast. Aurora, GUI, fontconfig, Docker, Vulkan, and KDE target acceptance remain unexercised; issue 37 hosted CI is not yet run.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 72 tests, correctness linting, palette validation, formatting, compilation, shell checks, catalog validation, and no-write previews."
+  cli-tool-additions:
+    status: done
+    updated_at: 2026-10-20
+    scope: Add gitlogue, VisiData, dnsglobe, oxker, llmfit, croc, grex, Kondo, and Worktrunk through Homebrew core; include existing Mike Farah yq in developer profile.
+    verification:
+      - "Real CLI preview selected all ten tools with nine pending brew actions, existing yq skipped, and no blockers."
+      - "Isolated CLI smoke verified ten missing-Homebrew blockers, no source-approval blockers, no home writes, vd/wt aliases, skip precedence, and exact additions in four profiles."
+      - "Existing yq catalog entry remains unique; base profile and installer runtime are unchanged."
+      - "Initial gate passed 72 tests but exposed Homebrew API/bootsnap cache writes in its isolated home after ai gained llmfit; smoke helper now redirects Homebrew caches to a separate cleaned temporary directory."
+    limitations: Aurora package installation and execution remain unverified. No cleanup, worktree mutation, DNS query, transfer, model download, or shell integration was run.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 72 tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and cache-isolated no-write previews."
