@@ -389,6 +389,89 @@
     "third_party": true
   },
   {
+    "id": "gitlogue",
+    "name": "gitlogue",
+    "method": "brew",
+    "package": "gitlogue",
+    "source": "https://github.com/unhappychoice/gitlogue",
+    "notes": "Animated Git history replay; Homebrew core provides Linux bottles for x86_64 and arm64. Requires Git and a repository with commit history.",
+    "third_party": false
+  },
+  {
+    "id": "visidata",
+    "name": "VisiData",
+    "method": "brew",
+    "package": "visidata",
+    "source": "https://github.com/saulpw/visidata",
+    "notes": "Terminal tabular-data explorer, exposed as vd and visidata. Homebrew core provides an architecture-independent bottle and manages its Python environment; formats such as XLSX and Parquet need optional dependencies not provisioned by setup.",
+    "aliases": ["vd"],
+    "third_party": false
+  },
+  {
+    "id": "dnsglobe",
+    "name": "dnsglobe",
+    "method": "brew",
+    "package": "dnsglobe",
+    "source": "https://github.com/514-labs/dnsglobe",
+    "notes": "DNS propagation TUI; Homebrew core provides Linux bottles for x86_64 and arm64 without an extra tap. Requires outbound access to public DNS resolvers; no firewall or capability changes are applied.",
+    "third_party": false
+  },
+  {
+    "id": "oxker",
+    "name": "oxker",
+    "method": "brew",
+    "package": "oxker",
+    "source": "https://github.com/mrjackwills/oxker",
+    "notes": "Docker container TUI; Homebrew core provides Linux bottles for x86_64 and arm64. Requires access to an existing Docker daemon, which can be root-equivalent; setup does not change groups, sockets, services, or contexts.",
+    "third_party": false
+  },
+  {
+    "id": "llmfit",
+    "name": "llmfit",
+    "method": "brew",
+    "package": "llmfit",
+    "source": "https://github.com/AlexsJones/llmfit",
+    "notes": "Hardware-aware LLM recommendations; Homebrew core provides Linux bottles for x86_64 and arm64. GPU detection depends on host drivers and probes; setup does not download models or start services.",
+    "third_party": false
+  },
+  {
+    "id": "croc",
+    "name": "croc",
+    "method": "brew",
+    "package": "croc",
+    "source": "https://github.com/schollz/croc",
+    "notes": "Encrypted file transfer; Homebrew core provides Linux bottles for x86_64 and arm64. Transfers require network access and can use public relays; protect transfer codes. No relay or automatic transfers are configured.",
+    "third_party": false
+  },
+  {
+    "id": "grex",
+    "name": "grex",
+    "method": "brew",
+    "package": "grex",
+    "source": "https://github.com/pemistahl/grex",
+    "notes": "Generates regular expressions from examples; Homebrew core provides Linux bottles for x86_64 and arm64. Review generated expressions for unintended matches and target-engine compatibility.",
+    "third_party": false
+  },
+  {
+    "id": "kondo",
+    "name": "kondo",
+    "method": "brew",
+    "package": "kondo",
+    "source": "https://github.com/tbillington/kondo",
+    "notes": "CLI for deleting project dependencies and build artifacts; Homebrew core provides Linux bottles for x86_64 and arm64. Cleanup is destructive and must be invoked explicitly by the user; setup never runs it or installs kondo-ui.",
+    "third_party": false
+  },
+  {
+    "id": "worktrunk",
+    "name": "Worktrunk",
+    "method": "brew",
+    "package": "worktrunk",
+    "source": "https://github.com/max-sixty/worktrunk",
+    "notes": "Git worktree manager exposed as wt; Homebrew core provides Linux bottles for x86_64 and arm64. Requires Git and conflicts with wiredtiger's wt executable. Shell integration, project hooks, agent plugins, and LLM providers are not configured.",
+    "aliases": ["wt"],
+    "third_party": false
+  },
+  {
     "id": "jetbrains-mono-nerd-font",
     "name": "Jetbrains mono nerd font",
     "method": "font",

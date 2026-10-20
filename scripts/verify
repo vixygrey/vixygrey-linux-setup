@@ -24,12 +24,15 @@ smoke_preview() {
     expected="${1#--expect=}"
     shift
   fi
-  local temporary status
+  local temporary brew_cache status
   temporary="$(mktemp -d "${TMPDIR:-/tmp}/vixygrey-setup-verify.XXXXXX")"
   temporary_directories+=("$temporary")
+  brew_cache="$(mktemp -d "${TMPDIR:-/tmp}/vixygrey-setup-verify.XXXXXX")"
+  temporary_directories+=("$brew_cache")
   if env HOME="$temporary" \
     XDG_CONFIG_HOME="$temporary/.config" \
     XDG_DATA_HOME="$temporary/.local/share" \
+    HOMEBREW_CACHE="$brew_cache" \
     PYTHONDONTWRITEBYTECODE=1 \
     "$ROOT/setup.sh" "$@"; then
     status=0
