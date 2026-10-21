@@ -48,6 +48,10 @@ if [[ -o interactive && -t 0 && -t 1 ]]; then
   command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
   [[ -r /home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] &&
     source /home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+  if [[ -z "${AI_AGENT:-}" ]]; then
+    command -v fzf >/dev/null 2>&1 && source <(fzf --zsh)
+    command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
+  fi
   [[ -r /home/linuxbrew/.linuxbrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] &&
     source /home/linuxbrew/.linuxbrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi

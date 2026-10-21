@@ -1,6 +1,6 @@
 {
   "ai": ["llama-cpp-vulkan", "llmfit"],
-  "base": ["micro", "bat", "eza", "git", "starship", "ripgrep", "fd", "jq"],
+  "base": ["micro", "bat", "eza", "git", "starship", "ripgrep", "fd", "jq", "zoxide", "fzf"],
   "cloud": ["aws-cli", "granted", "aws-sam-cli", "cfn-lint", "chamber", "dnsglobe"],
   "desktop": [
     "discord",
@@ -25,6 +25,7 @@
     "pre-commit",
     "ast-grep",
     "gh",
+    "delta",
     "zed",
     "bruno",
     "gitlogue",

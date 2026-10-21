@@ -73,6 +73,14 @@ Preview this group without deploying configuration:
 `vd` and `wt` are selection aliases for VisiData and Worktrunk. Catalog and profile edits
 invalidate saved plans; regenerate them before applying.
 
+The `base` profile includes zoxide and fzf; `developer` includes delta (Homebrew
+formula `git-delta`). Bat, ripgrep, and fd remain in `base`, and btop remains in
+`terminal`. These tools use Homebrew core without extra taps or per-ID source approval.
+
+```sh
+./setup.sh --apps-only --only zoxide,fzf,bat,btop,ripgrep,fd,delta --format json
+```
+
 A preview can run on this Mac; `--apply` requires Aurora and a non-root user. Read-only package
 queries may use package managers' own caches or locks.
 
@@ -194,6 +202,29 @@ source "$HOME/.config/vixygrey/setup.zsh"
 ```
 
 Start Zsh to use it. The setup does not call `chsh`. Shell integration includes stable Linuxbrew and user tool paths, the themed prompt, direnv, mise, the Zsh plugins, and Granted's interactive `assume` alias. Interactive hooks require an actual terminal. Existing direnv/mise trust checks remain in force; nothing authorizes project scripts automatically.
+
+Zoxide and fzf hooks load only in interactive terminal sessions without an
+`AI_AGENT` marker, when their executables are available. Zoxide adds `z` for
+directory jumps and `zi` for selection with fzf; native `cd` is unchanged.
+Fzf adds fuzzy completion, Ctrl+R history search, Ctrl+T file selection, and
+Alt+C directory selection. Existing `FZF_*` settings are respected.
+Skipping fzf does not disable ordinary zoxide directory jumps.
+
+`--apps-only` installs binaries, not shell configuration. Preview deployment with
+`./setup.sh --theme-only`. On existing machines, review
+`./setup.sh --theme-only --diff .config/vixygrey/setup.zsh` before using the
+existing explicit `--replace .config/vixygrey/setup.zsh` mechanism with `--apply`.
+Different existing files remain preserved unless replacement is explicitly approved.
+
+Delta is installed without changing Git configuration or a global pager.
+To opt in, add these settings to your own Git configuration after installation:
+
+```gitconfig
+[core]
+    pager = delta
+[interactive]
+    diffFilter = delta --color-only
+```
 
 Command aliases are enabled only in interactive Zsh shells with no `AI_AGENT` marker, and only
 when the target executable is available:
