@@ -139,6 +139,33 @@
     "third_party": true
   },
   {
+    "id": "zoxide",
+    "name": "zoxide",
+    "method": "brew",
+    "package": "zoxide",
+    "source": "https://github.com/ajeetdsouza/zoxide",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "fzf",
+    "name": "fzf",
+    "method": "brew",
+    "package": "fzf",
+    "source": "https://github.com/junegunn/fzf",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "third_party": false
+  },
+  {
+    "id": "delta",
+    "name": "delta",
+    "method": "brew",
+    "package": "git-delta",
+    "source": "https://github.com/dandavison/delta",
+    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64. The executable is delta.",
+    "third_party": false
+  },
+  {
     "id": "bat",
     "name": "bat",
     "method": "brew",

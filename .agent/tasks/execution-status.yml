@@ -266,3 +266,16 @@ tasks:
     limitations: Aurora package installation and execution remain unverified. No cleanup, worktree mutation, DNS query, transfer, model download, or shell integration was run.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 72 tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and cache-isolated no-write previews."
+  shell-navigation-tools:
+    status: done
+    updated_at: 2026-10-21
+    scope: Add zoxide and restore fzf and delta through Homebrew core, with guarded Zsh navigation and fuzzy search hooks.
+    plan: .agent/tasks/cli-tool-additions-plan.md
+    verification:
+      - "Actual seven-tool CLI preview had only zoxide pending and no blockers; isolated formula inventory fixtures verified missing/installed states, git-delta detection, profiles, skip precedence, and empty preview homes."
+      - "Real Zsh terminal smoke exercised z/zi, Ctrl+R/Ctrl+T/Alt+C bindings, missing-tool and AI_AGENT guards, noninteractive exclusion, zoxide without fzf, and user-disabled fzf history binding."
+      - "Actual delta diff rendering and Git pager invocation used temporary Git configuration; managed shell deployment preserved conflicts, backed up explicit replacement, and protected symlinks."
+      - "Temporary checksum-verified zoxide binary and smoke files removed; no global tools installed or Git configuration changed."
+    limitations: Aurora installation and Linux rendering remain unverified.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 72 tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews."
