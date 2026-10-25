@@ -96,6 +96,11 @@ Use JSON when another tool needs a stable record:
 ./setup.sh --doctor --format json
 ```
 
+`yaml-py` status verifies the helper ownership marker, executable wrapper, private interpreter,
+and pinned PyYAML version using the same check as installation planning. An intact helper reports
+`installed` without renewed source approval; missing or invalid helpers still require approval
+and uv before repair.
+
 `--doctor` reports the current Aurora, architecture, Homebrew, Flatpak, Docker, Plasma, Vulkan,
 and root/home free-space readiness. It never installs, repairs, downloads, locks, or creates
 state. Both commands are observation-only and cannot be combined with `--apply`, replacement,

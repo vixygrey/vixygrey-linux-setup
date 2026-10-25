@@ -279,3 +279,15 @@ tasks:
     limitations: Aurora installation and Linux rendering remain unverified.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 72 tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews."
+  python-helper-status:
+    status: done
+    updated_at: 2026-10-25
+    scope: Share Python helper installed-state verification between status and planning; preserve installation safeguards.
+    verification:
+      - "Failing-before CLI regression reproduced an intact helper reported blocked without source approval."
+      - "Five CLI regressions pass with isolated interpreters and distribution metadata: installed without approval, invalid/missing version metadata, missing/foreign ownership, missing interpreter, and modified/symlinked wrappers; status leaves each temporary home unchanged."
+      - "Standalone setup.sh smoke in a home containing spaces reports installed with and without approval, repeat preview has zero actions, invalid versions remain blocked/missing according to approval, and personal wrappers remain conflicts."
+    limitations: Local smoke used a real interpreter and distribution-metadata fixture; a fresh PyYAML install was unavailable because PyPI timed out and no wheel was cached. The user separately verified the real helper and PyYAML 6.0.3 on Aurora before this fix; patched target status remains to be checked.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 77 tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews."
+    diagnostic_note: Pyright reports object-typed action payload errors in the existing plan/apply code, outside the helper-status change and the canonical verifier's configured lint rules.
