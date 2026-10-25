@@ -484,6 +484,8 @@ class Setup:
 
     def is_installed(self, entry: dict) -> bool:
         method, package = entry["method"], entry["package"]
+        if method == "python-helper":
+            return self.helper_installed(entry)
         if method == "web":
             return bool(self.executable("xdg-open")) and all(
                 self.files.status(name, data, mode) == "unchanged"
@@ -793,9 +795,6 @@ class Setup:
             return
         if method == "brew" and package in self.dependencies:
             print(f"PLANNED {identifier} as a prerequisite")
-            return
-        if method == "python-helper" and self.helper_installed(entry):
-            print(f"INSTALLED {identifier}")
             return
         if entry.get("third_party", False) and identifier not in self.trust:
             self.blocks.append(

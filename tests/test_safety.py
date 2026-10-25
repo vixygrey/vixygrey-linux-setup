@@ -8,6 +8,8 @@ import sys
 import tarfile
 import tempfile
 import unittest
+import venv
+from types import SimpleNamespace
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -519,6 +521,110 @@ class CommandSafety(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(list(Path(temporary).iterdir()), [])
+
+
+class PythonHelperStatus(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.home = Path(temporary.name)
+        self.environment = {
+            "HOME": str(self.home),
+            "PATH": "",
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
+        self.entry = next(entry for entry in setup.catalog() if entry["id"] == "yaml-py")
+        with patch.dict(os.environ, self.environment, clear=True):
+            application = setup.Setup(SimpleNamespace(replace=[], trust=[]))
+        _, self.base, self.marker, command, wrapper = application.helper_paths(self.entry)
+        venv.EnvBuilder(with_pip=False, symlinks=True).create(self.base)
+        self.python = self.base / "bin/python"
+        result = subprocess.run(
+            [str(self.python), "-c", 'import sysconfig; print(sysconfig.get_path("purelib"))'],
+            env=self.environment,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        distribution = Path(result.stdout.strip()) / f"PyYAML-{self.entry['version']}.dist-info"
+        distribution.mkdir(parents=True)
+        self.metadata = distribution / "METADATA"
+        self.metadata.write_text(
+            f"Metadata-Version: 2.1\nName: PyYAML\nVersion: {self.entry['version']}\n"
+        )
+        self.marker.write_text(self.entry["id"])
+        self.command = self.home / command
+        self.command.parent.mkdir(parents=True)
+        self.command.write_bytes(wrapper)
+        self.command.chmod(0o755)
+        manager = self.command.with_name("uv")
+        manager.write_text('#!/bin/sh\n: > "$HOME/uv-was-called"\nexit 97\n')
+        manager.chmod(0o755)
+
+    def snapshot(self):
+        return {
+            path.relative_to(self.home): (
+                path.lstat().st_mode,
+                path.lstat().st_mtime_ns,
+                os.readlink(path)
+                if path.is_symlink()
+                else path.read_bytes()
+                if path.is_file()
+                else None,
+            )
+            for path in self.home.rglob("*")
+        }
+
+    def status(self, *approval):
+        before = self.snapshot()
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "setup.py"),
+                "--status",
+                "--apps-only",
+                "--only",
+                "yaml-py",
+                "--format",
+                "json",
+                *approval,
+            ],
+            env=self.environment,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.snapshot(), before)
+        return json.loads(result.stdout)["apps"][0]["state"]
+
+    def test_installed_helper_needs_no_source_approval(self):
+        self.assertEqual(self.status(), "installed")
+        self.assertEqual(self.status("--trust", "yaml-py"), "installed")
+
+    def test_wrong_or_missing_distribution_is_not_installed(self):
+        self.metadata.write_text("Metadata-Version: 2.1\nName: PyYAML\nVersion: 0.0.0\n")
+        self.assertEqual(self.status(), "blocked")
+        self.assertEqual(self.status("--trust", "yaml-py"), "missing")
+        self.metadata.unlink()
+        self.assertEqual(self.status("--trust", "yaml-py"), "missing")
+
+    def test_missing_or_foreign_ownership_is_not_installed(self):
+        self.marker.write_text("another-helper")
+        self.assertEqual(self.status("--trust", "yaml-py"), "missing")
+        self.marker.unlink()
+        self.assertEqual(self.status("--trust", "yaml-py"), "missing")
+
+    def test_missing_interpreter_is_not_installed(self):
+        self.python.unlink()
+        self.assertEqual(self.status("--trust", "yaml-py"), "missing")
+
+    def test_modified_or_symlinked_wrapper_is_a_conflict(self):
+        self.command.write_text("personal command\n")
+        self.assertEqual(self.status("--trust", "yaml-py"), "command-conflict")
+        self.command.unlink()
+        self.command.symlink_to(self.python)
+        self.assertEqual(self.status("--trust", "yaml-py"), "command-conflict")
 
 
 if __name__ == "__main__":
