@@ -17,14 +17,6 @@ def desktop_quote(value: str) -> str:
 
 def launchers(entry: dict, home: Path):
     identifier = entry["id"]
-    if entry["method"] == "web":
-        content = (
-            "[Desktop Entry]\nType=Application\n"
-            f"Name={entry['name']}\nExec=xdg-open {desktop_quote(entry['package'])}\n"
-            "Icon=web-browser\nTerminal=false\nCategories=Office;\n"
-        )
-        yield f".local/share/applications/vixygrey-{identifier}.desktop", content.encode(), 0o644
-        return
     if entry["method"] == "flatpak":
         names = {"libreoffice": ["libreoffice", "soffice"], "vlc": ["vlc"]}.get(identifier, [])
         for name in names:

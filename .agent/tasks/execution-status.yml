@@ -291,3 +291,17 @@ tasks:
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 77 tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews."
     diagnostic_note: Pyright reports object-typed action payload errors in the existing plan/apply code, outside the helper-status change and the canonical verifier's configured lint rules.
+  obsidian-todoist-replacement:
+    status: done
+    updated_at: 2026-10-25
+    scope: Replace Notion with explicitly approved per-user Obsidian and Todoist Flatpaks in the catalog and desktop profile; retire the unused web method and migrate its remaining test consumers.
+    routes:
+      obsidian: md.obsidian.Obsidian; community Flatpak verified but not officially supported by Obsidian; x86_64 and aarch64.
+      todoist: com.todoist.Todoist; community repackaging of the vendor client; x86_64 only.
+    verification:
+      - "Primary Flathub manifests and publisher guidance reviewed; catalog/docs disclose community packaging, Obsidian filesystem/SSH-agent permissions, Todoist's architecture limit, and explicit source approvals."
+      - "Real CLI smoke rejected retired Notion only/trust/skip IDs, blocked unapproved new sources, selected both replacements in desktop, respected skip, and left temporary homes unchanged during preview."
+      - "Saved-plan smoke with a recording Flatpak and overridden host eligibility requested only the two per-user packages; status reported installed, repeat preview had zero actions/blockers, and existing Notion launcher content remained untouched."
+    limitations: Actual Obsidian/Todoist Flatpak installation, application-menu integration, sign-in, and GUI operation require Aurora target verification. Local apply smoke used a stateful Flatpak fixture, not the real package manager.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 72 remaining tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews; five obsolete web-route tests were removed."

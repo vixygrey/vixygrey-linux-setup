@@ -15,7 +15,6 @@ import shlex
 import shutil
 import subprocess
 import sys
-from urllib.parse import urlsplit
 
 sys.dont_write_bytecode = True
 
@@ -34,7 +33,6 @@ METHODS = {
     "font",
     "python-helper",
     "system",
-    "web",
 }
 FLATHUB = "https://dl.flathub.org/repo/"
 PROFILE_PATH = ROOT / "profiles.json"
@@ -179,17 +177,6 @@ def validate_catalog(entries: list[dict]) -> None:
             raise SafetyError(f"{identifier}: source must use HTTPS")
         if entry["method"] not in METHODS:
             raise SafetyError(f"{identifier}: unsupported method")
-        if entry["method"] == "web":
-            url = urlsplit(entry["package"])
-            if (
-                url.scheme != "https"
-                or not url.hostname
-                or any(character.isspace() for character in entry["package"])
-                or any(ord(character) < 32 for character in entry["name"])
-            ):
-                raise SafetyError(
-                    f"{identifier}: web app requires an HTTPS URL and single-line name"
-                )
         if entry["method"] in versioned and not re.fullmatch(
             r"[A-Za-z0-9][A-Za-z0-9.+_-]*", entry.get("version", "")
         ):
@@ -486,11 +473,6 @@ class Setup:
         method, package = entry["method"], entry["package"]
         if method == "python-helper":
             return self.helper_installed(entry)
-        if method == "web":
-            return bool(self.executable("xdg-open")) and all(
-                self.files.status(name, data, mode) == "unchanged"
-                for name, data, mode in launchers(entry, self.files.home)
-            )
         if method == "system":
             docker = Path("/usr/bin/docker")
             if (
@@ -666,7 +648,6 @@ class Setup:
             "npm": "npm",
             "uv": "uv",
             "python-helper": "uv",
-            "web": "xdg-open",
         }
         if method in managers and not self.executable(managers[method]):
             return {"id": identifier, "method": method, "state": "blocked"}
@@ -811,12 +792,6 @@ class Setup:
                     raise SafetyError(f"Not a directory: {destination}")
             except SafetyError as error:
                 self.blocks.append(f"{identifier}: {error}")
-        if method == "web":
-            if not self.executable("xdg-open"):
-                self.blocks.append(
-                    f"{identifier}: xdg-open is missing; configure a desktop browser"
-                )
-            return
         if method == "brew" and not self.executable("brew"):
             self.blocks.append(
                 f"{identifier}: Homebrew is missing; this tool never downloads and executes its installer"
