@@ -419,15 +419,27 @@ class CommandSafety(unittest.TestCase):
             home.mkdir()
             binary = home / ".local/bin"
             binary.mkdir(parents=True)
-            opener = binary / "xdg-open"
-            opener.write_text("#!/bin/sh\nexit 1\n")
-            opener.chmod(0o755)
+            flatpak = binary / "flatpak"
+            flatpak.write_text(
+                "#!/bin/sh\n"
+                'case "$1" in\n'
+                '  info) [ -f "$FLATPAK_INSTALLED" ] && '
+                'IFS= read -r installed < "$FLATPAK_INSTALLED" && [ "$installed" = "$2" ] ;;\n'
+                '  remotes) printf "flathub https://dl.flathub.org/repo/\\n" ;;\n'
+                "  install) for argument do :; done; "
+                'printf "%s\\n" "$argument" > "$FLATPAK_INSTALLED" ;;\n'
+                "  *) exit 1 ;;\n"
+                "esac\n"
+            )
+            flatpak.chmod(0o755)
+            installed = Path(temporary) / "flatpak-installed"
             plan = Path(temporary) / "plan.json"
-            excluded = set(setup.profiles(setup.catalog())["desktop"]) - {"notion"}
+            excluded = set(setup.profiles(setup.catalog())["desktop"]) - {"libreoffice"}
             environment = {
                 "HOME": str(home),
                 "PATH": str(binary),
                 "PYTHONDONTWRITEBYTECODE": "1",
+                "FLATPAK_INSTALLED": str(installed),
             }
             result = subprocess.run(
                 [
@@ -438,8 +450,6 @@ class CommandSafety(unittest.TestCase):
                     "desktop",
                     "--skip",
                     ",".join(sorted(excluded)),
-                    "--trust",
-                    "notion",
                     "--format",
                     "json",
                     "--plan-out",
@@ -452,9 +462,10 @@ class CommandSafety(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             reviewed = plan.read_bytes()
-            self.assertEqual(json.loads(reviewed)["selected_ids"], ["notion"])
-            launcher = home / ".local/share/applications/vixygrey-notion.desktop"
-            self.assertFalse(launcher.exists())
+            self.assertEqual(json.loads(reviewed)["selected_ids"], ["libreoffice"])
+            self.assertFalse(installed.exists())
+            launchers = [home / ".local/bin/libreoffice", home / ".local/bin/soffice"]
+            self.assertFalse(any(launcher.exists() for launcher in launchers))
             with (
                 patch.dict(os.environ, environment, clear=True),
                 patch.object(setup, "aurora", return_value=True),
@@ -462,10 +473,13 @@ class CommandSafety(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()),
             ):
                 self.assertEqual(setup.main(["--apply-plan", str(plan)]), 0)
-            self.assertIn("https://www.notion.so", launcher.read_text())
+            self.assertEqual(installed.read_text(), "org.libreoffice.LibreOffice\n")
             self.assertEqual(plan.read_bytes(), reviewed)
             self.assertFalse((home / ".config").exists())
-            self.assertEqual(list(launcher.parent.iterdir()), [launcher])
+            self.assertEqual(
+                sorted(path.name for path in binary.iterdir()),
+                ["flatpak", "libreoffice", "soffice"],
+            )
 
     def test_json_plan_serialization_and_tamper_rejection(self):
         with tempfile.TemporaryDirectory() as temporary:

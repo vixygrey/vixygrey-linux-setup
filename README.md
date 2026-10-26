@@ -2,7 +2,7 @@
 
 Personal setup for **Aurora Linux** as a graphical workstation with selected useful CLI and TUI tools, Aurora DX's Docker Engine, and the Dracula-Sakura appearance from the existing Mac setup.
 
-The catalog explicitly lists the selected applications and their installation sources. `soffice` is part of LibreOffice. Docker Engine is the explicitly approved replacement for Docker Desktop. Notion is available through an official-web-app launcher; Zed and Bruno use pinned upstream Linux payloads. OMP remains the primary AI development tool alongside Kiro and Zed.
+The catalog explicitly lists the selected applications and their installation sources. `soffice` is part of LibreOffice. Docker Engine is the explicitly approved replacement for Docker Desktop. Obsidian and Todoist use per-user Flathub packages; Zed and Bruno use pinned upstream Linux payloads. OMP remains the primary AI development tool alongside Kiro and Zed.
 
 ## Before using it
 
@@ -45,17 +45,17 @@ need. Profiles only select applications; third-party sources still require per-I
 ./setup.sh --apps-only --profile base,terminal --skip btop
 
 # Apply only after reviewing the plan and approving its reported third-party IDs.
-./setup.sh --apps-only --only notion,zed,bruno --trust notion,zed,bruno --apply
+./setup.sh --apps-only --only obsidian,todoist --trust obsidian,todoist --apply
 
 # Individual IDs can refine a profile; --skip always wins.
 ./setup.sh --apps-only --profile developer --only git --skip gh
 ```
 
-The `desktop` profile includes Notion, Zed, and Bruno; `developer` also includes Zed and Bruno.
-To preview only these additions without deploying the rest of the theme:
+The `desktop` profile includes Obsidian, Todoist, Zed, and Bruno; `developer` also includes Zed and Bruno.
+To preview the note-taking and task applications without deploying the rest of the theme:
 
 ```sh
-./setup.sh --apps-only --only notion,zed,bruno --trust notion,zed,bruno --format json
+./setup.sh --apps-only --only obsidian,todoist --trust obsidian,todoist --format json
 ```
 
 The `developer` profile also includes gitlogue, oxker, grex, Kondo, Worktrunk, and the
@@ -266,7 +266,6 @@ documentation.
 | Vendor archives | Versioned HTTPS downloads with catalog SHA256 checks. Payloads stay in versioned user directories, with executable wrappers and GUI launchers. No archive install hooks, device nodes, escaping paths, escaping links, or setuid bits. |
 | uv / npm        | Exact top-level package versions in user-owned locations. Cheznav requests Python 3.14 through uv. Python tools may download a compatible managed interpreter.                                                                         |
 | `yaml-py`       | A private uv environment containing PyYAML, exposed as a Python interpreter command, matching the Mac helper rather than substituting a different YAML CLI.                                                                            |
-| Web app         | Installs a menu launcher for the official HTTPS app in the configured default browser. Requires `xdg-open`; no unofficial native wrapper, browser profile changes, or automatic sign-in.                                               |
 
 ### Special applications
 
@@ -275,7 +274,9 @@ documentation.
 - **AWS Session Manager Plugin:** the official versioned Debian payload is unpacked into a private application directory. No Debian maintainer scripts run and nothing is written to host `/usr` or `/etc`.
 - **DBeaver Community:** the desktop profile selects the publisher-listed Flathub package, with explicit `--trust dbeaver` approval. It replaces Harlequin, usql, and the standalone DuckDB CLI for graphical work. Configure a DuckDB connection and download its JDBC driver inside DBeaver. Dataset access may require Flatpak permissions, especially on additional drives. The retired command-line clients are not available to scripts or OMP through this setup.
 - **Discord:** included in the default catalog and `desktop` profile through [Flathub's `com.discordapp.Discord` wrapper](https://flathub.org/apps/com.discordapp.Discord), with explicit `--trust discord` approval. The package is [x86_64-only](https://github.com/flathub/com.discordapp.Discord/blob/master/flathub.json); on aarch64, use `--skip discord` and the browser client instead. Game Activity, file access, and Rich Presence have sandbox limitations. The setup does not import accounts, configure autostart, or broaden sandbox permissions.
-- **Notion:** the application-menu entry opens its [official web app](https://www.notion.com/help/notion-for-web) in your default browser. Notion does not provide a native Linux desktop download. Internet access, a supported browser, and your own sign-in are required; this is not an offline desktop client.
+- **Obsidian:** the [community Flathub package](https://github.com/flathub/md.obsidian.Obsidian) is verified by the Obsidian team but is not officially supported. It supports x86_64 and aarch64 and requires `--trust obsidian`. Its packaged permissions include home/removable-drive access and the SSH agent socket. Review those permissions; setup does not add overrides, create vaults, install plugins, or configure sync or credentials.
+- **Todoist:** the [community Flathub package](https://github.com/flathub/com.todoist.Todoist) repackages the vendor desktop client and requires `--trust todoist`. It is [x86_64-only](https://github.com/flathub/com.todoist.Todoist/blob/master/flathub.json); on aarch64, use `--skip todoist` and the browser client instead. [Upstream documents Snap/AppImage and officially supports Ubuntu GNOME only](https://www.todoist.com/help/todoist/get-started/install-todoist-for-linux-KgKaJa6H). This setup does not install snapd, import accounts, configure autostart, or add permission overrides.
+- **Retired Notion launcher:** Notion is no longer in the catalog or profiles. Existing files are not automatically removed. If previously installed, review `~/.local/share/applications/vixygrey-notion.desktop` and remove that menu entry manually if no longer wanted. Browser data and accounts are untouched. Regenerate saved plans after this catalog change.
 - **Zed:** official versioned tarballs for both supported architectures are deployed user-locally, with `zed` and an application-menu entry. No downloaded installer script runs. A working Vulkan driver, desktop portals, and the host's normal Linux libraries remain prerequisites. This native route lets Zed use host development tools without a Flatpak sandbox.
 - **Bruno:** official versioned Debian payloads for both architectures are extracted user-locally, without maintainer scripts or host writes. The publisher-documented Flatpak is x86_64-only, so it is not used here. The native application requires compatible host Electron libraries and unprivileged user namespaces for Chromium sandboxing; the setup never adds `--no-sandbox`. Accounts, collections, environments, and credentials are not imported. The separate Bruno CLI is not installed.
 - **Granted / AWS / Bitwarden / OMP:** credentials, accounts, tokens, profiles, and login flows remain yours to configure. No credentials are imported from the Mac.
@@ -442,9 +443,8 @@ The safety suite covers preservation, backups, symlink/traversal rejection, exec
 
 During development on the reference Mac, isolated smoke runs exercised actual theme deployment and repeat planning; Bat, Starship, lnav, Fastfetch, interactive Zsh, and the btop TUI; PyYAML installation and parsing; and checksum-verified AWS, Eilmeldung, Kitty, OMP, Nerd Font, and Kiro payload installation without executing the Linux binaries. A live local HTTPS fixture also verified executable deployment under a home path containing spaces and rejection of a changed download before any home writes. These historical checks do not establish current catalog support for removed applications.
 
-The Notion/Zed/Bruno additions were smoke-checked with both architecture previews and explicit
-source approval. Notion launcher provisioning and its URL handoff were exercised with an isolated
-browser handler. Both official Zed tarballs and Bruno Debian payloads passed checksum verification
+The Zed/Bruno additions were smoke-checked with both architecture previews and explicit
+source approval. Both official Zed tarballs and Bruno Debian payloads passed checksum verification
 and deployment through a local HTTPS fixture, including relocated launchers/icons, receipt checks,
 repeat planning, and preservation of an existing command, under home paths containing spaces and
 percent signs. These checks did not execute Linux binaries or validate Aurora's application menu.

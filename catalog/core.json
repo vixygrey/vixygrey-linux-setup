@@ -36,12 +36,21 @@
     "third_party": true
   },
   {
-    "id": "notion",
-    "name": "Notion (Web)",
-    "method": "web",
-    "package": "https://www.notion.so/",
-    "source": "https://www.notion.com/help/notion-for-web",
-    "notes": "Official web app opened through an application-menu launcher in the configured default browser. Requires xdg-open, a supported browser, internet access and your own sign-in. No official native Linux desktop app or unofficial wrapper is installed; browser profiles and credentials remain untouched.",
+    "id": "obsidian",
+    "name": "Obsidian",
+    "method": "flatpak",
+    "package": "md.obsidian.Obsidian",
+    "source": "https://flathub.org/apps/md.obsidian.Obsidian",
+    "notes": "Community Flatpak verified by the Obsidian team but not officially supported, available for x86_64 and aarch64. Requires explicit source approval. Package permissions include home/removable-drive access and the SSH agent socket; review them before use. No vaults, plugins, sync accounts, credentials, or permission overrides are configured.",
+    "third_party": true
+  },
+  {
+    "id": "todoist",
+    "name": "Todoist",
+    "method": "flatpak",
+    "package": "com.todoist.Todoist",
+    "source": "https://flathub.org/apps/com.todoist.Todoist",
+    "notes": "Community Flathub repackaging of Todoist's desktop client, available on x86_64 only. Requires explicit source approval and your own sign-in. Upstream documents Snap/AppImage and officially supports Ubuntu GNOME only; this route does not install snapd. No accounts, autostart, or permission overrides are configured. On aarch64, explicitly skip this entry and use Todoist in your browser.",
     "third_party": true
   },
   {

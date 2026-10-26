@@ -114,25 +114,25 @@ class ConfigDiff(unittest.TestCase):
         self.assertIn("-private local setting\n\\ No newline at end of file\n+", result.stdout)
 
     def test_selected_launchers_and_theme_scope_exclude_other_files(self):
-        name = ".local/share/applications/vixygrey-notion.desktop"
-        allowed = self.cli("--apps-only", "--only", "notion", "--diff", name)
+        name = ".local/share/applications/vixygrey-zed.desktop"
+        allowed = self.cli("--apps-only", "--only", "zed", "--diff", name)
         self.assertEqual(allowed.returncode, 0, allowed.stderr)
         self.assertIn("MISSING (new) " + name, allowed.stdout)
         for flags, disallowed in [
             (("--theme-only",), name),
             (("--apps-only", "--only", "git"), name),
-            (("--apps-only", "--only", "notion"), KITTY),
-            (("--apps-only", "--only", "notion", "--skip", "notion"), name),
+            (("--apps-only", "--only", "zed"), KITTY),
+            (("--apps-only", "--only", "zed", "--skip", "zed"), name),
             (("--theme-only",), ".local/state/vixygrey-setup/receipts.json"),
         ]:
             with self.subTest(flags=flags, name=disallowed):
                 result = self.cli(*flags, "--diff", disallowed)
                 self.assertEqual(result.returncode, 2)
                 self.assertEqual(result.stdout, "")
-        notion = next(entry for entry in setup.catalog() if entry["id"] == "notion")
+        zed = next(entry for entry in setup.catalog() if entry["id"] == "zed")
         self.assertIn(
             "MISSING (new) " + name,
-            self.local_diff([name], apps_only=True, selected=[notion]),
+            self.local_diff([name], apps_only=True, selected=[zed]),
         )
 
     def test_incompatible_modes_fail_before_catalog_or_home_effects(self):
@@ -278,11 +278,11 @@ class ConfigDiff(unittest.TestCase):
                 )
                 self.assertEqual((result.returncode, result.stdout), (2, ""))
                 self.assertIn("nonstandard", result.stderr)
-        launcher = ".local/share/applications/vixygrey-notion.desktop"
+        launcher = ".local/share/applications/vixygrey-zed.desktop"
         result = self.cli(
             "--apps-only",
             "--only",
-            "notion",
+            "zed",
             "--diff",
             launcher,
             environment={"XDG_DATA_HOME": str(self.home / "other")},
