@@ -2,10 +2,10 @@
   {
     "id": "aws-cli",
     "name": "aws",
-    "method": "brew",
-    "package": "awscli",
-    "source": "https://github.com/aws/aws-cli",
-    "notes": "Official AWS command-line interface; Homebrew core provides Linux bottles.",
+    "method": "pacman",
+    "package": "aws-cli-v2",
+    "source": "https://archlinux.org/packages/extra/any/aws-cli-v2/",
+    "notes": "Official Arch aws-cli-v2 package provides AWS CLI v2; no profiles or credentials are configured. The separate aws-cli package is v1 and is not a substitute.",
     "aliases": ["awscli"],
     "third_party": false
   },
@@ -43,10 +43,10 @@
   {
     "id": "cfn-lint",
     "name": "cfn-lint",
-    "method": "brew",
-    "package": "cfn-lint",
-    "source": "https://github.com/aws-cloudformation/cfn-lint",
-    "notes": "CloudFormation template linter from Homebrew core.",
+    "method": "pacman",
+    "package": "python-cfn-lint",
+    "source": "https://archlinux.org/packages/extra/any/python-cfn-lint/",
+    "notes": "Official Arch python-cfn-lint package provides the CloudFormation cfn-lint executable.",
     "third_party": false
   },
   {
@@ -95,92 +95,92 @@
   {
     "id": "gitleaks",
     "name": "gitleaks",
-    "method": "brew",
+    "method": "pacman",
     "package": "gitleaks",
-    "source": "https://github.com/gitleaks/gitleaks",
-    "notes": "Secret scanner from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/gitleaks/",
+    "notes": "Official Arch package for gitleaks.",
     "third_party": false
   },
   {
     "id": "age",
     "name": "age",
-    "method": "brew",
+    "method": "pacman",
     "package": "age",
-    "source": "https://github.com/FiloSottile/age",
-    "notes": "File encryption tool from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/age/",
+    "notes": "Official Arch package for age.",
     "third_party": false
   },
   {
     "id": "just",
     "name": "just",
-    "method": "brew",
+    "method": "pacman",
     "package": "just",
-    "source": "https://github.com/casey/just",
-    "notes": "Command runner from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/just/",
+    "notes": "Official Arch package for just.",
     "third_party": false
   },
   {
     "id": "actionlint",
     "name": "actionlint",
-    "method": "brew",
+    "method": "pacman",
     "package": "actionlint",
-    "source": "https://github.com/rhysd/actionlint",
-    "notes": "GitHub Actions workflow linter from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/actionlint/",
+    "notes": "Official Arch package for actionlint.",
     "third_party": false
   },
   {
     "id": "ruff",
     "name": "ruff",
-    "method": "brew",
+    "method": "pacman",
     "package": "ruff",
-    "source": "https://github.com/astral-sh/ruff",
-    "notes": "Python linter and formatter from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/ruff/",
+    "notes": "Python linter and formatter from the official Arch repository.",
     "third_party": false
   },
   {
     "id": "shellcheck",
     "name": "shellcheck",
-    "method": "brew",
+    "method": "pacman",
     "package": "shellcheck",
-    "source": "https://github.com/koalaman/shellcheck",
-    "notes": "Shell script static analyzer from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/shellcheck/",
+    "notes": "Official Arch package for shellcheck.",
     "third_party": false
   },
   {
     "id": "shfmt",
     "name": "shfmt",
-    "method": "brew",
+    "method": "pacman",
     "package": "shfmt",
-    "source": "https://github.com/mvdan/sh",
-    "notes": "Shell formatter from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/shfmt/",
+    "notes": "Official Arch package for shfmt.",
     "third_party": false
   },
   {
     "id": "typos",
     "name": "typos",
-    "method": "brew",
-    "package": "typos-cli",
-    "source": "https://github.com/crate-ci/typos",
-    "notes": "Source-code spell checker; Homebrew formula is named typos-cli and installs typos.",
+    "method": "pacman",
+    "package": "typos",
+    "source": "https://archlinux.org/packages/extra/x86_64/typos/",
+    "notes": "Official Arch package for typos.",
     "aliases": ["typos-cli"],
     "third_party": false
   },
   {
     "id": "mise",
     "name": "mise",
-    "method": "brew",
+    "method": "pacman",
     "package": "mise",
-    "source": "https://github.com/jdx/mise",
-    "notes": "Polyglot tool-version manager from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/mise/",
+    "notes": "Polyglot tool-version manager from the official Arch repository; no project tools are installed implicitly.",
     "third_party": false
   },
   {
     "id": "uv",
     "name": "uv",
-    "method": "brew",
+    "method": "pacman",
     "package": "uv",
-    "source": "https://github.com/astral-sh/uv",
-    "notes": "Python package and project manager from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/uv/",
+    "notes": "Python package and project manager from the official Arch repository; no Python tools are installed implicitly.",
     "third_party": false
   },
   {
@@ -217,10 +217,10 @@
   {
     "id": "chezmoi",
     "name": "chezmoi",
-    "method": "brew",
+    "method": "pacman",
     "package": "chezmoi",
-    "source": "https://github.com/twpayne/chezmoi",
-    "notes": "Dotfile manager from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/chezmoi/",
+    "notes": "Official Arch package for chezmoi.",
     "third_party": false
   },
   {
@@ -237,88 +237,70 @@
   {
     "id": "libreoffice",
     "name": "libreoffice",
-    "method": "flatpak",
-    "package": "org.libreoffice.LibreOffice",
-    "source": "https://www.libreoffice.org/",
-    "notes": "Verified Flathub build of the LibreOffice suite; soffice is its command name, not a separate application.",
+    "method": "pacman",
+    "package": "libreoffice-fresh",
+    "source": "https://archlinux.org/packages/extra/x86_64/libreoffice-fresh/",
+    "notes": "Official Arch libreoffice-fresh suite provides soffice; no documents or accounts are configured.",
     "aliases": ["soffice"],
     "third_party": false
   },
   {
     "id": "drawio",
     "name": "draw.io",
-    "method": "flatpak",
-    "package": "com.jgraph.drawio.desktop",
-    "source": "https://github.com/jgraph/drawio-desktop",
-    "notes": "Linux desktop application published on Flathub.",
+    "method": "pacman",
+    "package": "drawio-desktop",
+    "source": "https://archlinux.org/packages/extra/any/drawio-desktop/",
+    "notes": "Official Arch drawio-desktop package provides the Electron desktop editor.",
     "aliases": ["drawio"],
-    "third_party": true
+    "third_party": false
   },
   {
     "id": "imagemagick",
     "name": "imagemagick",
-    "method": "brew",
+    "method": "pacman",
     "package": "imagemagick",
-    "source": "https://imagemagick.org/",
-    "notes": "Image manipulation tools from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/imagemagick/",
+    "notes": "Official Arch package for imagemagick.",
     "aliases": ["ImageMagick"],
     "third_party": false
   },
   {
     "id": "oxipng",
     "name": "oxiping",
-    "method": "brew",
+    "method": "pacman",
     "package": "oxipng",
-    "source": "https://github.com/shssoichiro/oxipng",
-    "notes": "The requested oxiping spelling resolves to oxipng, the multithreaded PNG optimizer in Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/oxipng/",
+    "notes": "The requested oxiping spelling resolves to the official oxipng PNG optimizer.",
     "aliases": ["oxipng"],
     "third_party": false
   },
   {
     "id": "jpegoptim",
     "name": "jpegoptim",
-    "method": "brew",
+    "method": "pacman",
     "package": "jpegoptim",
-    "source": "https://github.com/tjko/jpegoptim",
-    "notes": "JPEG optimizer from Homebrew core.",
+    "source": "https://archlinux.org/packages/extra/x86_64/jpegoptim/",
+    "notes": "Official Arch package for jpegoptim.",
     "third_party": false
   },
   {
     "id": "vlc",
     "name": "VLC",
-    "method": "flatpak",
-    "package": "org.videolan.VLC",
-    "source": "https://www.videolan.org/vlc/",
-    "notes": "VLC media player via Flathub.",
+    "method": "pacman",
+    "package": "vlc",
+    "source": "https://archlinux.org/packages/extra/x86_64/vlc/",
+    "notes": "Official Arch VLC media player, including its GUI package dependencies.",
     "aliases": ["vlc"],
-    "third_party": true
+    "third_party": false
   },
   {
     "id": "caligula",
     "name": "caligula",
-    "method": "archive",
+    "method": "pacman",
     "package": "caligula",
-    "source": "https://github.com/ifd3f/caligula",
-    "notes": "Official checksum-pinned Linux release executables avoid Caligula's bindgen, C compiler, and native compression-library source-build requirements.",
-    "version": "0.5.0",
-    "artifacts": {
-      "x86_64": {
-        "url": "https://github.com/ifd3f/caligula/releases/download/v0.5.0/caligula-x86_64-linux",
-        "sha256": "470da9381d2ac44bbd54485ac8c8afcc23fd2aecbce98cd1aba815d1ef5ed3ed",
-        "format": "raw",
-        "filename": "caligula"
-      },
-      "aarch64": {
-        "url": "https://github.com/ifd3f/caligula/releases/download/v0.5.0/caligula-aarch64-linux",
-        "sha256": "9dd0cea2080bfa51e5b9a50c8048632e9767c1b269784e6902663566f53dbf75",
-        "format": "raw",
-        "filename": "caligula"
-      }
-    },
-    "commands": {
-      "caligula": "caligula"
-    },
-    "third_party": true
+    "source": "https://archlinux.org/packages/extra/x86_64/caligula/",
+    "notes": "Official Arch package provides the disk-imaging TUI; setup installs the package but never runs disk-imaging operations.",
+    "third_party": false
   },
   {
     "id": "chamber",
@@ -332,34 +314,19 @@
   {
     "id": "kitty",
     "name": "kitty",
-    "method": "archive",
+    "method": "pacman",
     "package": "kitty",
-    "source": "https://sw.kovidgoyal.net/kitty/binary/",
-    "notes": "Official checksum-pinned Linux binary bundle; extraction preserves Kitty's required directory layout and exposes kitty and kitten through wrappers.",
-    "version": "0.49.2",
-    "artifacts": {
-      "x86_64": {
-        "url": "https://github.com/kovidgoyal/kitty/releases/download/v0.49.2/kitty-0.49.2-x86_64.txz",
-        "sha256": "d573618b911e9c461bd421b96c13c74c7f1cb2f1ac9c327818d4ff84366cf5c6"
-      },
-      "aarch64": {
-        "url": "https://github.com/kovidgoyal/kitty/releases/download/v0.49.2/kitty-0.49.2-arm64.txz",
-        "sha256": "0c81a995614426cccf0fecaf7d104d47cd63bbccf173d14976e9f92e3d60fce6"
-      }
-    },
-    "commands": {
-      "kitty": "bin/kitty",
-      "kitten": "bin/kitten"
-    },
-    "third_party": true
+    "source": "https://archlinux.org/packages/extra/x86_64/kitty/",
+    "notes": "Official Arch package includes kitty and kitten and their required host libraries.",
+    "third_party": false
   },
   {
     "id": "bitwarden",
     "name": "bitwarden",
-    "method": "flatpak",
-    "package": "com.bitwarden.desktop",
-    "source": "https://bitwarden.com/",
-    "notes": "Officially verified Bitwarden desktop package on Flathub.",
+    "method": "pacman",
+    "package": "bitwarden",
+    "source": "https://archlinux.org/packages/extra/x86_64/bitwarden/",
+    "notes": "Official Arch desktop client; no vault, account, login, or browser extension is configured.",
     "aliases": ["Bitwarden"],
     "third_party": false
   },
@@ -391,19 +358,19 @@
   {
     "id": "gitlogue",
     "name": "gitlogue",
-    "method": "brew",
+    "method": "pacman",
     "package": "gitlogue",
-    "source": "https://github.com/unhappychoice/gitlogue",
-    "notes": "Animated Git history replay; Homebrew core provides Linux bottles for x86_64 and arm64. Requires Git and a repository with commit history.",
+    "source": "https://archlinux.org/packages/extra/x86_64/gitlogue/",
+    "notes": "Animated Git history replay; requires Git and a repository with commit history.",
     "third_party": false
   },
   {
     "id": "visidata",
     "name": "VisiData",
-    "method": "brew",
+    "method": "pacman",
     "package": "visidata",
-    "source": "https://github.com/saulpw/visidata",
-    "notes": "Terminal tabular-data explorer, exposed as vd and visidata. Homebrew core provides an architecture-independent bottle and manages its Python environment; formats such as XLSX and Parquet need optional dependencies not provisioned by setup.",
+    "source": "https://archlinux.org/packages/extra/any/visidata/",
+    "notes": "Terminal tabular-data explorer, exposed as vd and visidata. Formats such as XLSX and Parquet may require optional dependencies not provisioned by setup.",
     "aliases": ["vd"],
     "third_party": false
   },
@@ -428,60 +395,57 @@
   {
     "id": "llmfit",
     "name": "llmfit",
-    "method": "brew",
+    "method": "pacman",
     "package": "llmfit",
-    "source": "https://github.com/AlexsJones/llmfit",
-    "notes": "Hardware-aware LLM recommendations; Homebrew core provides Linux bottles for x86_64 and arm64. GPU detection depends on host drivers and probes; setup does not download models or start services.",
+    "source": "https://archlinux.org/packages/extra/x86_64/llmfit/",
+    "notes": "Hardware-aware LLM recommendations; GPU detection depends on host drivers and probes. Setup does not download models or start services.",
     "third_party": false
   },
   {
     "id": "croc",
     "name": "croc",
-    "method": "brew",
+    "method": "pacman",
     "package": "croc",
-    "source": "https://github.com/schollz/croc",
-    "notes": "Encrypted file transfer; Homebrew core provides Linux bottles for x86_64 and arm64. Transfers require network access and can use public relays; protect transfer codes. No relay or automatic transfers are configured.",
+    "source": "https://archlinux.org/packages/extra/x86_64/croc/",
+    "notes": "Encrypted file transfer; network transfers can use public relays. Protect transfer codes. No relay or automatic transfers are configured.",
     "third_party": false
   },
   {
     "id": "grex",
     "name": "grex",
-    "method": "brew",
+    "method": "pacman",
     "package": "grex",
-    "source": "https://github.com/pemistahl/grex",
-    "notes": "Generates regular expressions from examples; Homebrew core provides Linux bottles for x86_64 and arm64. Review generated expressions for unintended matches and target-engine compatibility.",
+    "source": "https://archlinux.org/packages/extra/x86_64/grex/",
+    "notes": "Generates regular expressions from examples; review generated expressions for unintended matches and target-engine compatibility.",
     "third_party": false
   },
   {
     "id": "kondo",
     "name": "kondo",
-    "method": "brew",
+    "method": "pacman",
     "package": "kondo",
-    "source": "https://github.com/tbillington/kondo",
-    "notes": "CLI for deleting project dependencies and build artifacts; Homebrew core provides Linux bottles for x86_64 and arm64. Cleanup is destructive and must be invoked explicitly by the user; setup never runs it or installs kondo-ui.",
+    "source": "https://archlinux.org/packages/extra/x86_64/kondo/",
+    "notes": "Project dependency and artifact cleanup can be destructive; setup never runs it or installs kondo-ui.",
     "third_party": false
   },
   {
     "id": "worktrunk",
     "name": "Worktrunk",
-    "method": "brew",
+    "method": "pacman",
     "package": "worktrunk",
-    "source": "https://github.com/max-sixty/worktrunk",
-    "notes": "Git worktree manager exposed as wt; Homebrew core provides Linux bottles for x86_64 and arm64. Requires Git and conflicts with wiredtiger's wt executable. Shell integration, project hooks, agent plugins, and LLM providers are not configured.",
+    "source": "https://archlinux.org/packages/extra/x86_64/worktrunk/",
+    "notes": "Git worktree manager exposed as wt; requires Git and conflicts with wiredtiger's wt executable. Shell integration, project hooks, agent plugins, and LLM providers are not configured.",
     "aliases": ["wt"],
     "third_party": false
   },
   {
     "id": "jetbrains-mono-nerd-font",
     "name": "Jetbrains mono nerd font",
-    "method": "font",
-    "package": "JetBrainsMono",
-    "source": "https://github.com/ryanoasis/nerd-fonts",
-    "notes": "Checksum-verified Nerd Fonts release archive; installer deploys only font files to the user font directory.",
+    "method": "pacman",
+    "package": "ttf-jetbrains-mono-nerd",
+    "source": "https://archlinux.org/packages/extra/any/ttf-jetbrains-mono-nerd/",
+    "notes": "Official Arch package provides the patched JetBrains Mono Nerd Font; pacman verifies the signed package instead of downloading a user-local release archive.",
     "aliases": ["JetBrains Mono Nerd Font"],
-    "version": "3.5.1",
-    "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/JetBrainsMono.zip",
-    "sha256": "fab782a66f7d3019da64f6572db9fc5d3a4bcb19f9fa13e2d8a62e3693d6396e",
-    "third_party": true
+    "third_party": false
   }
 ]

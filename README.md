@@ -1,24 +1,24 @@
 # Vixygrey Linux Setup
 
-Personal setup for **Aurora Linux** as a graphical workstation with selected useful CLI and TUI tools, Aurora DX's Docker Engine, and the Dracula-Sakura appearance from the existing Mac setup.
+Personal setup for **CachyOS** as a KDE Plasma workstation with selected CLI and TUI tools, local Docker Engine, and the Dracula-Sakura appearance from the existing Mac setup.
 
-The catalog explicitly lists the selected applications and their installation sources. `soffice` is part of LibreOffice. Docker Engine is the explicitly approved replacement for Docker Desktop. Obsidian and Todoist use per-user Flathub packages; Zed and Bruno use pinned upstream Linux payloads. OMP remains the primary AI development tool alongside Kiro and Zed.
+The catalog explicitly lists selected applications and installation sources. `soffice` is part of LibreOffice. Docker Engine is the approved replacement for Docker Desktop. Obsidian, Discord, Zed, Kitty, and DBeaver use official native packages; Todoist uses per-user Flathub and Bruno retains a pinned upstream Linux payload. OMP remains the primary AI development tool alongside Kiro and Zed.
 
 ## Before using it
 
 - Run as your normal user, **never with `sudo`**.
-- Complete Aurora's normal provisioning first. Python 3.11+, Homebrew, and Flatpak must be available for the relevant selections. This repository does not bootstrap them with downloaded shell scripts.
-- The catalog includes architecture-specific x86_64 and aarch64 vendor artifacts. Preview uses the current machine's architecture.
-- The standard `~/.config` and `~/.local/share` locations are supported. Equivalent canonical paths, including Aurora's `/home` aliases, are accepted. A genuinely different XDG location is blocked rather than written incorrectly.
+- Complete CachyOS installation first. Python 3.11+, pacman, and sudo are required for native package installation. Flatpak and Homebrew are needed only for selections using those routes; no downloaded bootstrap scripts run.
+- CachyOS apply targets x86_64. Retained vendor artifacts also include aarch64 payloads for cross-platform preview; those do not imply CachyOS ARM support.
+- The standard `~/.config` and `~/.local/share` locations are supported. Equivalent canonical home paths are accepted. A genuinely different XDG location is blocked rather than written incorrectly.
 - Review the catalog and the plan before applying. The setup is not an OS installer or a replacement for system backups.
 
 Before the first apply on any machine, complete the [machine commissioning runbook](docs/machine-commissioning.md). It keeps storage, encryption, backup, power, and optional capability decisions per-machine without changing installer defaults.
 
-Aurora's recommended software model is [Flatpak, Homebrew, then containers](https://docs.getaurora.dev/guides/software/), not normal host `dnf` installation. This setup never layers RPMs, changes the OS image, alters groups, enables system services, or changes your login shell.
+Official CachyOS/Arch repository packages are preferred where available. Native application installs require explicit `--apply` and use sudo for a pacman full system upgrade plus the selected packages, avoiding [unsupported partial upgrades](https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported). Review pacman's transaction before accepting it. This can update packages beyond the selection. There is no AUR automation. The setup never alters groups, enables system services, changes the desktop, or changes your login shell.
 
 ### Docker Engine
 
-Docker Engine is supplied by [Aurora DX](https://docs.getaurora.dev/dx/aurora-dx-intro/). On standard Aurora, run `ujust devmode` separately and follow its reboot instructions. Aurora documents `ujust dx-group` followed by logging out and back in for group access.
+Provision Docker Engine separately using the [Arch Docker guidance](https://wiki.archlinux.org/title/Docker). Install the official `docker` package and explicitly decide whether to enable its service and grant user access to the local daemon.
 
 **Docker group access is effectively root access.** These operations are deliberately not automated. The setup checks `/usr/bin/docker` and `/usr/bin/dockerd`, then queries only the local `/var/run/docker.sock`, not an existing remote Docker context. Missing or inaccessible Engine access blocks the full plan unless `docker-engine` is explicitly skipped.
 
@@ -45,7 +45,7 @@ need. Profiles only select applications; third-party sources still require per-I
 ./setup.sh --apps-only --profile base,terminal --skip btop
 
 # Apply only after reviewing the plan and approving its reported third-party IDs.
-./setup.sh --apps-only --only obsidian,todoist --trust obsidian,todoist --apply
+./setup.sh --apps-only --only obsidian,todoist --trust todoist --apply
 
 # Individual IDs can refine a profile; --skip always wins.
 ./setup.sh --apps-only --profile developer --only git --skip gh
@@ -55,12 +55,12 @@ The `desktop` profile includes Obsidian, Todoist, Zed, and Bruno; `developer` al
 To preview the note-taking and task applications without deploying the rest of the theme:
 
 ```sh
-./setup.sh --apps-only --only obsidian,todoist --trust obsidian,todoist --format json
+./setup.sh --apps-only --only obsidian,todoist --trust todoist --format json
 ```
 
 The `developer` profile also includes gitlogue, oxker, grex, Kondo, Worktrunk, and the
 existing Mike Farah yq entry. `terminal` adds VisiData and croc, `cloud` adds dnsglobe,
-and `ai` adds llmfit. All use Homebrew core, without extra taps or per-ID source approval.
+and `ai` adds llmfit. The catalog records each tool's explicit native or fallback route.
 Both catalog files participate in the default full selection; `extended` does not mean opt-in.
 Preview this group without deploying configuration:
 
@@ -73,16 +73,16 @@ Preview this group without deploying configuration:
 `vd` and `wt` are selection aliases for VisiData and Worktrunk. Catalog and profile edits
 invalidate saved plans; regenerate them before applying.
 
-The `base` profile includes zoxide and fzf; `developer` includes delta (Homebrew
-formula `git-delta`). Bat, ripgrep, and fd remain in `base`, and btop remains in
-`terminal`. These tools use Homebrew core without extra taps or per-ID source approval.
+The `base` profile includes zoxide and fzf; `developer` includes delta (`git-delta`).
+Bat, ripgrep, and fd remain in `base`, and btop remains in `terminal`.
+These tools use official native repository packages without per-ID source approval.
 
 ```sh
 ./setup.sh --apps-only --only zoxide,fzf,bat,btop,ripgrep,fd,delta --format json
 ```
 
-A preview can run on this Mac; `--apply` requires Aurora and a non-root user. Read-only package
-queries may use package managers' own caches or locks.
+A preview can run on this Mac; `--apply` requires CachyOS x86_64 and a non-root user.
+Read-only package queries may use package managers' own caches or locks.
 
 ### Status and readiness
 
@@ -101,7 +101,7 @@ and pinned PyYAML version using the same check as installation planning. An inta
 `installed` without renewed source approval; missing or invalid helpers still require approval
 and uv before repair.
 
-`--doctor` reports the current Aurora, architecture, Homebrew, Flatpak, Docker, Plasma, Vulkan,
+`--doctor` reports CachyOS, architecture, native package manager, fallback Homebrew, Flatpak, Docker, Plasma, Vulkan,
 and root/home free-space readiness. It never installs, repairs, downloads, locks, or creates
 state. Both commands are observation-only and cannot be combined with `--apply`, replacement,
 desktop activation, or plan-writing options.
@@ -206,7 +206,7 @@ If preserving an existing `.zshrc`, add this line yourself after reviewing the f
 source "$HOME/.config/vixygrey/setup.zsh"
 ```
 
-Start Zsh to use it. The setup does not call `chsh`. Shell integration includes stable Linuxbrew and user tool paths, the themed prompt, direnv, mise, the Zsh plugins, and Granted's interactive `assume` alias. Interactive hooks require an actual terminal. Existing direnv/mise trust checks remain in force; nothing authorizes project scripts automatically.
+Start Zsh to use it. The setup does not call `chsh`. Shell integration includes user tool paths, optional Linuxbrew paths, the themed prompt, direnv, mise, native Zsh plugins with a Homebrew fallback, and Granted's interactive `assume` alias. Interactive hooks require an actual terminal. Existing direnv/mise trust checks remain in force; nothing authorizes project scripts automatically.
 
 Zoxide and fzf hooks load only in interactive terminal sessions without an
 `AI_AGENT` marker, when their executables are available. Zoxide adds `z` for
@@ -261,8 +261,9 @@ documentation.
 
 | Route           | Behavior                                                                                                                                                                                                                               |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pacman          | Explicit official repository packages. Apply uses sudo and a full system upgrade with `--needed`; no partial upgrades, AUR helpers, group changes, or service activation. Rolling repository versions are not pinned.                  |
 | Homebrew        | CLI formulas, never casks. Existing formulas are skipped. Missing manager prerequisites are planned explicitly. No automatic global upgrade or cleanup.                                                                                |
-| Flatpak         | Missing apps install per user from Flathub. An existing system installation is left in place. A conflicting user `flathub` URL blocks installation. LibreOffice/`soffice` and VLC receive conflict-preserving CLI wrappers.            |
+| Flatpak         | Remaining sandboxed apps install per user from Flathub. An existing system installation is left in place. A conflicting user `flathub` URL blocks installation.                                                                        |
 | Vendor archives | Versioned HTTPS downloads with catalog SHA256 checks. Payloads stay in versioned user directories, with executable wrappers and GUI launchers. No archive install hooks, device nodes, escaping paths, escaping links, or setuid bits. |
 | uv / npm        | Exact top-level package versions in user-owned locations. Cheznav requests Python 3.14 through uv. Python tools may download a compatible managed interpreter.                                                                         |
 | `yaml-py`       | A private uv environment containing PyYAML, exposed as a Python interpreter command, matching the Mac helper rather than substituting a different YAML CLI.                                                                            |
@@ -272,37 +273,37 @@ documentation.
 - **llama.cpp:** the pinned upstream Vulkan bundle is used, not a CPU-only Homebrew substitute. Installation must detect a Vulkan device with `llama-cli --list-devices`. A working host Vulkan driver and compatible runtime libraries are required. No model downloads or server services are configured.
 - **Kiro:** the official portable Linux bundle is installed user-locally. It needs the host's normal Electron desktop libraries and unprivileged user namespaces. The setup never adds `--no-sandbox`, sets a root-owned sandbox helper, or disables OS security policy.
 - **AWS Session Manager Plugin:** the official versioned Debian payload is unpacked into a private application directory. No Debian maintainer scripts run and nothing is written to host `/usr` or `/etc`.
-- **DBeaver Community:** the desktop profile selects the publisher-listed Flathub package, with explicit `--trust dbeaver` approval. It replaces Harlequin, usql, and the standalone DuckDB CLI for graphical work. Configure a DuckDB connection and download its JDBC driver inside DBeaver. Dataset access may require Flatpak permissions, especially on additional drives. The retired command-line clients are not available to scripts or OMP through this setup.
-- **Discord:** included in the default catalog and `desktop` profile through [Flathub's `com.discordapp.Discord` wrapper](https://flathub.org/apps/com.discordapp.Discord), with explicit `--trust discord` approval. The package is [x86_64-only](https://github.com/flathub/com.discordapp.Discord/blob/master/flathub.json); on aarch64, use `--skip discord` and the browser client instead. Game Activity, file access, and Rich Presence have sandbox limitations. The setup does not import accounts, configure autostart, or broaden sandbox permissions.
-- **Obsidian:** the [community Flathub package](https://github.com/flathub/md.obsidian.Obsidian) is verified by the Obsidian team but is not officially supported. It supports x86_64 and aarch64 and requires `--trust obsidian`. Its packaged permissions include home/removable-drive access and the SSH agent socket. Review those permissions; setup does not add overrides, create vaults, install plugins, or configure sync or credentials.
+- **DBeaver Community:** the desktop profile selects the official Arch `dbeaver` package. Configure a DuckDB connection and download its JDBC driver inside DBeaver. The retired Harlequin, usql, and standalone DuckDB clients are not available to scripts or OMP through this setup.
+- **Discord:** the desktop profile selects the official Arch `discord` package for x86_64. Accounts, autostart, and permissions are not configured. The previous Flatpak route and its sandbox restrictions no longer describe this selection.
+- **Obsidian:** the desktop profile selects the official Arch `obsidian` package. No vaults, plugins, sync accounts, or credentials are configured. This is a native application, not the previous community Flatpak.
 - **Todoist:** the [community Flathub package](https://github.com/flathub/com.todoist.Todoist) repackages the vendor desktop client and requires `--trust todoist`. It is [x86_64-only](https://github.com/flathub/com.todoist.Todoist/blob/master/flathub.json); on aarch64, use `--skip todoist` and the browser client instead. [Upstream documents Snap/AppImage and officially supports Ubuntu GNOME only](https://www.todoist.com/help/todoist/get-started/install-todoist-for-linux-KgKaJa6H). This setup does not install snapd, import accounts, configure autostart, or add permission overrides.
 - **Retired Notion launcher:** Notion is no longer in the catalog or profiles. Existing files are not automatically removed. If previously installed, review `~/.local/share/applications/vixygrey-notion.desktop` and remove that menu entry manually if no longer wanted. Browser data and accounts are untouched. Regenerate saved plans after this catalog change.
-- **Zed:** official versioned tarballs for both supported architectures are deployed user-locally, with `zed` and an application-menu entry. No downloaded installer script runs. A working Vulkan driver, desktop portals, and the host's normal Linux libraries remain prerequisites. This native route lets Zed use host development tools without a Flatpak sandbox.
+- **Zed:** the official Arch `zed` package supplies the editor and application-menu integration. A working Vulkan driver, desktop portals, and compatible host libraries remain prerequisites. No downloaded installer script runs.
 - **Bruno:** official versioned Debian payloads for both architectures are extracted user-locally, without maintainer scripts or host writes. The publisher-documented Flatpak is x86_64-only, so it is not used here. The native application requires compatible host Electron libraries and unprivileged user namespaces for Chromium sandboxing; the setup never adds `--no-sandbox`. Accounts, collections, environments, and credentials are not imported. The separate Bruno CLI is not installed.
 - **Granted / AWS / Bitwarden / OMP:** credentials, accounts, tokens, profiles, and login flows remain yours to configure. No credentials are imported from the Mac.
 - **Backups:** backup software and policy are outside this setup. Choose destinations, encryption, credentials, retention, and scheduling separately, then validate restoration using the machine commissioning runbook.
 - **Network diagnostics / Caligula:** no uinput permissions, network capabilities, or disk writes are enabled by setup. Privileged runtime actions remain explicit user decisions.
 - **gitlogue:** replays local Git history and requires Git plus a repository with commits. Setup does not set its theme or start watch mode.
-- **VisiData:** Homebrew manages the Python environment and supplies `vd` and `visidata`. Optional formats such as XLSX and Parquet need dependencies in that environment; setup does not add them or promise every upstream format.
+- **VisiData:** the selected package manager supplies its Python environment and commands. Optional formats such as XLSX and Parquet need additional dependencies; setup does not add them or promise every upstream format.
 - **dnsglobe:** queries public DNS resolvers, including direct DNS on port 53, which restricted networks may block. Displayed resolver regions are not independent probes physically running in those regions. Setup does not change firewall rules or configure EDNS Client Subnet.
 - **oxker:** can control containers through an accessible Docker daemon. Socket access can be root-equivalent; setup does not change Docker groups, sockets, services, or contexts. Lazydocker remains available.
 - **llmfit:** recommends models from detected hardware; GPU detection depends on host drivers and probes. Recommendations do not prove Vulkan llama.cpp compatibility. Setup does not download models, configure providers, or start services.
 - **croc:** encrypted transfers can use public relays. Protect transfer codes and use trusted endpoints. Setup does not configure a relay, open firewall ports, or start transfers.
 - **grex:** generates candidate regular expressions from examples. Review unintended matches and compatibility with the intended regex engine.
 - **Kondo:** installs only the `kondo` CLI. Cleanup deletes dependencies and build artifacts; upstream describes it as essentially `rm -rf` with a prompt. Back up projects and review targets. Setup never runs cleanup or installs `kondo-ui`.
-- **Worktrunk:** installs `wt` for Git worktree management. Homebrew conflicts with `wiredtiger`, which also supplies `wt`; resolve conflicts explicitly rather than forcing links. Directory-changing integration is an optional user step, `wt config shell install`, which modifies shell configuration and is never run by setup. Project hooks, agent plugins, LLM providers, and existing worktrees are not configured or changed.
-- **yq:** the existing entry is Mike Farah's Go implementation, not Python yq. Homebrew conflicts with `python-yq`; setup does not force replacement. The separate `yaml-py` interpreter helper remains available.
+- **Worktrunk:** installs `wt` for Git worktree management. Resolve package conflicts explicitly rather than forcing replacement. Directory-changing integration is an optional user step, `wt config shell install`, which modifies shell configuration and is never run by setup. Project hooks, agent plugins, LLM providers, and existing worktrees are not configured or changed.
+- **yq:** the existing entry is Mike Farah's Go implementation, not Python yq. Setup does not force replacement of conflicting packages. The separate `yaml-py` interpreter helper remains available.
 
-To preview or install Discord alone on an eligible x86_64 Aurora machine:
+To preview or install Discord alone on an eligible x86_64 CachyOS machine:
 
 ```sh
-./setup.sh --apps-only --only discord --trust discord
-./setup.sh --apps-only --only discord --trust discord --apply
+./setup.sh --apps-only --only discord
+./setup.sh --apps-only --only discord --apply
 ```
 
 ### Repeated runs, changes, and failure
 
-Package-manager state is inspected rather than trusting a generic "done" marker. Archive receipts also check deployed file hashes and executable permissions. Existing Homebrew and Flatpak installations are not upgraded automatically. Registry installs use their pinned versions; if a manager refuses a conflicting existing version, the setup stops rather than forcing replacement.
+Package-manager state is inspected rather than trusting a generic "done" marker. Archive receipts also check deployed file hashes and executable permissions. Native installs include a full system upgrade; existing Homebrew and Flatpak installations are not upgraded automatically. Registry installs use their pinned versions; if a manager refuses a conflicting existing version, the setup stops rather than forcing replacement.
 
 Archive wrapper changes, including version changes, require explicit `--replace .local/bin/<command>` approval. Existing modified payload files remain protected. Older version directories are not pruned automatically. Receipts live under `~/.local/state/vixygrey-setup/receipts/`.
 
@@ -348,57 +349,37 @@ or protected receipts fail closed.
 Saved review plans still use the strict whole-catalog digest. A catalog edit can invalidate a
 saved plan even when it no longer invalidates an intact application installation.
 
-### Font upgrades and recovery
+### Fonts and existing installations
 
-Fonts stay in `~/.local/share/fonts/JetBrainsMonoNerd`; existing installations do not need a
-directory migration. Source approval still requires `--trust jetbrains-mono-nerd-font` when
-downloading a release.
+The CachyOS catalog uses the official `ttf-jetbrains-mono-nerd` package. Pacman owns its
+system font files and font-cache hooks; setup no longer deploys a private font ZIP for this
+selection. No per-ID source approval is needed.
 
-Offline preview inspects recorded current and retired font paths, reporting missing, modified,
-or protected files without downloads or home writes. It cannot produce a complete target-file
-diff because the catalog pins the ZIP checksum, not its member inventory. JSON install actions
-include `font_readiness` with `payload_preflight_required: true`.
-
-During apply, the complete checksum-verified font archive is validated and staged in temporary
-files. Every destination and the receipt are checked before font deployment. A known conflict
-stops deployment without changing installed fonts or the receipt, even when some other paths
-have replacement approval. Review the reported paths and approve each intended replacement
-with `--replace .local/share/fonts/JetBrainsMonoNerd/<filename>`. Original bytes are backed up
-using the same private backup mechanism as other managed files. Receipt ownership never grants
-permission to overwrite fonts, and symlinks remain protected even with explicit consent.
-
-Fonts removed from a new upstream release are **retained**, not deleted. Their original recorded
-hashes remain in a separate retired inventory across upgrades. Text status labels them
-`RETAINED FONT`; JSON status exposes `retired_fonts`. Editing or removing a retired font does not
-invalidate the current release. Review any variants you no longer want and remove them manually;
-retained variants remain available to the font system and may affect selection.
-
-After deployment, the receipt records pending cache work before running `fc-cache -f` on the
-font directory. A failed or unavailable `fc-cache` leaves the payload intact and reports
-`cache-pending`. Once the tool is available or its error resolved, rerun the same selection with
-`--apply`: an intact payload gets a cache-only retry, without downloading or redeploying fonts.
-Successful cache work clears pending state. Legacy receipts without cache metadata do not force
-a rebuild. This preflight is not a transaction: I/O failures or external filesystem changes after
-preflight can still interrupt deployment, and the installer stops rather than bypassing safeguards.
+Existing user-local fonts, archive payloads, wrappers, desktop launchers, and Flatpaks from an
+older setup are not deleted automatically. Before applying to an existing home, review
+`~/.local/bin`, `~/.local/share/applications/vixygrey-*.desktop`, and
+`~/.local/share/fonts/JetBrainsMonoNerd` for old copies that can shadow native packages.
+Remove only confirmed obsolete files after backing them up. Changing the catalog does not
+migrate application data or uninstall a previous package route.
 
 ```sh
-./setup.sh --apps-only --only jetbrains-mono-nerd-font --trust jetbrains-mono-nerd-font
+./setup.sh --apps-only --only jetbrains-mono-nerd-font
 ./setup.sh --status --apps-only --only jetbrains-mono-nerd-font --format json
 ```
 
 ## Security model
 
-Review this repository and its catalog before execution. Homebrew core and the Flathub remote are baseline package sources; catalog-marked additional sources require explicit approval. Package-manager builds, package install scripts, application binaries, and shell initialization hooks still execute code as your user. **Approval is not sandboxing or a security audit.**
+Review this repository and its catalog before execution. Official CachyOS/Arch repositories, Homebrew core, and the Flathub remote are baseline package sources; catalog-marked additional sources require explicit approval. Native package install scripts execute with root privileges through sudo; other package-manager builds, application binaries, and shell initialization hooks execute as your user. **Approval is not sandboxing or a security audit.**
 
 TLS and hashes protect downloads against unexpected changes. Hashes are publisher-provided where available, or computed from the versioned official HTTPS artifact where noted. They do not independently prove publisher identity or make a compromised upstream safe. A changed artifact fails closed; refreshing a pin requires reviewing the source and replacing its checksum deliberately.
 
-Top-level registry versions and vendor assets are pinned, but this is not a fully reproducible supply-chain lock: Homebrew/Flatpak use their current catalogs, and registry transitive dependencies can change. OS updates and application vulnerability maintenance remain necessary.
+Top-level registry versions and vendor assets are pinned, but this is not a fully reproducible supply-chain lock: pacman, Homebrew, and Flatpak use their current catalogs, and registry transitive dependencies can change. OS updates and application vulnerability maintenance remain necessary.
 
 ### Refreshing catalog pins
 
 Catalog and profile changes are deliberately manual. Do not use Dependabot or another automated
 updater for `catalog/*.json`, `profiles.json`, vendor artifact URLs, SHA-256 values, Flatpak IDs,
-Homebrew formulas, or source-approval classifications.
+native package names, Homebrew formulas, or source-approval classifications.
 
 For every catalog refresh:
 
@@ -447,9 +428,9 @@ The Zed/Bruno additions were smoke-checked with both architecture previews and e
 source approval. Both official Zed tarballs and Bruno Debian payloads passed checksum verification
 and deployment through a local HTTPS fixture, including relocated launchers/icons, receipt checks,
 repeat planning, and preservation of an existing command, under home paths containing spaces and
-percent signs. These checks did not execute Linux binaries or validate Aurora's application menu.
+percent signs. These historical checks did not execute Linux binaries or validate the target application menu.
 
-**The full application install, Linux binary execution, Vulkan device detection, and KDE desktop activation have not been run on an Aurora target.** A local Docker daemon was unavailable. Validate the plan on the intended machine before approving an apply run, and validate the desktop there before treating its appearance as verified.
+**The full application install, Linux binary execution, Vulkan device detection, and KDE desktop activation have not been run on a CachyOS target.** A local Docker daemon was unavailable. Validate the plan on the intended machine before approving an apply run, and validate the desktop there before treating its appearance as verified.
 
 ## License
 

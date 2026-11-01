@@ -115,9 +115,19 @@ class ConfigDiff(unittest.TestCase):
 
     def test_selected_launchers_and_theme_scope_exclude_other_files(self):
         name = ".local/share/applications/vixygrey-zed.desktop"
-        allowed = self.cli("--apps-only", "--only", "zed", "--diff", name)
-        self.assertEqual(allowed.returncode, 0, allowed.stderr)
-        self.assertIn("MISSING (new) " + name, allowed.stdout)
+        native = self.cli("--apps-only", "--only", "zed", "--diff", name)
+        self.assertEqual((native.returncode, native.stdout), (2, ""))
+        archive_entry = {
+            "id": "zed",
+            "method": "archive",
+            "version": "1.0",
+            "package": "zed",
+            "source": "https://example.invalid/zed",
+        }
+        self.assertIn(
+            "MISSING (new) " + name,
+            self.local_diff([name], apps_only=True, selected=[archive_entry]),
+        )
         for flags, disallowed in [
             (("--theme-only",), name),
             (("--apps-only", "--only", "git"), name),
@@ -129,11 +139,6 @@ class ConfigDiff(unittest.TestCase):
                 result = self.cli(*flags, "--diff", disallowed)
                 self.assertEqual(result.returncode, 2)
                 self.assertEqual(result.stdout, "")
-        zed = next(entry for entry in setup.catalog() if entry["id"] == "zed")
-        self.assertIn(
-            "MISSING (new) " + name,
-            self.local_diff([name], apps_only=True, selected=[zed]),
-        )
 
     def test_incompatible_modes_fail_before_catalog_or_home_effects(self):
         combinations = [

@@ -1,6 +1,6 @@
 # Machine commissioning
 
-Use this runbook before the first `--apply` on any Aurora machine. It is a manual checklist,
+Use this runbook before the first `--apply` on any CachyOS machine. It is a manual checklist,
 not installer behavior. It does not choose partitions, mount points, power policy, backup
 locations, or credentials for you.
 
@@ -14,9 +14,9 @@ Before writing data:
 
 1. Record the current firmware or BIOS version and whether an update is required according to the
    hardware vendor's guidance.
-2. Follow Aurora's [installation guide](https://docs.getaurora.dev/guides/install-guide), including
-   its current Secure Boot guidance. Do not copy changing installer steps or recovery material into
-   this repository.
+2. Follow the [CachyOS installation documentation](https://wiki.cachyos.org/) and its
+   [Secure Boot guidance](https://wiki.cachyos.org/configuration/secure_boot_setup).
+   Do not copy changing installer steps or recovery material into this repository.
 3. Record the encryption decision for every internal storage device. The installer does not create,
    modify, or unlock encrypted volumes.
 4. Select the desktop-managed power profile appropriate for the machine. Do not add a competing
@@ -40,7 +40,7 @@ workspaces, or large caches on it.
 Do not assume a particular drive count, filesystem, mount point, or capacity. A second internal
 drive can improve capacity or local recovery options, but it is not an independent backup.
 
-After normal Aurora provisioning, capture the read-only result of:
+After normal CachyOS provisioning, capture the read-only result of:
 
 ```sh
 ./setup.sh --doctor --format json
@@ -60,7 +60,7 @@ The setup owns only its existing user-state locations:
 Choose the location for every other large data class per machine:
 
 - **Worktrees and reproducible build caches:** use the data location selected in the private record.
-- **Container images and volumes:** inspect the selected Aurora DX, Docker, or Podman runtime before
+- **Container images and volumes:** inspect the selected Docker or Podman runtime before
   reserving space or configuring bind mounts. This repository does not assume a runtime storage path.
 - **Local models:** choose a data location only when the machine uses a supported local-model path.
   Record the capacity requirement and revisit it during the target-specific model validation.
@@ -82,15 +82,20 @@ Before relying on a machine:
 
 Keep backup destination details, credentials, passphrases, and restore evidence out of this repository.
 
-## 5. Aurora and developer prerequisites
+## 5. CachyOS and developer prerequisites
 
-Complete Aurora's normal provisioning first. Follow Aurora's [software guidance](https://docs.getaurora.dev/guides/software)
-for Flatpak, Homebrew, and containers. The setup does not bootstrap those prerequisites.
+Complete CachyOS installation first. Native selections use official CachyOS/Arch repositories
+through pacman. Run the setup as your normal user; only explicit apply invokes sudo for native
+package transactions. These include a full system upgrade, not a partial package database refresh.
+Review the transaction and any upstream upgrade notices before accepting it.
 
-When the machine needs Docker Engine, use Aurora DX according to its
-[developer-mode guidance](https://docs.getaurora.dev/dx/aurora-dx-intro). This is a manual host
-choice. On a standard Aurora image, it includes `ujust devmode`; Aurora then requires `ujust dx-group`
-and a logout/login before Docker access works. Docker group access is effectively root-equivalent.
+Install Flatpak or Homebrew separately when a selected fallback route requires it. The setup
+does not bootstrap either with downloaded shell scripts and never builds AUR packages.
+
+When the machine needs Docker Engine, follow the [Arch Docker guidance](https://wiki.archlinux.org/title/Docker).
+Install the official `docker` package, then explicitly decide service activation and user access.
+The setup does not enable services or change group membership. Docker group access is
+effectively root-equivalent; log out and back in after any manual group change.
 
 After prerequisites are present, use this sequence:
 
@@ -112,10 +117,10 @@ and explicit replacement rules remain in force.
 
 Keep target-specific validation separate from this machine-neutral runbook:
 
-- Aurora install, desktop, Docker, and Vulkan acceptance: issue #25.
+- CachyOS install, desktop, Docker, and Vulkan acceptance: issue #25.
 - AMD Radeon local-model validation and model capacity evidence: issue #18.
 - Additional storage and GPU presentation in Fastfetch or btop: issue #24.
 
-Each target should supply only sanitized facts to those follow-ons: Aurora version, architecture,
+Each target should supply only sanitized facts to those follow-ons: CachyOS version, architecture,
 selected catalog IDs, free-space evidence, and the private decision record's conclusions. Do not
 commit private machine identifiers or secrets.

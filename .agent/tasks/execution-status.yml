@@ -305,3 +305,20 @@ tasks:
     limitations: Actual Obsidian/Todoist Flatpak installation, application-menu integration, sign-in, and GUI operation require Aurora target verification. Local apply smoke used a stateful Flatpak fixture, not the real package manager.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 72 remaining tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews; five obsolete web-route tests were removed."
+  cachyos-migration:
+    status: done
+    updated_at: 2026-11-01
+    scope: Replace Aurora host requirements with CachyOS x86_64 and prefer official native repository packages while preserving preview and file safety.
+    routes:
+      native_entries: 73
+      native_manager: pacman
+      native_transaction: sudo pacman -Syu --needed
+      excluded: AUR automation, Docker service activation, group changes, implicit apply.
+    verification:
+      - "Native mappings reviewed against official Arch Extra and CachyOS repository databases; retained routes cover unavailable packages, pinned helpers, and Vulkan llama.cpp."
+      - "Actual CLI preview and doctor left isolated home empty; wrong-host apply was rejected before package writes."
+      - "Stateful executable pacman/sudo fixture exercised main apply with overridden host eligibility, observed a full-upgrade transaction, confirmed installed status, and verified repeat preview did not escalate."
+      - "Interactive Zsh terminal sourced the migrated fragment and reported the expected editor and Bat theme."
+    limitations: Actual CachyOS package installation, native Linux plugin sourcing, GUI operation, Docker access, and Vulkan detection require target validation; no host packages were installed locally.
+    verify_command: ./scripts/verify
+    gate_result: "./scripts/verify passed all 80 tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews using installed Node 24.18.1 through mise."

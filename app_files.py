@@ -25,7 +25,7 @@ def launchers(entry: dict, home: Path):
                 f'#!/bin/sh\nexec flatpak run {entry["package"]} "$@"\n'.encode(),
                 0o755,
             )
-    if identifier not in {"kitty", "kiro", "zed", "bruno"}:
+    if entry["method"] != "archive" or identifier not in {"kitty", "kiro", "zed", "bruno"}:
         return
     base = home / ".local/share/vixygrey/apps" / identifier / entry["version"]
     if identifier == "kitty":
