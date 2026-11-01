@@ -37,6 +37,7 @@ OFFICIAL_REPOSITORIES = {
     "cachyos-extra-v3",
     "cachyos-extra-v4",
     "cachyos-znver4",
+    "cachyos-extra-znver4",
 }
 
 

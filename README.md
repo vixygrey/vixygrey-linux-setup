@@ -16,6 +16,10 @@ Before the first apply on any machine, complete the [machine commissioning runbo
 
 Official CachyOS/Arch repository packages are preferred where available. Native application installs require explicit `--apply` and use sudo for a pacman full system upgrade plus the selected packages, avoiding [unsupported partial upgrades](https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported). Review pacman's transaction before accepting it. This can update packages beyond the selection. There is no AUR automation. The setup never alters groups, enables system services, changes the desktop, or changes your login shell.
 
+Native package checks recognize the CachyOS `cachyos-extra-znver4` repository.
+For unqualified package names, the first repository returned by pacman must be approved;
+a later official result does not override an unapproved higher-priority repository.
+
 ### Docker Engine
 
 Provision Docker Engine separately using the [Arch Docker guidance](https://wiki.archlinux.org/title/Docker). Install the official `docker` package and explicitly decide whether to enable its service and grant user access to the local daemon.
