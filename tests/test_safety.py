@@ -643,6 +643,35 @@ class PacmanSafety(unittest.TestCase):
             self.app.apply()
         self.assertNotIn("micro", self.installed)
 
+    def test_znver4_package_preview_preserves_repository_priority(self):
+        self.entry["package"] = "zoxide"
+        for repository, blocked in (
+            ("cachyos-extra-znver4", False),
+            ("local", True),
+            ("cachyos-extra-znver4-untrusted", True),
+        ):
+            with self.subTest(repository=repository):
+                self.app.blocks.clear()
+                self.app.steps.clear()
+                self.app.dependencies.clear()
+                with (
+                    patch.object(
+                        self.app,
+                        "run",
+                        side_effect=lambda argv, capture=False: SimpleNamespace(
+                            returncode=1 if argv[1] == "-Q" else 0,
+                            stdout=(
+                                f"Repository : {repository}\nName : zoxide\n\n"
+                                "Repository : extra\nName : zoxide\n"
+                            ),
+                        ),
+                    ),
+                    contextlib.redirect_stdout(io.StringIO()),
+                ):
+                    self.app.plan()
+                self.assertEqual(bool(self.app.blocks), blocked)
+        self.assertEqual(list(self.home.iterdir()), [])
+
     def test_unofficial_repository_or_unsafe_name_blocks_before_apply(self):
         self.entry["package"] = "community/micro"
         with self.assertRaises(SafetyError):
