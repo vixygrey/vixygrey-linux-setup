@@ -322,3 +322,13 @@ tasks:
     limitations: Actual CachyOS package installation, native Linux plugin sourcing, GUI operation, Docker access, and Vulkan detection require target validation; no host packages were installed locally.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 80 tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews using installed Node 24.18.1 through mise."
+  remove-personal-desktop-apps:
+    status: done
+    updated_at: 2026-11-16
+    scope: Remove Obsidian, Todoist, and Discord from the catalogs and desktop profile without uninstalling existing applications or touching personal data.
+    verification:
+      - "Actual full-catalog and desktop CLI previews exclude all three removed IDs."
+      - "All nine only/trust/skip requests for removed IDs were rejected; isolated preview home remained unchanged."
+      - "Profile source-approval and saved-plan apply tests migrated to retained applications."
+    verify_command: mise exec node@24.18.1 -- ./scripts/verify
+    gate_result: "Passed all 81 tests, formatting, linting, compilation, shell checks, palette and catalog validation, and no-write previews."
