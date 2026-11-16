@@ -2,7 +2,7 @@
 
 Personal setup for **CachyOS** as a KDE Plasma workstation with selected CLI and TUI tools, local Docker Engine, and the Dracula-Sakura appearance from the existing Mac setup.
 
-The catalog explicitly lists selected applications and installation sources. `soffice` is part of LibreOffice. Docker Engine is the approved replacement for Docker Desktop. Obsidian, Discord, Zed, Kitty, and DBeaver use official native packages; Todoist uses per-user Flathub and Bruno retains a pinned upstream Linux payload. OMP remains the primary AI development tool alongside Kiro and Zed.
+The catalog explicitly lists selected applications and installation sources. `soffice` is part of LibreOffice. Docker Engine is the approved replacement for Docker Desktop. Zed, Kitty, and DBeaver use official native packages; Bruno retains a pinned upstream Linux payload. OMP remains the primary AI development tool alongside Kiro and Zed.
 
 ## Before using it
 
@@ -49,17 +49,17 @@ need. Profiles only select applications; third-party sources still require per-I
 ./setup.sh --apps-only --profile base,terminal --skip btop
 
 # Apply only after reviewing the plan and approving its reported third-party IDs.
-./setup.sh --apps-only --only obsidian,todoist --trust todoist --apply
+./setup.sh --apps-only --only zed,bruno --trust bruno --apply
 
 # Individual IDs can refine a profile; --skip always wins.
 ./setup.sh --apps-only --profile developer --only git --skip gh
 ```
 
-The `desktop` profile includes Obsidian, Todoist, Zed, and Bruno; `developer` also includes Zed and Bruno.
-To preview the note-taking and task applications without deploying the rest of the theme:
+The `desktop` and `developer` profiles both include Zed and Bruno.
+To preview those applications without deploying the rest of the theme:
 
 ```sh
-./setup.sh --apps-only --only obsidian,todoist --trust todoist --format json
+./setup.sh --apps-only --only zed,bruno --trust bruno --format json
 ```
 
 The `developer` profile also includes gitlogue, oxker, grex, Kondo, Worktrunk, and the
@@ -278,9 +278,7 @@ documentation.
 - **Kiro:** the official portable Linux bundle is installed user-locally. It needs the host's normal Electron desktop libraries and unprivileged user namespaces. The setup never adds `--no-sandbox`, sets a root-owned sandbox helper, or disables OS security policy.
 - **AWS Session Manager Plugin:** the official versioned Debian payload is unpacked into a private application directory. No Debian maintainer scripts run and nothing is written to host `/usr` or `/etc`.
 - **DBeaver Community:** the desktop profile selects the official Arch `dbeaver` package. Configure a DuckDB connection and download its JDBC driver inside DBeaver. The retired Harlequin, usql, and standalone DuckDB clients are not available to scripts or OMP through this setup.
-- **Discord:** the desktop profile selects the official Arch `discord` package for x86_64. Accounts, autostart, and permissions are not configured. The previous Flatpak route and its sandbox restrictions no longer describe this selection.
-- **Obsidian:** the desktop profile selects the official Arch `obsidian` package. No vaults, plugins, sync accounts, or credentials are configured. This is a native application, not the previous community Flatpak.
-- **Todoist:** the [community Flathub package](https://github.com/flathub/com.todoist.Todoist) repackages the vendor desktop client and requires `--trust todoist`. It is [x86_64-only](https://github.com/flathub/com.todoist.Todoist/blob/master/flathub.json); on aarch64, use `--skip todoist` and the browser client instead. [Upstream documents Snap/AppImage and officially supports Ubuntu GNOME only](https://www.todoist.com/help/todoist/get-started/install-todoist-for-linux-KgKaJa6H). This setup does not install snapd, import accounts, configure autostart, or add permission overrides.
+- **Removed applications:** Obsidian, Todoist, and Discord are no longer in the catalog or profiles. Existing installations and personal data are untouched. Regenerate saved plans after this catalog change; the removed IDs are no longer valid selection or approval arguments.
 - **Retired Notion launcher:** Notion is no longer in the catalog or profiles. Existing files are not automatically removed. If previously installed, review `~/.local/share/applications/vixygrey-notion.desktop` and remove that menu entry manually if no longer wanted. Browser data and accounts are untouched. Regenerate saved plans after this catalog change.
 - **Zed:** the official Arch `zed` package supplies the editor and application-menu integration. A working Vulkan driver, desktop portals, and compatible host libraries remain prerequisites. No downloaded installer script runs.
 - **Bruno:** official versioned Debian payloads for both architectures are extracted user-locally, without maintainer scripts or host writes. The publisher-documented Flatpak is x86_64-only, so it is not used here. The native application requires compatible host Electron libraries and unprivileged user namespaces for Chromium sandboxing; the setup never adds `--no-sandbox`. Accounts, collections, environments, and credentials are not imported. The separate Bruno CLI is not installed.
@@ -297,13 +295,6 @@ documentation.
 - **Kondo:** installs only the `kondo` CLI. Cleanup deletes dependencies and build artifacts; upstream describes it as essentially `rm -rf` with a prompt. Back up projects and review targets. Setup never runs cleanup or installs `kondo-ui`.
 - **Worktrunk:** installs `wt` for Git worktree management. Resolve package conflicts explicitly rather than forcing replacement. Directory-changing integration is an optional user step, `wt config shell install`, which modifies shell configuration and is never run by setup. Project hooks, agent plugins, LLM providers, and existing worktrees are not configured or changed.
 - **yq:** the existing entry is Mike Farah's Go implementation, not Python yq. Setup does not force replacement of conflicting packages. The separate `yaml-py` interpreter helper remains available.
-
-To preview or install Discord alone on an eligible x86_64 CachyOS machine:
-
-```sh
-./setup.sh --apps-only --only discord
-./setup.sh --apps-only --only discord --apply
-```
 
 ### Repeated runs, changes, and failure
 

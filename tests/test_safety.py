@@ -209,7 +209,7 @@ class CommandSafety(unittest.TestCase):
             document = json.loads(result.stdout)
             self.assertEqual(result.returncode, 2)
             self.assertIn(
-                "todoist: review https://flathub.org/apps/com.todoist.Todoist and explicitly --trust todoist",
+                "bruno: review https://docs.usebruno.com/get-started/bruno-basics/download and explicitly --trust bruno",
                 document["blockers"],
             )
             self.assertEqual(list(Path(temporary).iterdir()), [])
@@ -419,27 +419,31 @@ class CommandSafety(unittest.TestCase):
             home.mkdir()
             binary = home / ".local/bin"
             binary.mkdir(parents=True)
-            flatpak = binary / "flatpak"
-            flatpak.write_text(
+            pacman = binary / "pacman"
+            pacman.write_text(
                 "#!/bin/sh\n"
                 'case "$1" in\n'
-                '  info) [ -f "$FLATPAK_INSTALLED" ] && '
-                'IFS= read -r installed < "$FLATPAK_INSTALLED" && [ "$installed" = "$2" ] ;;\n'
-                '  remotes) printf "flathub https://dl.flathub.org/repo/\\n" ;;\n'
-                "  install) for argument do :; done; "
-                'printf "%s\\n" "$argument" > "$FLATPAK_INSTALLED" ;;\n'
+                '  -Q) [ -f "$PACMAN_INSTALLED" ] ;;\n'
+                '  -Si) printf "Repository : extra\\nName : micro\\n" ;;\n'
                 "  *) exit 1 ;;\n"
                 "esac\n"
             )
-            flatpak.chmod(0o755)
-            installed = Path(temporary) / "flatpak-installed"
+            pacman.chmod(0o755)
+            sudo = binary / "sudo"
+            sudo.write_text(
+                "#!/bin/sh\n"
+                "for argument do :; done\n"
+                'printf "%s\\n" "$argument" > "$PACMAN_INSTALLED"\n'
+            )
+            sudo.chmod(0o755)
+            installed = Path(temporary) / "pacman-installed"
             plan = Path(temporary) / "plan.json"
-            excluded = set(setup.profiles(setup.catalog())["desktop"]) - {"todoist"}
+            excluded = set(setup.profiles(setup.catalog())["base"]) - {"micro"}
             environment = {
                 "HOME": str(home),
                 "PATH": str(binary),
                 "PYTHONDONTWRITEBYTECODE": "1",
-                "FLATPAK_INSTALLED": str(installed),
+                "PACMAN_INSTALLED": str(installed),
             }
             result = subprocess.run(
                 [
@@ -447,9 +451,7 @@ class CommandSafety(unittest.TestCase):
                     str(ROOT / "setup.py"),
                     "--apps-only",
                     "--profile",
-                    "desktop",
-                    "--trust",
-                    "todoist",
+                    "base",
                     "--skip",
                     ",".join(sorted(excluded)),
                     "--format",
@@ -464,9 +466,8 @@ class CommandSafety(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             reviewed = plan.read_bytes()
-            self.assertEqual(json.loads(reviewed)["selected_ids"], ["todoist"])
+            self.assertEqual(json.loads(reviewed)["selected_ids"], ["micro"])
             self.assertFalse(installed.exists())
-            self.assertFalse((home / ".local/bin/todoist").exists())
             with (
                 patch.dict(os.environ, environment, clear=True),
                 patch.object(setup, "cachyos", return_value=True),
@@ -475,10 +476,10 @@ class CommandSafety(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()),
             ):
                 self.assertEqual(setup.main(["--apply-plan", str(plan)]), 0)
-            self.assertEqual(installed.read_text(), "com.todoist.Todoist\n")
+            self.assertEqual(installed.read_text(), "micro\n")
             self.assertEqual(plan.read_bytes(), reviewed)
             self.assertFalse((home / ".config").exists())
-            self.assertEqual(sorted(path.name for path in binary.iterdir()), ["flatpak"])
+            self.assertEqual(sorted(path.name for path in binary.iterdir()), ["pacman", "sudo"])
 
     def test_json_plan_serialization_and_tamper_rejection(self):
         with tempfile.TemporaryDirectory() as temporary:
