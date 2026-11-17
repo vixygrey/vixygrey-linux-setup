@@ -98,6 +98,17 @@ Ramalama/llmman). This repository's catalog deliberately does not duplicate thos
 bbrew` is the sanctioned way to get them and is a manual per-machine step, not something
 `./setup.sh` runs or checks for you.
 
+The theme deployment installs `.zshrc` and `~/.config/vixygrey/setup.zsh`, but the setup never
+runs `chsh` or otherwise changes your login shell. If Zsh should be the default, set it yourself:
+
+```sh
+chsh -s "$(command -v zsh)"
+```
+
+Then log out and back in (or start a new session) before the deployed prompt, aliases, and
+Zoxide/fzf hooks take effect. Skipping this step leaves the files deployed but inactive under
+whatever shell is already the default.
+
 After prerequisites are present, use this sequence:
 
 ```sh

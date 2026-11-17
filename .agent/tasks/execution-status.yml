@@ -356,3 +356,8 @@ tasks:
       into a live bash shell completed --only/--profile correctly by prefix; typo suggestions
       verified for --only and --profile, and confirmed absent for an unrelated token.
     verify_command: ./scripts/verify
+  runbook-default-shell-note:
+    status: done
+    updated_at: 2026-11-17
+    scope: Document in docs/machine-commissioning.md that the setup never calls chsh; add the manual `chsh -s "$(command -v zsh)"` step and logout/login requirement before the deployed Zsh integration takes effect.
+    verify_command: ./scripts/verify
