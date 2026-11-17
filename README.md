@@ -157,7 +157,7 @@ Appearance files use the local Mac palette, with Linux-specific adaptations. You
 
 - KDE colors; Kitty and JetBrainsMono Nerd Font settings.
 - Starship, Micro, Bat, btop, Yazi, Lazydocker, and Fastfetch.
-- Kiro editor and terminal colors, plus Trippy. Apps without a custom palette inherit terminal colors where supported; this does not claim to recolor every Flatpak or web interface.
+- Kiro gets a full Dracula-Sakura color theme extension (`~/.kiro/extensions/vixygrey.dracula-sakura-1.0.0`: a manifest plus a 140-color, semantic-highlighting-aware theme), activated via `workbench.colorTheme` in its settings; the existing inline `workbench.colorCustomizations`/`editor.tokenColorCustomizations` overrides stay in place alongside it. OMP gets its own theme file at `~/.omp/agent/themes/dracula-sakura.json`, authored against OMP's own schema. Trippy also has a managed palette. Apps without a custom palette inherit terminal colors where supported; this does not claim to recolor every Flatpak or web interface.
 
 Missing files are installed; identical files are left unchanged. Different existing files are **preserved**, including on repeat runs. Symlink destinations and symlink ancestors are protected, even with replacement consent. No configuration merge is attempted.
 
@@ -288,6 +288,7 @@ documentation.
 - **Zed:** official versioned tarballs for both supported architectures are deployed user-locally, with `zed` and an application-menu entry. No downloaded installer script runs. A working Vulkan driver, desktop portals, and the host's normal Linux libraries remain prerequisites. This native route lets Zed use host development tools without a Flatpak sandbox.
 - **Bruno:** official versioned Debian payloads for both architectures are extracted user-locally, without maintainer scripts or host writes. The publisher-documented Flatpak is x86_64-only, so it is not used here. The native application requires compatible host Electron libraries and unprivileged user namespaces for Chromium sandboxing; the setup never adds `--no-sandbox`. Accounts, collections, environments, and credentials are not imported. The separate Bruno CLI is not installed.
 - **Granted / AWS / Bitwarden / OMP:** credentials, accounts, tokens, profiles, and login flows remain yours to configure. No credentials are imported from the Mac.
+- **OMP theme activation:** the theme deploys `~/.omp/agent/themes/dracula-sakura.json`, but does not edit `~/.omp/agent/config.yml` to activate it, since that file also carries model routing and provider settings this setup never touches (same boundary as the credentials note above). Add `theme: {dark: dracula-sakura, light: dracula-sakura}` to that file yourself to turn it on.
 - **Backups:** backup software and policy are outside this setup. Choose destinations, encryption, credentials, retention, and scheduling separately, then validate restoration using the machine commissioning runbook.
 - **Network diagnostics / Caligula:** no uinput permissions, network capabilities, or disk writes are enabled by setup. Privileged runtime actions remain explicit user decisions.
 - **gitlogue:** replays local Git history and requires Git plus a repository with commits. Setup does not set its theme or start watch mode.

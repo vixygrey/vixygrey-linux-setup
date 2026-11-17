@@ -378,3 +378,25 @@ tasks:
       fixture so font-method CLI coverage survives the catalog removal. Direct smoke: `--only
       vlc,jetbrains-mono-nerd-font` rejected both as unknown IDs without a stray "did you mean".
     verify_command: ./scripts/verify
+  theme-coverage-omp-kiro:
+    status: done
+    updated_at: 2026-11-17
+    scope: >
+      Close the two theme-coverage gaps found diffing dotfiles/ against the vixygrey-mac-setup
+      reference: OMP had zero theme, and Kiro only had inline workbench.colorCustomizations
+      covering 41 keys. Ported OMP's dracula-sakura.json (omp's own schema) to
+      dotfiles/.omp/agent/themes/, and the full Kiro VS Code theme extension
+      (vixygrey.dracula-sakura-1.0.0: package.json + a 140-color/16-tokenColor/
+      16-semanticTokenColor theme) to dotfiles/.kiro/extensions/. Kiro's settings.json now also
+      sets workbench.colorTheme/preferredDarkColorTheme to activate the extension, additively:
+      the existing inline overrides stay, since scripts/validate-palette.py requires them.
+      OMP's own activation key was deliberately left for the user to add to
+      ~/.omp/agent/config.yml themselves, since that file also carries model routing and
+      provider settings this setup has never touched (documented in README).
+    verification: >
+      ./scripts/verify passed all 77 tests, formatting, linting, compilation, shell checks,
+      palette validation, catalog validation, and no-write previews. Direct smoke: patched
+      aurora()/geteuid to exercise a real --theme-only --apply into an isolated temporary home;
+      confirmed all three new files deployed byte-for-byte and Kiro's settings.json carried both
+      the new workbench.colorTheme key and the original workbench.colorCustomizations block.
+    verify_command: ./scripts/verify
