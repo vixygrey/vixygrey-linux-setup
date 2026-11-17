@@ -30,7 +30,17 @@ class FontSetupSafety(unittest.TestCase):
         )
         environment.start()
         self.addCleanup(environment.stop)
-        self.entry = next(entry for entry in setup.catalog() if entry["method"] == "font")
+        self.entry = {
+            "id": "font",
+            "name": "Font",
+            "method": "font",
+            "package": "Font",
+            "source": "https://example.invalid/docs",
+            "notes": "Fixture font entry.",
+            "version": "1",
+            "url": "https://example.invalid/font.zip",
+            "third_party": True,
+        }
         source = self.root / "font.zip"
         with zipfile.ZipFile(source, "w") as archive:
             archive.writestr("Regular.ttf", b"fixture regular")
