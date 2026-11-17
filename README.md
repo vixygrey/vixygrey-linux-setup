@@ -58,15 +58,15 @@ To preview those applications without deploying the rest of the theme:
 ./setup.sh --apps-only --only zed,bruno --trust zed,bruno --format json
 ```
 
-The `developer` profile also includes gitlogue, oxker, grex, Kondo, Worktrunk, and the
-existing Mike Farah yq entry. `terminal` adds VisiData and croc, `cloud` adds dnsglobe,
-and `ai` adds llmfit. All use Homebrew core, without extra taps or per-ID source approval.
-Both catalog files participate in the default full selection; `extended` does not mean opt-in.
-Preview this group without deploying configuration:
+The `developer` profile also includes gitlogue, oxker, grex, Kondo, Worktrunk, Rust, xh,
+mkcert, and the existing Mike Farah yq entry. `terminal` adds VisiData and croc, `cloud`
+adds dnsglobe, and `ai` adds llmfit. All use Homebrew core, without extra taps or per-ID
+source approval. Both catalog files participate in the default full selection; `extended`
+does not mean opt-in. Preview this group without deploying configuration:
 
 ```sh
 ./setup.sh --apps-only \
-  --only gitlogue,visidata,dnsglobe,oxker,llmfit,croc,grex,kondo,worktrunk,yq \
+  --only gitlogue,visidata,dnsglobe,oxker,llmfit,croc,grex,kondo,worktrunk,rust,xh,mkcert,yq \
   --format json
 ```
 
@@ -289,6 +289,8 @@ documentation.
 - **grex:** generates candidate regular expressions from examples. Review unintended matches and compatibility with the intended regex engine.
 - **Kondo:** installs only the `kondo` CLI. Cleanup deletes dependencies and build artifacts; upstream describes it as essentially `rm -rf` with a prompt. Back up projects and review targets. Setup never runs cleanup or installs `kondo-ui`.
 - **Worktrunk:** installs `wt` for Git worktree management. Homebrew conflicts with `wiredtiger`, which also supplies `wt`; resolve conflicts explicitly rather than forcing links. Directory-changing integration is an optional user step, `wt config shell install`, which modifies shell configuration and is never run by setup. Project hooks, agent plugins, LLM providers, and existing worktrees are not configured or changed.
+- **Rust:** the Homebrew core `rust` formula installs `rustc`, `cargo`, and the bundled `rustfmt`/`clippy` tools as a single stable toolchain. This is not `rustup`; it does not manage multiple toolchains, channels, or cross-compilation targets. Link it under `rustup` yourself with `rustup toolchain link system "$(brew --prefix rust)"` if you also install `rustup`.
+- **mkcert:** installs the CLI only. Running `mkcert -install` changes your local trust store and is never done automatically by this setup.
 - **yq:** the existing entry is Mike Farah's Go implementation, not Python yq. Homebrew conflicts with `python-yq`; setup does not force replacement. The separate `yaml-py` interpreter helper remains available.
 
 ### Repeated runs, changes, and failure

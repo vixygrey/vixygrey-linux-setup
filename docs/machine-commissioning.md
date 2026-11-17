@@ -92,6 +92,12 @@ When the machine needs Docker Engine, use Aurora DX according to its
 choice. On a standard Aurora image, it includes `ujust devmode`; Aurora then requires `ujust dx-group`
 and a logout/login before Docker access works. Docker group access is effectively root-equivalent.
 
+After devmode, also run `ujust bbrew` and select the Brewfile bundles the target machine needs
+(for example `k8s-tools` for `kubectl`/`helm`/`k9s`/`kind` when doing AWS/EKS work, or `ai` for
+Ramalama/llmman). This repository's catalog deliberately does not duplicate those bundles; `ujust
+bbrew` is the sanctioned way to get them and is a manual per-machine step, not something
+`./setup.sh` runs or checks for you.
+
 After prerequisites are present, use this sequence:
 
 ```sh

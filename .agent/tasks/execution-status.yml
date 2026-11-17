@@ -319,11 +319,17 @@ tasks:
     status: done
     updated_at: 2026-11-17
     scope: Revert the CachyOS/pacman migration; retarget the setup at Aurora Linux (Flatpak, Homebrew, Aurora DX) as originally scoped in .agent/product/scope.yml, while keeping the later Obsidian/Todoist/Discord removal.
-    verification: Pending ./scripts/verify run after the revert.
+    verification: "mise exec node@24.18.1 -- ./scripts/verify passed all 72 tests, formatting, linting, compilation, shell checks, catalog validation, and no-write previews."
     verify_command: ./scripts/verify
   remove-just-aurora-dx-redundant:
     status: done
     updated_at: 2026-11-17
     scope: Drop just from catalog/extended.json and the developer profile; Aurora DX already bundles just on the image, and the Homebrew copy only shadowed it via the prepended Linuxbrew PATH entry.
-    verification: Pending ./scripts/verify run after removal.
+    verification: "mise exec node@24.18.1 -- ./scripts/verify passed all 72 tests, formatting, linting, compilation, shell checks, catalog validation, and no-write previews."
+    verify_command: ./scripts/verify
+  close-dev-workflow-gaps:
+    status: done
+    updated_at: 2026-11-17
+    scope: Add rust, xh, and mkcert (Homebrew core) to catalog/extended.json and the developer profile, closing gaps identified against Aurora DX devmode for Rust/web-dev tooling; document running ujust bbrew per machine for k8s-tools/ai Brewfile bundles in docs/machine-commissioning.md.
+    added: [rust, xh, mkcert]
     verify_command: ./scripts/verify

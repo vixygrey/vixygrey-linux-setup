@@ -175,6 +175,33 @@
     "third_party": false
   },
   {
+    "id": "rust",
+    "name": "Rust",
+    "method": "brew",
+    "package": "rust",
+    "source": "https://github.com/rust-lang/rust",
+    "notes": "Official Homebrew core formula providing rustc, cargo, and the bundled rustfmt/clippy tools. This is a single stable toolchain, not rustup; link it under rustup with `rustup toolchain link system \"$(brew --prefix rust)\"` or install rustup separately for toolchain channels and cross targets.",
+    "third_party": false
+  },
+  {
+    "id": "xh",
+    "name": "xh",
+    "method": "brew",
+    "package": "xh",
+    "source": "https://github.com/ducaale/xh",
+    "notes": "Friendly HTTPie-like HTTP client from Homebrew core.",
+    "third_party": false
+  },
+  {
+    "id": "mkcert",
+    "name": "mkcert",
+    "method": "brew",
+    "package": "mkcert",
+    "source": "https://github.com/FiloSottile/mkcert",
+    "notes": "Local development CA tool from Homebrew core. Running mkcert -install changes the local trust store and is never done automatically by this setup.",
+    "third_party": false
+  },
+  {
     "id": "yaml-py",
     "name": "yaml-py",
     "method": "python-helper",
