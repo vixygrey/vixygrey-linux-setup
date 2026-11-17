@@ -339,3 +339,20 @@ tasks:
     scope: Add pnpm (Homebrew core) to catalog/extended.json and the developer profile; corepack conflict with the same-named binaries noted in catalog notes and README.
     verification: "mise exec node@24.18.1 -- ./scripts/verify passed all 72 tests, formatting, linting, compilation, shell checks, catalog validation, and no-write previews. Direct smoke: --status reported pnpm missing; --only pnpm preview had zero blockers and a single pending brew action."
     verify_command: ./scripts/verify
+  cli-ux-and-mise-pin:
+    status: done
+    updated_at: 2026-11-17
+    scope: >
+      Pin contributor tool versions in mise.toml (node 24.18.1, uv 0.13.1, go 1.26); make --list
+      honor --profile/--only/--skip and support --format json; add difflib-based "did you mean"
+      hints to unknown --profile/--only/--skip/--trust errors; report periodic download progress
+      to stderr in archives.download (8 MiB steps plus a final line, with entry id as label);
+      add ./setup.sh --completion {bash,zsh} printing a script sourced from the live catalog.
+    verification: >
+      ./scripts/verify passed all 77 tests, formatting, linting, compilation, shell checks,
+      catalog validation, and no-write previews, now runnable without a manual mise exec
+      workaround after `mise install`. Direct smoke: --list --profile base and --list --only
+      micro,rust --format json both filtered correctly; --completion bash/zsh scripts sourced
+      into a live bash shell completed --only/--profile correctly by prefix; typo suggestions
+      verified for --only and --profile, and confirmed absent for an unrelated token.
+    verify_command: ./scripts/verify

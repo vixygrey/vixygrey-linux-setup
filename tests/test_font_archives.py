@@ -31,7 +31,7 @@ class FontArchives(unittest.TestCase):
         downloader.start()
         self.addCleanup(downloader.stop)
 
-    def download(self, artifact, destination):
+    def download(self, artifact, destination, label=""):
         destination.write_bytes(self.source.read_bytes())
         self.assertEqual(hashlib.sha256(destination.read_bytes()).hexdigest(), artifact["sha256"])
 

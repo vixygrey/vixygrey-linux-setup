@@ -37,7 +37,7 @@ class FontSetupSafety(unittest.TestCase):
         self.entry = self.entry | {"sha256": digest(source.read_bytes())}
         self.downloads = 0
 
-        def download(artifact, destination):
+        def download(artifact, destination, label=""):
             self.downloads += 1
             shutil.copyfile(source, destination)
 

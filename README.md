@@ -28,6 +28,10 @@ Docker Engine is supplied by [Aurora DX](https://docs.getaurora.dev/dx/aurora-dx
 # Application IDs, sources, methods, and notes. No installation.
 ./setup.sh --list
 
+# --list honors --profile/--only/--skip for a narrower view, and --format json for scripting.
+./setup.sh --list --profile base
+./setup.sh --list --only zed,bruno --format json
+
 # Preview the entire catalog and theme. No installation or configuration writes.
 ./setup.sh
 ```
@@ -207,6 +211,12 @@ source "$HOME/.config/vixygrey/setup.zsh"
 ```
 
 Start Zsh to use it. The setup does not call `chsh`. Shell integration includes stable Linuxbrew and user tool paths, the themed prompt, direnv, mise, the Zsh plugins, and Granted's interactive `assume` alias. Interactive hooks require an actual terminal. Existing direnv/mise trust checks remain in force; nothing authorizes project scripts automatically.
+
+Separately, `./setup.sh --completion {bash,zsh}` prints a completion script for `setup.sh`'s own
+flags, catalog IDs, and profile names, read live from the current catalog. It is a plain stdout
+print with no home writes; wire it into your shell yourself, for example
+`source <(./setup.sh --completion zsh)` or `eval "$(./setup.sh --completion bash)"`. It cannot be
+combined with `--diff`, `--validate-catalog`, `--apply-plan`, `--status`, or `--doctor`.
 
 Zoxide and fzf hooks load only in interactive terminal sessions without an
 `AI_AGENT` marker, when their executables are available. Zoxide adds `z` for
@@ -411,6 +421,7 @@ Do not put cloud credentials, SSH keys, Bitwarden exports, shell history, browse
 ## Verification
 
 ```sh
+mise install  # or otherwise provide Node 24.18.1, uv 0.13.1, and Go 1.26+
 npm ci
 uv sync --locked --group dev
 go install mvdan.cc/sh/v3/cmd/shfmt@v3.14.1
@@ -418,7 +429,7 @@ export PATH="$(go env GOPATH)/bin:$PATH"
 ./scripts/verify
 ```
 
-This canonical check requires Node 24.18.1, uv 0.13.1, Go 1.26+, Python 3.11+, Zsh, and ShellCheck. Run `npm ci` and `uv sync --locked --group dev` after cloning or changing their lockfiles. Node, Prettier, uv, Ruff, Go, and shfmt are development-only tooling; the installer runtime remains Python standard library. The check validates Prettier, Ruff, and explicitly-dialected Bash/Zsh shfmt formatting; runs the safety suite; validates the catalog with `--list`; checks managed shell files; and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools. `scripts/format-shell --check` verifies `setup.sh`, the repository Bash helper scripts, and the two managed Zsh files; `--write` is the opt-in normalization command. It uses two-space indentation and does not enable shfmt simplification.
+This canonical check requires Node 24.18.1, uv 0.13.1, Go 1.26+, Python 3.11+, Zsh, and ShellCheck. `mise.toml` pins the Node, uv, and Go versions; `mise install` provisions them without hunting for the right combination. Run `npm ci` and `uv sync --locked --group dev` after cloning or changing their lockfiles. Node, Prettier, uv, Ruff, Go, and shfmt are development-only tooling; the installer runtime remains Python standard library. The check validates Prettier, Ruff, and explicitly-dialected Bash/Zsh shfmt formatting; runs the safety suite; validates the catalog with `--list`; checks managed shell files; and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools. `scripts/format-shell --check` verifies `setup.sh`, the repository Bash helper scripts, and the two managed Zsh files; `--write` is the opt-in normalization command. It uses two-space indentation and does not enable shfmt simplification.
 
 The same gate also runs Ruff correctness linting with the explicit `E9` and `F` rule families.
 Linting does not enable auto-fixes, import sorting, or broader modernization rules. Its scope is
