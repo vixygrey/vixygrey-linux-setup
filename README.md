@@ -59,14 +59,14 @@ To preview those applications without deploying the rest of the theme:
 ```
 
 The `developer` profile also includes gitlogue, oxker, grex, Kondo, Worktrunk, Rust, xh,
-mkcert, and the existing Mike Farah yq entry. `terminal` adds VisiData and croc, `cloud`
-adds dnsglobe, and `ai` adds llmfit. All use Homebrew core, without extra taps or per-ID
-source approval. Both catalog files participate in the default full selection; `extended`
-does not mean opt-in. Preview this group without deploying configuration:
+mkcert, pnpm, and the existing Mike Farah yq entry. `terminal` adds VisiData and croc,
+`cloud` adds dnsglobe, and `ai` adds llmfit. All use Homebrew core, without extra taps or
+per-ID source approval. Both catalog files participate in the default full selection;
+`extended` does not mean opt-in. Preview this group without deploying configuration:
 
 ```sh
 ./setup.sh --apps-only \
-  --only gitlogue,visidata,dnsglobe,oxker,llmfit,croc,grex,kondo,worktrunk,rust,xh,mkcert,yq \
+  --only gitlogue,visidata,dnsglobe,oxker,llmfit,croc,grex,kondo,worktrunk,rust,xh,mkcert,pnpm,yq \
   --format json
 ```
 
@@ -291,6 +291,7 @@ documentation.
 - **Worktrunk:** installs `wt` for Git worktree management. Homebrew conflicts with `wiredtiger`, which also supplies `wt`; resolve conflicts explicitly rather than forcing links. Directory-changing integration is an optional user step, `wt config shell install`, which modifies shell configuration and is never run by setup. Project hooks, agent plugins, LLM providers, and existing worktrees are not configured or changed.
 - **Rust:** the Homebrew core `rust` formula installs `rustc`, `cargo`, and the bundled `rustfmt`/`clippy` tools as a single stable toolchain. This is not `rustup`; it does not manage multiple toolchains, channels, or cross-compilation targets. Link it under `rustup` yourself with `rustup toolchain link system "$(brew --prefix rust)"` if you also install `rustup`.
 - **mkcert:** installs the CLI only. Running `mkcert -install` changes your local trust store and is never done automatically by this setup.
+- **pnpm:** the Homebrew formula conflicts with Homebrew's separate `corepack` formula (both install `pnpm`/`pnpx`), which this catalog does not install. If you already manage pnpm through Node's bundled `corepack`, skip this entry rather than forcing a replacement.
 - **yq:** the existing entry is Mike Farah's Go implementation, not Python yq. Homebrew conflicts with `python-yq`; setup does not force replacement. The separate `yaml-py` interpreter helper remains available.
 
 ### Repeated runs, changes, and failure

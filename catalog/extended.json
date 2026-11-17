@@ -202,6 +202,15 @@
     "third_party": false
   },
   {
+    "id": "pnpm",
+    "name": "pnpm",
+    "method": "brew",
+    "package": "pnpm",
+    "source": "https://github.com/pnpm/pnpm",
+    "notes": "Fast, disk-space-efficient JS package manager from Homebrew core. The Homebrew formula conflicts with Homebrew's separate corepack formula, which this catalog does not install.",
+    "third_party": false
+  },
+  {
     "id": "yaml-py",
     "name": "yaml-py",
     "method": "python-helper",

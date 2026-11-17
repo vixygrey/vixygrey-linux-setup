@@ -333,3 +333,9 @@ tasks:
     scope: Add rust, xh, and mkcert (Homebrew core) to catalog/extended.json and the developer profile, closing gaps identified against Aurora DX devmode for Rust/web-dev tooling; document running ujust bbrew per machine for k8s-tools/ai Brewfile bundles in docs/machine-commissioning.md.
     added: [rust, xh, mkcert]
     verify_command: ./scripts/verify
+  add-pnpm:
+    status: done
+    updated_at: 2026-11-17
+    scope: Add pnpm (Homebrew core) to catalog/extended.json and the developer profile; corepack conflict with the same-named binaries noted in catalog notes and README.
+    verification: "mise exec node@24.18.1 -- ./scripts/verify passed all 72 tests, formatting, linting, compilation, shell checks, catalog validation, and no-write previews. Direct smoke: --status reported pnpm missing; --only pnpm preview had zero blockers and a single pending brew action."
+    verify_command: ./scripts/verify
