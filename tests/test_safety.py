@@ -209,7 +209,7 @@ class CommandSafety(unittest.TestCase):
             document = json.loads(result.stdout)
             self.assertEqual(result.returncode, 2)
             self.assertIn(
-                "bruno: review https://docs.usebruno.com/get-started/bruno-basics/download and explicitly --trust bruno",
+                "flameshot: review https://flathub.org/apps/org.flameshot.Flameshot and explicitly --trust flameshot",
                 document["blockers"],
             )
             self.assertEqual(list(Path(temporary).iterdir()), [])
@@ -419,31 +419,27 @@ class CommandSafety(unittest.TestCase):
             home.mkdir()
             binary = home / ".local/bin"
             binary.mkdir(parents=True)
-            pacman = binary / "pacman"
-            pacman.write_text(
+            flatpak = binary / "flatpak"
+            flatpak.write_text(
                 "#!/bin/sh\n"
                 'case "$1" in\n'
-                '  -Q) [ -f "$PACMAN_INSTALLED" ] ;;\n'
-                '  -Si) printf "Repository : extra\\nName : micro\\n" ;;\n'
+                '  info) [ -f "$FLATPAK_INSTALLED" ] && '
+                'IFS= read -r installed < "$FLATPAK_INSTALLED" && [ "$installed" = "$2" ] ;;\n'
+                '  remotes) printf "flathub https://dl.flathub.org/repo/\\n" ;;\n'
+                "  install) for argument do :; done; "
+                'printf "%s\\n" "$argument" > "$FLATPAK_INSTALLED" ;;\n'
                 "  *) exit 1 ;;\n"
                 "esac\n"
             )
-            pacman.chmod(0o755)
-            sudo = binary / "sudo"
-            sudo.write_text(
-                "#!/bin/sh\n"
-                "for argument do :; done\n"
-                'printf "%s\\n" "$argument" > "$PACMAN_INSTALLED"\n'
-            )
-            sudo.chmod(0o755)
-            installed = Path(temporary) / "pacman-installed"
+            flatpak.chmod(0o755)
+            installed = Path(temporary) / "flatpak-installed"
             plan = Path(temporary) / "plan.json"
-            excluded = set(setup.profiles(setup.catalog())["base"]) - {"micro"}
+            excluded = set(setup.profiles(setup.catalog())["desktop"]) - {"libreoffice"}
             environment = {
                 "HOME": str(home),
                 "PATH": str(binary),
                 "PYTHONDONTWRITEBYTECODE": "1",
-                "PACMAN_INSTALLED": str(installed),
+                "FLATPAK_INSTALLED": str(installed),
             }
             result = subprocess.run(
                 [
@@ -451,7 +447,7 @@ class CommandSafety(unittest.TestCase):
                     str(ROOT / "setup.py"),
                     "--apps-only",
                     "--profile",
-                    "base",
+                    "desktop",
                     "--skip",
                     ",".join(sorted(excluded)),
                     "--format",
@@ -466,20 +462,24 @@ class CommandSafety(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             reviewed = plan.read_bytes()
-            self.assertEqual(json.loads(reviewed)["selected_ids"], ["micro"])
+            self.assertEqual(json.loads(reviewed)["selected_ids"], ["libreoffice"])
             self.assertFalse(installed.exists())
+            launchers = [home / ".local/bin/libreoffice", home / ".local/bin/soffice"]
+            self.assertFalse(any(launcher.exists() for launcher in launchers))
             with (
                 patch.dict(os.environ, environment, clear=True),
-                patch.object(setup, "cachyos", return_value=True),
-                patch.object(setup.archives, "machine_arch", return_value="x86_64"),
+                patch.object(setup, "aurora", return_value=True),
                 patch.object(setup.os, "geteuid", return_value=1000),
                 contextlib.redirect_stdout(io.StringIO()),
             ):
                 self.assertEqual(setup.main(["--apply-plan", str(plan)]), 0)
-            self.assertEqual(installed.read_text(), "micro\n")
+            self.assertEqual(installed.read_text(), "org.libreoffice.LibreOffice\n")
             self.assertEqual(plan.read_bytes(), reviewed)
             self.assertFalse((home / ".config").exists())
-            self.assertEqual(sorted(path.name for path in binary.iterdir()), ["pacman", "sudo"])
+            self.assertEqual(
+                sorted(path.name for path in binary.iterdir()),
+                ["flatpak", "libreoffice", "soffice"],
+            )
 
     def test_json_plan_serialization_and_tamper_rejection(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -535,223 +535,6 @@ class CommandSafety(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(list(Path(temporary).iterdir()), [])
-
-
-class PacmanSafety(unittest.TestCase):
-    def setUp(self):
-        temporary = tempfile.TemporaryDirectory()
-        self.addCleanup(temporary.cleanup)
-        self.home = Path(temporary.name)
-        environment = patch.dict(os.environ, {"HOME": str(self.home), "PATH": ""}, clear=True)
-        environment.start()
-        self.addCleanup(environment.stop)
-        self.app = setup.Setup(SimpleNamespace(replace=[], trust=[], profile=[], apps_only=True))
-        self.entry = {
-            "id": "fixture",
-            "name": "Fixture",
-            "method": "pacman",
-            "package": "extra/micro",
-            "source": "https://archlinux.org/packages/extra/x86_64/micro/",
-            "notes": "Official package",
-            "third_party": False,
-        }
-        self.app.selected = [self.entry]
-        self.installed = set()
-        self.calls = []
-        executable = patch.object(
-            self.app,
-            "executable",
-            side_effect=lambda name: f"/usr/bin/{name}" if name in {"pacman", "sudo"} else None,
-        )
-        executable.start()
-        self.addCleanup(executable.stop)
-        commands = patch.object(self.app, "run", side_effect=self.command)
-        commands.start()
-        self.addCleanup(commands.stop)
-
-    def command(self, argv, capture=False):
-        self.calls.append(argv)
-        if argv[:2] == ["pacman", "-Q"]:
-            return SimpleNamespace(returncode=0 if argv[-1] in self.installed else 1, stdout="")
-        if argv[:2] == ["pacman", "-Si"]:
-            return SimpleNamespace(returncode=0, stdout="Repository : extra\nName : micro\n")
-        if argv[:3] == ["sudo", "pacman", "-Syu"]:
-            self.installed.add(argv[-1].rsplit("/", 1)[-1])
-            return SimpleNamespace(returncode=0, stdout="")
-        raise AssertionError(f"Unexpected command: {argv}")
-
-    def test_cachyos_detection_requires_exact_os_id_and_plan_uses_new_field(self):
-        with (
-            patch.object(setup.sys, "platform", "linux"),
-            patch.object(
-                setup.Path, "read_text", return_value='ID=arch\nID_LIKE=cachyos\nNAME="CachyOS"\n'
-            ),
-        ):
-            self.assertFalse(setup.cachyos())
-        with (
-            patch.object(setup.sys, "platform", "linux"),
-            patch.object(setup.Path, "read_text", return_value="ID=cachyos\nID_LIKE=arch\n"),
-            patch.object(setup, "catalog_digest", return_value="f" * 64),
-        ):
-            self.assertTrue(setup.cachyos())
-            preflight = setup.plan_document(self.app, {})["preflight"]
-        self.assertTrue(preflight["is_cachyos"])
-        self.assertNotIn("is_aurora", preflight)
-
-    def test_native_preview_status_and_doctor_do_not_write_or_escalate(self):
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.app.plan()
-        self.assertEqual(self.app.blocks, [])
-        self.assertEqual(setup.action_records(self.app)[0]["method"], "pacman")
-        self.assertEqual(setup.action_records(self.app)[0]["package"], "extra/micro")
-        self.assertEqual(self.app.status_document()["apps"][0]["state"], "missing")
-        with patch.object(setup, "cachyos", return_value=False):
-            doctor = self.app.doctor_document()
-        self.assertEqual(
-            next(c for c in doctor["checks"] if c["id"] == "cachyos")["state"], "blocked"
-        )
-        self.assertEqual(list(self.home.iterdir()), [])
-        self.assertFalse(any(call[0] == "sudo" for call in self.calls))
-
-    def test_native_gui_package_does_not_plan_archive_launcher(self):
-        for identifier in ("kitty", "zed"):
-            with self.subTest(identifier=identifier):
-                entry = self.entry | {"id": identifier, "package": identifier}
-                self.assertEqual(list(setup.launchers(entry, self.home)), [])
-
-    def test_native_apply_uses_full_upgrade_and_confirms_installed_state(self):
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.app.apply()
-        self.assertIn(["sudo", "pacman", "-Syu", "--needed", "--", "extra/micro"], self.calls)
-        self.assertIn(["pacman", "-Q", "--", "micro"], self.calls)
-        self.assertIn("micro", self.installed)
-        self.calls.clear()
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.app.apply()
-        self.assertFalse(any(call[0] == "sudo" for call in self.calls))
-
-    def test_successful_transaction_without_installed_package_is_rejected(self):
-        def unchanged(argv, capture=False):
-            if argv[:3] == ["sudo", "pacman", "-Syu"]:
-                return SimpleNamespace(returncode=0, stdout="")
-            return self.command(argv, capture)
-
-        with (
-            patch.object(self.app, "run", side_effect=unchanged),
-            contextlib.redirect_stdout(io.StringIO()),
-            self.assertRaisesRegex(SafetyError, "did not confirm"),
-        ):
-            self.app.apply()
-        self.assertNotIn("micro", self.installed)
-
-    def test_znver4_package_preview_preserves_repository_priority(self):
-        self.entry["package"] = "zoxide"
-        for repository, blocked in (
-            ("cachyos-extra-znver4", False),
-            ("local", True),
-            ("cachyos-extra-znver4-untrusted", True),
-        ):
-            with self.subTest(repository=repository):
-                self.app.blocks.clear()
-                self.app.steps.clear()
-                self.app.dependencies.clear()
-                with (
-                    patch.object(
-                        self.app,
-                        "run",
-                        side_effect=lambda argv, capture=False: SimpleNamespace(
-                            returncode=1 if argv[1] == "-Q" else 0,
-                            stdout=(
-                                f"Repository : {repository}\nName : zoxide\n\n"
-                                "Repository : extra\nName : zoxide\n"
-                            ),
-                        ),
-                    ),
-                    contextlib.redirect_stdout(io.StringIO()),
-                ):
-                    self.app.plan()
-                self.assertEqual(bool(self.app.blocks), blocked)
-        self.assertEqual(list(self.home.iterdir()), [])
-
-    def test_unofficial_repository_or_unsafe_name_blocks_before_apply(self):
-        self.entry["package"] = "community/micro"
-        with self.assertRaises(SafetyError):
-            setup.validate_catalog([self.entry])
-        self.entry["package"] = "extra/micro;touch"
-        with self.assertRaises(SafetyError):
-            setup.validate_catalog([self.entry])
-        self.entry["package"] = "extra/micro"
-        with patch.object(
-            self.app,
-            "run",
-            side_effect=lambda argv, capture=False: SimpleNamespace(
-                returncode=1 if argv[1] == "-Q" else 0, stdout="Repository : local\n"
-            ),
-        ):
-            with contextlib.redirect_stdout(io.StringIO()):
-                self.app.plan()
-        self.assertTrue(self.app.blocks)
-        self.assertEqual(list(self.home.iterdir()), [])
-
-    def test_manager_prerequisites_are_native(self):
-        self.app.selected = [
-            self.entry,
-            {
-                "id": "npm-fixture",
-                "name": "npm fixture",
-                "method": "npm",
-                "package": "sample",
-                "version": "1.0.0",
-                "source": "https://www.npmjs.com/",
-                "notes": "Fixture",
-                "third_party": False,
-            },
-            {
-                "id": "uv-fixture",
-                "name": "uv fixture",
-                "method": "uv",
-                "package": "sample",
-                "version": "1.0.0",
-                "source": "https://pypi.org/",
-                "notes": "Fixture",
-                "third_party": False,
-            },
-            {
-                "id": "flatpak-fixture",
-                "name": "Flatpak fixture",
-                "method": "flatpak",
-                "package": "org.example.App",
-                "source": "https://flathub.org/apps/",
-                "notes": "Fixture",
-                "third_party": False,
-            },
-        ]
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.app.plan()
-        dependencies = [payload for kind, payload in self.app.steps if kind == "dependency"]
-        self.assertEqual(dependencies, ["nodejs", "npm", "uv", "flatpak"])
-        self.assertIn(("flathub", None), self.app.steps)
-        self.assertFalse(self.app.blocks)
-        self.assertEqual(list(self.home.iterdir()), [])
-
-    def test_apply_guard_rejects_wrong_distro_root_and_architecture_without_writes(self):
-        for target, uid, architecture in (
-            (False, 1000, "x86_64"),
-            (True, 0, "x86_64"),
-            (True, 1000, "aarch64"),
-        ):
-            with (
-                self.subTest(target=target, uid=uid, architecture=architecture),
-                patch.object(setup, "catalog", return_value=[self.entry]),
-                patch.object(setup, "profiles", return_value={"base": ["fixture"]}),
-                patch.object(setup, "cachyos", return_value=target),
-                patch.object(setup.os, "geteuid", return_value=uid),
-                patch.object(setup.archives, "machine_arch", return_value=architecture),
-                patch.object(setup.Setup, "apply", side_effect=AssertionError("must not apply")),
-                self.assertRaisesRegex(SafetyError, "Apply requires x86_64 CachyOS"),
-            ):
-                setup.main(["--apply", "--apps-only", "--only", "fixture"])
-        self.assertEqual(list(self.home.iterdir()), [])
 
 
 class PythonHelperStatus(unittest.TestCase):
