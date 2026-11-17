@@ -361,3 +361,20 @@ tasks:
     updated_at: 2026-11-17
     scope: Document in docs/machine-commissioning.md that the setup never calls chsh; add the manual `chsh -s "$(command -v zsh)"` step and logout/login requirement before the deployed Zsh integration takes effect.
     verify_command: ./scripts/verify
+  remove-devmode-duplicates:
+    status: done
+    updated_at: 2026-11-17
+    scope: >
+      Remove jetbrains-mono-nerd-font and vlc from catalog/extended.json and their
+      profile/launcher/README references; Aurora DX devmode already bundles JetBrains Mono Nerd
+      Font, and Aurora ships Haruna as its default video player. The generic font-method
+      machinery and VLC's launcher-less flatpak route are retained as live infrastructure (no
+      current catalog consumer) for any future entry of either kind.
+    removed: [jetbrains-mono-nerd-font, vlc]
+    verification: >
+      ./scripts/verify passed all 77 tests, formatting, linting, compilation, shell checks,
+      catalog validation (94 entries), and no-write previews; test_font_setup.py's
+      FontSetupSafety class was migrated from pulling a real catalog font entry to a synthetic
+      fixture so font-method CLI coverage survives the catalog removal. Direct smoke: `--only
+      vlc,jetbrains-mono-nerd-font` rejected both as unknown IDs without a stray "did you mean".
+    verify_command: ./scripts/verify

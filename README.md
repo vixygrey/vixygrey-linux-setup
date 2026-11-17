@@ -272,7 +272,7 @@ documentation.
 | Route           | Behavior                                                                                                                                                                                                                               |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Homebrew        | CLI formulas, never casks. Existing formulas are skipped. Missing manager prerequisites are planned explicitly. No automatic global upgrade or cleanup.                                                                                |
-| Flatpak         | Missing apps install per user from Flathub. An existing system installation is left in place. A conflicting user `flathub` URL blocks installation. LibreOffice/`soffice` and VLC receive conflict-preserving CLI wrappers.            |
+| Flatpak         | Missing apps install per user from Flathub. An existing system installation is left in place. A conflicting user `flathub` URL blocks installation. `soffice`/LibreOffice receives a conflict-preserving CLI wrapper.                  |
 | Vendor archives | Versioned HTTPS downloads with catalog SHA256 checks. Payloads stay in versioned user directories, with executable wrappers and GUI launchers. No archive install hooks, device nodes, escaping paths, escaping links, or setuid bits. |
 | uv / npm        | Exact top-level package versions in user-owned locations. Cheznav requests Python 3.14 through uv. Python tools may download a compatible managed interpreter.                                                                         |
 | `yaml-py`       | A private uv environment containing PyYAML, exposed as a Python interpreter command, matching the Mac helper rather than substituting a different YAML CLI.                                                                            |
@@ -354,9 +354,13 @@ saved plan even when it no longer invalidates an intact application installation
 
 ### Font upgrades and recovery
 
-Fonts stay in `~/.local/share/fonts/JetBrainsMonoNerd`; existing installations do not need a
-directory migration. Source approval still requires `--trust jetbrains-mono-nerd-font` when
-downloading a release.
+No catalog entry currently uses the `font` method; Aurora DX's Nerd Fonts bundle covers
+JetBrains Mono Nerd Font instead. The mechanism below remains live infrastructure (exercised by
+the test suite) for any future font catalog addition.
+
+Fonts deploy to `~/.local/share/fonts/JetBrainsMonoNerd` (a fixed directory, not per-entry);
+existing installations would not need a directory migration. Source approval requires
+`--trust <id>` when downloading a release, same as any other third-party entry.
 
 Offline preview inspects recorded current and retired font paths, reporting missing, modified,
 or protected files without downloads or home writes. It cannot produce a complete target-file
@@ -384,11 +388,6 @@ font directory. A failed or unavailable `fc-cache` leaves the payload intact and
 Successful cache work clears pending state. Legacy receipts without cache metadata do not force
 a rebuild. This preflight is not a transaction: I/O failures or external filesystem changes after
 preflight can still interrupt deployment, and the installer stops rather than bypassing safeguards.
-
-```sh
-./setup.sh --apps-only --only jetbrains-mono-nerd-font --trust jetbrains-mono-nerd-font
-./setup.sh --status --apps-only --only jetbrains-mono-nerd-font --format json
-```
 
 ## Security model
 

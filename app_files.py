@@ -18,7 +18,7 @@ def desktop_quote(value: str) -> str:
 def launchers(entry: dict, home: Path):
     identifier = entry["id"]
     if entry["method"] == "flatpak":
-        names = {"libreoffice": ["libreoffice", "soffice"], "vlc": ["vlc"]}.get(identifier, [])
+        names = {"libreoffice": ["libreoffice", "soffice"]}.get(identifier, [])
         for name in names:
             yield (
                 f".local/bin/{name}",

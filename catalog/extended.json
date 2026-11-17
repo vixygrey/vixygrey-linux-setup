@@ -311,16 +311,6 @@
     "third_party": false
   },
   {
-    "id": "vlc",
-    "name": "VLC",
-    "method": "flatpak",
-    "package": "org.videolan.VLC",
-    "source": "https://www.videolan.org/vlc/",
-    "notes": "VLC media player via Flathub.",
-    "aliases": ["vlc"],
-    "third_party": true
-  },
-  {
     "id": "caligula",
     "name": "caligula",
     "method": "archive",
@@ -497,18 +487,5 @@
     "notes": "Git worktree manager exposed as wt; Homebrew core provides Linux bottles for x86_64 and arm64. Requires Git and conflicts with wiredtiger's wt executable. Shell integration, project hooks, agent plugins, and LLM providers are not configured.",
     "aliases": ["wt"],
     "third_party": false
-  },
-  {
-    "id": "jetbrains-mono-nerd-font",
-    "name": "Jetbrains mono nerd font",
-    "method": "font",
-    "package": "JetBrainsMono",
-    "source": "https://github.com/ryanoasis/nerd-fonts",
-    "notes": "Checksum-verified Nerd Fonts release archive; installer deploys only font files to the user font directory.",
-    "aliases": ["JetBrains Mono Nerd Font"],
-    "version": "3.5.1",
-    "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/JetBrainsMono.zip",
-    "sha256": "fab782a66f7d3019da64f6572db9fc5d3a4bcb19f9fa13e2d8a62e3693d6396e",
-    "third_party": true
   }
 ]
