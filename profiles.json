@@ -16,7 +16,6 @@
     "direnv",
     "mise",
     "uv",
-    "just",
     "ruff",
     "shellcheck",
     "shfmt",

@@ -321,3 +321,9 @@ tasks:
     scope: Revert the CachyOS/pacman migration; retarget the setup at Aurora Linux (Flatpak, Homebrew, Aurora DX) as originally scoped in .agent/product/scope.yml, while keeping the later Obsidian/Todoist/Discord removal.
     verification: Pending ./scripts/verify run after the revert.
     verify_command: ./scripts/verify
+  remove-just-aurora-dx-redundant:
+    status: done
+    updated_at: 2026-11-17
+    scope: Drop just from catalog/extended.json and the developer profile; Aurora DX already bundles just on the image, and the Homebrew copy only shadowed it via the prepended Linuxbrew PATH entry.
+    verification: Pending ./scripts/verify run after removal.
+    verify_command: ./scripts/verify

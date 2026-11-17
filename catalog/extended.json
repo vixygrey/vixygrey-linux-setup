@@ -111,15 +111,6 @@
     "third_party": false
   },
   {
-    "id": "just",
-    "name": "just",
-    "method": "brew",
-    "package": "just",
-    "source": "https://github.com/casey/just",
-    "notes": "Command runner from Homebrew core.",
-    "third_party": false
-  },
-  {
     "id": "actionlint",
     "name": "actionlint",
     "method": "brew",
