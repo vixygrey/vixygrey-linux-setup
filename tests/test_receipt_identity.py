@@ -79,7 +79,7 @@ class ReceiptIdentity(unittest.TestCase):
         }
 
     def install(self, entry):
-        def local_download(artifact, destination):
+        def local_download(artifact, destination, label=""):
             destination.write_bytes(self.source.read_bytes())
 
         with patch.object(archives, "download", side_effect=local_download):

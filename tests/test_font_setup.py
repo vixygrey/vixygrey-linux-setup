@@ -30,24 +30,14 @@ class FontSetupSafety(unittest.TestCase):
         )
         environment.start()
         self.addCleanup(environment.stop)
-        self.entry = {
-            "id": "jetbrains-mono-nerd",
-            "name": "JetBrains Mono Nerd Font",
-            "method": "font",
-            "package": "JetBrainsMono",
-            "version": "3.3.0",
-            "source": "https://example.invalid/font",
-            "notes": "Local test fixture",
-            "url": "https://example.invalid/font.zip",
-            "third_party": True,
-        }
+        self.entry = next(entry for entry in setup.catalog() if entry["method"] == "font")
         source = self.root / "font.zip"
         with zipfile.ZipFile(source, "w") as archive:
             archive.writestr("Regular.ttf", b"fixture regular")
         self.entry = self.entry | {"sha256": digest(source.read_bytes())}
         self.downloads = 0
 
-        def download(artifact, destination):
+        def download(artifact, destination, label=""):
             self.downloads += 1
             shutil.copyfile(source, destination)
 

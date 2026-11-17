@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preview-first CachyOS personal setup. Python 3.11+, standard library only."""
+"""Preview-first Aurora personal setup. Python 3.11+, standard library only."""
 
 from __future__ import annotations
 
@@ -24,32 +24,7 @@ from app_files import launchers
 from safe_files import Files, SafetyError, digest, relative_path
 
 ROOT = Path(__file__).resolve().parent
-PACMAN_PACKAGE = re.compile(r"(?:[a-z][a-z0-9_-]*/)?[a-z0-9][a-z0-9@.+_-]*\Z")
-OFFICIAL_REPOSITORIES = {
-    "core",
-    "extra",
-    "multilib",
-    "cachyos",
-    "cachyos-v3",
-    "cachyos-v4",
-    "cachyos-core-v3",
-    "cachyos-core-v4",
-    "cachyos-extra-v3",
-    "cachyos-extra-v4",
-    "cachyos-znver4",
-    "cachyos-extra-znver4",
-}
-
-
-def official_pacman_package(package: str) -> bool:
-    return bool(
-        PACMAN_PACKAGE.fullmatch(package)
-        and ("/" not in package or package.split("/", 1)[0] in OFFICIAL_REPOSITORIES)
-    )
-
-
 METHODS = {
-    "pacman",
     "brew",
     "flatpak",
     "npm",
@@ -158,8 +133,6 @@ def catalog() -> list[dict]:
         if entry["method"] not in METHODS or not entry["source"].startswith("https://"):
             raise SafetyError(f"Invalid catalog source or method: {identifier}")
         package = entry["package"]
-        if entry["method"] == "pacman" and not official_pacman_package(package):
-            raise SafetyError(f"Invalid official pacman package: {identifier}")
         if not package or package.startswith("-") or any(c.isspace() for c in package):
             raise SafetyError(f"Invalid package: {identifier}")
         if entry["method"] in {"npm", "uv", "archive", "font", "python-helper"}:
@@ -204,8 +177,6 @@ def validate_catalog(entries: list[dict]) -> None:
             raise SafetyError(f"{identifier}: source must use HTTPS")
         if entry["method"] not in METHODS:
             raise SafetyError(f"{identifier}: unsupported method")
-        if entry["method"] == "pacman" and not official_pacman_package(entry["package"]):
-            raise SafetyError(f"{identifier}: invalid official pacman package")
         if entry["method"] in versioned and not re.fullmatch(
             r"[A-Za-z0-9][A-Za-z0-9.+_-]*", entry.get("version", "")
         ):
@@ -233,25 +204,38 @@ def validate_catalog(entries: list[dict]) -> None:
                 relative_path(member)
 
 
-def cachyos() -> bool:
+def aurora() -> bool:
     if sys.platform != "linux":
         return False
-    try:
-        release = {}
-        for line in Path("/etc/os-release").read_text().splitlines():
-            if "=" in line and not line.startswith("#"):
-                key, value = line.split("=", 1)
-                release[key] = value.strip("\"'")
-        return release.get("ID", "").lower() == "cachyos"
-    except OSError:
-        return False
+    release = {}
+    for line in Path("/etc/os-release").read_text().splitlines():
+        if "=" in line and not line.startswith("#"):
+            key, value = line.split("=", 1)
+            release[key] = value.strip("\"'")
+    values = [release.get(key, "").lower() for key in ("ID", "IMAGE_ID", "VARIANT_ID", "NAME")]
+    if any(re.search(r"(^|[/ :_-])aurora($|[/ :_-])", value) for value in values):
+        return True
+    image = Path("/usr/share/ublue-os/image-info.json")
+    if image.is_file():
+        info = json.loads(image.read_text())
+        return str(info.get("image-name", "")).startswith("aurora")
+    return False
 
 
 def tokens(values) -> set[str]:
     return {token.strip() for value in values for token in value.split(",") if token.strip()}
 
 
-PLAN_SCHEMA_VERSION = 4
+def suggest(unknown: set[str], candidates: dict[str, str]) -> str:
+    hints = []
+    for name in sorted(unknown):
+        match = difflib.get_close_matches(name, candidates.keys(), n=1, cutoff=0.6)
+        if match:
+            hints.append(f"{candidates[match[0]]} (not {name!r})")
+    return "; ".join(hints)
+
+
+PLAN_SCHEMA_VERSION = 3
 
 
 def catalog_digest() -> str:
@@ -321,7 +305,7 @@ def plan_document(setup, value: dict) -> dict:
         "intent": value,
         "preflight": {
             "architecture": archives.machine_arch(),
-            "is_cachyos": cachyos(),
+            "is_aurora": aurora(),
             "platform": sys.platform,
         },
         "preserved_conflicts": setup.preserved,
@@ -438,7 +422,6 @@ class Setup:
             HOMEBREW_NO_ANALYTICS="1",
             UV_TOOL_BIN_DIR=f"{home}/.local/bin",
             npm_config_update_notifier="false",
-            LC_ALL="C",
         )
         self.steps: list[tuple[str, object]] = []
         self.blocks: list[str] = []
@@ -478,78 +461,22 @@ class Setup:
                 self.brew_packages = set(result.stdout.splitlines())
         return self.brew_packages
 
-    def pacman_installed(self, package: str) -> bool:
-        if not official_pacman_package(package):
-            raise SafetyError(f"Invalid official pacman package: {package}")
-        if not self.executable("pacman"):
-            return False
-        name = package.rsplit("/", 1)[-1]
-        return self.run(["pacman", "-Q", "--", name], capture=True).returncode == 0
-
-    def pacman_install(self, package: str):
-        if not official_pacman_package(package):
-            raise SafetyError(f"Invalid official pacman package: {package}")
-        self.command(["sudo", "pacman", "-Syu", "--needed", "--", package])
-        if not self.pacman_installed(package):
-            raise SafetyError(f"pacman did not confirm the requested installation: {package}")
-        executable = {"nodejs": "node", "npm": "npm", "uv": "uv", "flatpak": "flatpak"}.get(package)
-        if executable and not self.executable(executable):
-            raise SafetyError(f"{package} installed but {executable} is unavailable on PATH")
-
-    def pacman_available(self, package: str) -> bool:
-        if not official_pacman_package(package):
-            raise SafetyError(f"Invalid official pacman package: {package}")
-        if not self.executable("pacman"):
-            return False
-        result = self.run(["pacman", "-Si", "--", package], capture=True)
-        if result.returncode:
-            return False
-        match = re.search(r"(?m)^Repository\s*:\s*(\S+)\s*$", result.stdout)
-        repository = match.group(1) if match else ""
-        if repository not in OFFICIAL_REPOSITORIES:
-            return False
-        return "/" not in package or repository == package.split("/", 1)[0]
-
-    def dependency(self, package: str):
-        if not official_pacman_package(package):
-            raise SafetyError(f"Invalid official pacman prerequisite: {package}")
-        if package in self.dependencies or self.pacman_installed(package):
+    def dependency(self, formula: str):
+        if not re.fullmatch(r"[a-z0-9][a-z0-9@+._-]*", formula):
+            raise SafetyError(f"Implicit prerequisites must be Homebrew core formulas: {formula}")
+        if formula in self.dependencies or formula in self.brew_installed():
             return
-        self.dependencies.add(package)
-        if not self.executable("sudo"):
-            self.blocks.append(f"pacman and sudo are required for official prerequisite {package}")
-        elif not self.pacman_available(package):
+        self.dependencies.add(formula)
+        if not self.executable("brew"):
             self.blocks.append(
-                f"Official prerequisite {package} is unavailable in configured repositories"
+                f"Homebrew required for {formula}; use Aurora’s supported Homebrew provisioning"
             )
         else:
-            self.steps.append(("dependency", package))
+            self.steps.append(("dependency", formula))
 
-    def manager(self, name: str, package: str):
+    def manager(self, name: str, formula: str):
         if not self.executable(name):
-            if self.pacman_installed(package):
-                self.blocks.append(f"{package} is installed but {name} is unavailable on PATH")
-            else:
-                self.dependency(package)
-
-    def flathub_remote(self) -> bool:
-        result = self.run(["flatpak", "remotes", "--user", "--columns=name,url"], capture=True)
-        if result.returncode:
-            raise SafetyError("Cannot inspect user Flatpak remotes")
-        remotes = {}
-        for line in result.stdout.splitlines():
-            if not line.strip():
-                continue
-            fields = line.split(None, 1)
-            if len(fields) != 2:
-                raise SafetyError("Cannot inspect user Flatpak remotes")
-            remotes[fields[0]] = fields[1]
-        remote = remotes.get("flathub")
-        if remote is not None and remote.rstrip("/") != FLATHUB.rstrip("/"):
-            raise SafetyError(
-                "User flathub remote has an unexpected URL; refusing to use or replace it"
-            )
-        return remote is not None
+            self.dependency(formula)
 
     def is_installed(self, entry: dict) -> bool:
         method, package = entry["method"], entry["package"]
@@ -579,8 +506,6 @@ class Setup:
                 timeout=15,
             )
             return result.returncode == 0 and bool(result.stdout.strip())
-        if method == "pacman":
-            return self.pacman_installed(package)
         if method == "brew":
             return package in self.brew_installed()
         if method == "flatpak":
@@ -727,25 +652,14 @@ class Setup:
         if method == "system":
             return {"id": identifier, "method": method, "state": "blocked"}
         managers = {
-            "pacman": "pacman",
             "brew": "brew",
+            "flatpak": "flatpak",
+            "npm": "npm",
+            "uv": "uv",
+            "python-helper": "uv",
         }
         if method in managers and not self.executable(managers[method]):
             return {"id": identifier, "method": method, "state": "blocked"}
-        if method == "pacman" and not self.executable("sudo"):
-            return {"id": identifier, "method": method, "state": "blocked"}
-        if method in {"flatpak", "npm", "uv", "python-helper"}:
-            commands = (
-                ("node", "npm")
-                if method == "npm"
-                else ("flatpak",)
-                if method == "flatpak"
-                else ("uv",)
-            )
-            if any(not self.executable(name) for name in commands) and (
-                not self.executable("pacman") or not self.executable("sudo")
-            ):
-                return {"id": identifier, "method": method, "state": "blocked"}
         return {"id": identifier, "method": method, "state": "missing"}
 
     def file_status(self) -> list[dict]:
@@ -783,38 +697,27 @@ class Setup:
             checks.append({"id": identifier, "remediation": remediation, "state": state, **values})
 
         check(
-            "cachyos",
-            "ready" if cachyos() else "blocked",
-            "Run --apply only from CachyOS as a non-root user.",
-        )
-        check(
-            "non-root",
-            "ready" if os.geteuid() != 0 else "blocked",
-            "Invoke setup.py as a regular user; sudo is used only for pacman transactions.",
+            "aurora",
+            "ready" if aurora() else "blocked",
+            "Run --apply only from Aurora Linux as a non-root user.",
         )
         architecture = archives.machine_arch()
         check(
             "architecture",
-            "ready" if architecture == "x86_64" else "blocked",
-            "Apply requires a CachyOS x86_64 machine.",
+            "ready" if architecture in {"x86_64", "aarch64"} else "blocked",
+            "Use a supported x86_64 or aarch64 Aurora machine.",
             value=architecture,
         )
         for command, remediation in (
-            ("pacman", "Install or restore CachyOS's system package manager."),
-            ("sudo", "Configure sudo access for official pacman package installation."),
-            ("flatpak", "Install the official flatpak package if selecting Flatpak apps."),
+            ("brew", "Complete Aurora's supported Homebrew provisioning."),
+            ("flatpak", "Install or enable Flatpak through normal Aurora provisioning."),
         ):
             check(command, "ready" if self.executable(command) else "blocked", remediation)
-        check(
-            "brew",
-            "ready" if self.executable("brew") else "optional",
-            "Homebrew is needed only for catalog tools unavailable in official repositories.",
-        )
         docker = {"method": "system", "package": "docker"}
         check(
             "docker",
             "ready" if self.is_installed(docker) else "blocked",
-            "Install the official docker package, enable Docker, and configure access manually; group access is root-equivalent.",
+            "Provision Aurora DX, run ujust dx-group, then log out and back in.",
         )
         plasma = "KDE" in os.environ.get("XDG_CURRENT_DESKTOP", "").upper() and self.executable(
             "plasma-apply-colorscheme"
@@ -833,13 +736,13 @@ class Setup:
             check(
                 "vulkan",
                 "ready" if vulkan else "blocked",
-                "Install the Vulkan llama.cpp selection and confirm a working CachyOS GPU driver.",
+                "Install the Vulkan llama.cpp selection and confirm a working Aurora GPU driver.",
             )
         else:
             check(
                 "vulkan",
                 "missing",
-                "Install the Vulkan llama.cpp selection and confirm a working CachyOS GPU driver.",
+                "Install the Vulkan llama.cpp selection and confirm a working Aurora GPU driver.",
             )
         for identifier, path in (("root-space", Path("/")), ("home-space", self.files.home)):
             usage = shutil.disk_usage(path)
@@ -880,9 +783,6 @@ class Setup:
                 return
             print(f"INSTALLED {identifier}")
             return
-        if method == "pacman" and package in self.dependencies:
-            print(f"PLANNED {identifier} as a prerequisite")
-            return
         if method == "brew" and package in self.dependencies:
             print(f"PLANNED {identifier} as a prerequisite")
             return
@@ -901,35 +801,33 @@ class Setup:
                     raise SafetyError(f"Not a directory: {destination}")
             except SafetyError as error:
                 self.blocks.append(f"{identifier}: {error}")
-        if method == "pacman":
-            if not self.executable("sudo"):
-                self.blocks.append(f"{identifier}: pacman and sudo are required")
-            elif not self.pacman_available(package):
-                self.blocks.append(
-                    f"{identifier}: {package} is unavailable in configured official repositories"
-                )
         if method == "brew" and not self.executable("brew"):
             self.blocks.append(
                 f"{identifier}: Homebrew is missing; this tool never downloads and executes its installer"
             )
         if method == "flatpak":
             if not self.executable("flatpak"):
-                self.manager("flatpak", "flatpak")
-                if "flathub" not in self.dependencies:
-                    self.steps.append(("flathub", None))
-                    self.dependencies.add("flathub")
+                self.blocks.append(f"{identifier}: Flatpak is missing")
             else:
-                try:
-                    remote = self.flathub_remote()
-                except SafetyError as error:
-                    self.blocks.append(str(error))
+                result = self.run(
+                    ["flatpak", "remotes", "--user", "--columns=name,url"], capture=True
+                )
+                if result.returncode:
+                    self.blocks.append("Cannot inspect user Flatpak remotes")
                 else:
-                    if not remote and "flathub" not in self.dependencies:
-                        self.steps.append(("flathub", None))
-                        self.dependencies.add("flathub")
+                    remotes = dict(
+                        line.split(None, 1) for line in result.stdout.splitlines() if line.strip()
+                    )
+                    if "flathub" not in remotes:
+                        if "flathub" not in self.dependencies:
+                            self.steps.append(("flathub", None))
+                            self.dependencies.add("flathub")
+                    elif remotes["flathub"].rstrip("/") != FLATHUB.rstrip("/"):
+                        self.blocks.append(
+                            "User flathub remote has an unexpected URL; refusing to use or replace it"
+                        )
         if method == "npm":
-            self.manager("node", "nodejs")
-            self.manager("npm", "npm")
+            self.manager("npm", "node")
         if method in {"uv", "python-helper"}:
             self.manager("uv", "uv")
         if method == "python-helper":
@@ -950,9 +848,7 @@ class Setup:
                     self.blocks.append(
                         f"{identifier}: command path {name} conflicts; explicitly --replace it or skip the app"
                     )
-        if method == "pacman":
-            self.dependencies.add(package)
-        elif method == "brew":
+        if method == "brew":
             self.dependencies.add(package)
         self.steps.append(("app", entry))
 
@@ -1070,9 +966,7 @@ class Setup:
     def install_app(self, entry: dict):
         method, package = entry["method"], entry["package"]
         version = entry.get("version", "")
-        if method == "pacman":
-            self.pacman_install(package)
-        elif method == "brew":
+        if method == "brew":
             self.command(["brew", "install", "--formula", package])
         elif method == "flatpak":
             self.command(
@@ -1150,7 +1044,7 @@ class Setup:
             if result.returncode or not re.search(r"(?m)^\s*Vulkan\d+\s*:", result.stdout):
                 self.files.target(archives.receipt_path(entry)).unlink(missing_ok=True)
                 raise SafetyError(
-                    "The Vulkan build was installed, but no working Vulkan device was detected; check CachyOS GPU drivers before rerunning"
+                    "The Vulkan build was installed, but no working Vulkan device was detected; check Aurora GPU drivers before rerunning"
                 )
 
     def apply(self):
@@ -1174,21 +1068,18 @@ class Setup:
                 raise SafetyError("Preflight changed; no installation was started")
             for kind, payload in self.steps:
                 if kind == "dependency":
-                    self.pacman_install(payload)
+                    self.command(["brew", "install", "--formula", payload])
                 elif kind == "flathub":
-                    if not self.flathub_remote():
-                        self.command(
-                            [
-                                "flatpak",
-                                "remote-add",
-                                "--user",
-                                "--if-not-exists",
-                                "flathub",
-                                "https://dl.flathub.org/repo/flathub.flatpakrepo",
-                            ]
-                        )
-                        if not self.flathub_remote():
-                            raise SafetyError("Flathub remote was not confirmed after installation")
+                    self.command(
+                        [
+                            "flatpak",
+                            "remote-add",
+                            "--user",
+                            "--if-not-exists",
+                            "flathub",
+                            "https://dl.flathub.org/repo/flathub.flatpakrepo",
+                        ]
+                    )
                 elif kind == "app":
                     self.install_app(payload)
                 elif kind == "font-cache":
@@ -1227,6 +1118,51 @@ class Setup:
         print(
             f"Plan: {len(self.steps)} actions, {len(self.blocks)} blockers, {len(self.preserved)} preserved conflicts."
         )
+
+
+def completion_script(
+    shell: str,
+    parser: argparse.ArgumentParser,
+    entries: list[dict],
+    profile_map: dict[str, list[str]],
+) -> str:
+    flags = sorted({option for action in parser._actions for option in action.option_strings})
+    ids = sorted({entry["id"] for entry in entries})
+    names = sorted(profile_map)
+    if shell == "zsh":
+        return (
+            "#compdef setup.sh\n"
+            "_setup_sh() {\n"
+            f"  local -a flags ids names\n"
+            f"  flags=({' '.join(flags)})\n"
+            f"  ids=({' '.join(ids)})\n"
+            f"  names=({' '.join(names)})\n"
+            '  case "$words[CURRENT-1]" in\n'
+            "    --only|--skip|--trust) _values -s , 'catalog id' $ids; return ;;\n"
+            "    --profile) _values -s , 'profile' $names; return ;;\n"
+            "    --format) _values 'format' text json; return ;;\n"
+            "    --completion) _values 'shell' bash zsh; return ;;\n"
+            "  esac\n"
+            "  _describe 'flag' flags\n"
+            "}\n"
+            "compdef _setup_sh setup.sh ./setup.sh\n"
+        )
+    return (
+        "_setup_sh_complete() {\n"
+        "  local cur prev\n"
+        '  cur="${COMP_WORDS[COMP_CWORD]}"\n'
+        '  prev="${COMP_WORDS[COMP_CWORD-1]}"\n'
+        '  case "$prev" in\n'
+        f'    --only|--skip|--trust) COMPREPLY=($(compgen -W "{" ".join(ids)}" -- "$cur")); return 0 ;;\n'
+        f'    --profile) COMPREPLY=($(compgen -W "{" ".join(names)}" -- "$cur")); return 0 ;;\n'
+        '    --format) COMPREPLY=($(compgen -W "text json" -- "$cur")); return 0 ;;\n'
+        '    --completion) COMPREPLY=($(compgen -W "bash zsh" -- "$cur")); return 0 ;;\n'
+        "  esac\n"
+        f'  COMPREPLY=($(compgen -W "{" ".join(flags)}" -- "$cur"))\n'
+        "}\n"
+        "complete -F _setup_sh_complete setup.sh\n"
+        "complete -F _setup_sh_complete ./setup.sh\n"
+    )
 
 
 def main(argv=None) -> int:
@@ -1299,6 +1235,11 @@ def main(argv=None) -> int:
         action="store_true",
         help="Activate KDE colors, preserving the wallpaper and other desktop settings",
     )
+    parser.add_argument(
+        "--completion",
+        choices=("bash", "zsh"),
+        help="Print a shell completion script for the given shell and exit",
+    )
     args = parser.parse_args(argv)
     if args.diff and any(
         (
@@ -1312,11 +1253,12 @@ def main(argv=None) -> int:
             args.validate_catalog,
             args.desktop,
             args.replace,
+            args.completion,
         )
     ):
         parser.error(
             "--diff cannot be combined with apply, JSON, plan output, reports, "
-            "listing, desktop, or replacement"
+            "listing, desktop, completion, or replacement"
         )
     if args.validate_catalog:
         if any(
@@ -1336,6 +1278,7 @@ def main(argv=None) -> int:
                 args.theme_only,
                 args.replace,
                 args.desktop,
+                args.completion,
             )
         ):
             parser.error("--validate-catalog cannot be combined with other options")
@@ -1357,6 +1300,7 @@ def main(argv=None) -> int:
             args.theme_only,
             args.replace,
             args.desktop,
+            args.completion,
         )
     ):
         parser.error("--apply-plan cannot be combined with other plan options")
@@ -1369,6 +1313,7 @@ def main(argv=None) -> int:
             args.plan_out,
             args.replace,
             args.desktop,
+            args.completion,
         )
     ):
         parser.error(
@@ -1389,11 +1334,10 @@ def main(argv=None) -> int:
             args.theme_only,
             args.replace,
             args.desktop,
+            args.completion,
         )
     ):
         parser.error("--doctor cannot be combined with selection, apply, or planning options")
-    if args.list and args.format is not None:
-        parser.error("--list does not support --format")
     if args.plan_out and args.format != "json":
         parser.error("--plan-out requires --format json")
     args.format = args.format or "text"
@@ -1412,11 +1356,16 @@ def main(argv=None) -> int:
         parser.error("Application selection flags cannot be used with --theme-only")
     entries = catalog()
     profile_map = profiles(entries)
+    if args.completion:
+        print(completion_script(args.completion, parser, entries, profile_map))
+        return 0
     profile_names = {name.lower() for name in tokens(args.profile)}
     unknown_profiles = profile_names - profile_map.keys()
     if unknown_profiles:
+        hint = suggest(unknown_profiles, {name: name for name in profile_map})
         parser.error(
             f"Unknown --profile entries: {', '.join(sorted(unknown_profiles))}; use --list"
+            + (f"; did you mean {hint}?" if hint else "")
         )
     args.profile = sorted(profile_names)
     aliases = {}
@@ -1430,23 +1379,43 @@ def main(argv=None) -> int:
         raw = {name.lower() for name in tokens(getattr(args, flag))}
         unknown = raw - aliases.keys()
         if unknown:
-            parser.error(f"Unknown --{flag} entries: {', '.join(sorted(unknown))}; use --list")
+            hint = suggest(unknown, aliases)
+            parser.error(
+                f"Unknown --{flag} entries: {', '.join(sorted(unknown))}; use --list"
+                + (f"; did you mean {hint}?" if hint else "")
+            )
         setattr(args, flag, [aliases[name] for name in raw])
+    value = intent(args)
+    filtered = select(entries, value, selected_profile_ids(profile_map, args.profile))
     if args.list:
         memberships = profile_memberships(profile_map)
-        for entry in entries:
-            profile_note = (
-                "; profiles " + ",".join(memberships[entry["id"]])
-                if entry["id"] in memberships
-                else ""
-            )
+        if args.format == "json":
             print(
-                f"{entry['id']} [{entry['method']}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
+                json.dumps(
+                    {
+                        "entries": [
+                            {**entry, "profiles": memberships.get(entry["id"], [])}
+                            for entry in filtered
+                        ],
+                        "kind": "catalog",
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
             )
+        else:
+            for entry in filtered:
+                profile_note = (
+                    "; profiles " + ",".join(memberships[entry["id"]])
+                    if entry["id"] in memberships
+                    else ""
+                )
+                print(
+                    f"{entry['id']} [{entry['method']}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
+                )
         return 0
     setup = Setup(args)
-    value = intent(args)
-    setup.selected = select(entries, value, selected_profile_ids(profile_map, args.profile))
+    setup.selected = filtered
     if args.diff:
         setup.diff(args.diff)
         return 0
@@ -1458,9 +1427,9 @@ def main(argv=None) -> int:
         return 0
     if approved and approved["catalog_digest"] != catalog_digest():
         raise SafetyError("Plan catalog digest does not match this checkout")
-    if args.apply and (os.geteuid() == 0 or not cachyos() or archives.machine_arch() != "x86_64"):
+    if args.apply and (os.geteuid() == 0 or not aurora()):
         raise SafetyError(
-            "Apply requires x86_64 CachyOS and a non-root user. Preview is supported on other hosts."
+            "Apply requires Aurora Linux and a non-root user. Preview is supported on other hosts."
         )
     if approved and approved["selected_ids"] != sorted(entry["id"] for entry in setup.selected):
         raise SafetyError("Plan selection intent does not match the current catalog")

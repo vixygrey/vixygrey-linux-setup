@@ -1,4 +1,4 @@
-# CachyOS shell integration. Source this file from an interactive zsh.
+# Portable Aurora shell integration. Source this file from an interactive zsh.
 
 # Keep package-manager binaries in stable user-owned locations.
 typeset -U path PATH
@@ -46,18 +46,12 @@ if [[ -o interactive && -t 0 && -t 1 ]]; then
     alias assume='source assume'
   fi
   command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
-  if [[ -r /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
-    source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-  elif [[ -r /home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
+  [[ -r /home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] &&
     source /home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-  fi
   if [[ -z "${AI_AGENT:-}" ]]; then
     command -v fzf >/dev/null 2>&1 && source <(fzf --zsh)
     command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
   fi
-  if [[ -r /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
-    source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-  elif [[ -r /home/linuxbrew/.linuxbrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
+  [[ -r /home/linuxbrew/.linuxbrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] &&
     source /home/linuxbrew/.linuxbrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-  fi
 fi
