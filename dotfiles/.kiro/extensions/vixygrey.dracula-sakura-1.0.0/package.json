@@ -1,0 +1,22 @@
+{
+  "name": "dracula-sakura",
+  "displayName": "Dracula-Sakura",
+  "description": "Dark plum, rose, lilac, cyan, and mint theme from vixygrey-dev-setup.",
+  "version": "1.0.0",
+  "publisher": "vixygrey",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Dracula-Sakura",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dracula-sakura-color-theme.json"
+      }
+    ]
+  }
+}

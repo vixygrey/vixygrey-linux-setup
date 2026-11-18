@@ -305,3 +305,98 @@ tasks:
     limitations: Actual Obsidian/Todoist Flatpak installation, application-menu integration, sign-in, and GUI operation require Aurora target verification. Local apply smoke used a stateful Flatpak fixture, not the real package manager.
     verify_command: ./scripts/verify
     gate_result: "./scripts/verify passed all 72 remaining tests, formatting, linting, palette validation, compilation, shell checks, catalog validation, and no-write previews; five obsolete web-route tests were removed."
+  remove-personal-desktop-apps:
+    status: done
+    updated_at: 2026-11-16
+    scope: Remove Obsidian, Todoist, and Discord from the catalogs and desktop profile without uninstalling existing applications or touching personal data.
+    verification:
+      - "Actual full-catalog and desktop CLI previews exclude all three removed IDs."
+      - "All nine only/trust/skip requests for removed IDs were rejected; isolated preview home remained unchanged."
+      - "Profile source-approval and saved-plan apply tests migrated to retained applications."
+    verify_command: mise exec node@24.18.1 -- ./scripts/verify
+    gate_result: "Passed all 81 tests, formatting, linting, compilation, shell checks, palette and catalog validation, and no-write previews."
+  aurora-retarget:
+    status: done
+    updated_at: 2026-11-17
+    scope: Revert the CachyOS/pacman migration; retarget the setup at Aurora Linux (Flatpak, Homebrew, Aurora DX) as originally scoped in .agent/product/scope.yml, while keeping the later Obsidian/Todoist/Discord removal.
+    verification: "mise exec node@24.18.1 -- ./scripts/verify passed all 72 tests, formatting, linting, compilation, shell checks, catalog validation, and no-write previews."
+    verify_command: ./scripts/verify
+  remove-just-aurora-dx-redundant:
+    status: done
+    updated_at: 2026-11-17
+    scope: Drop just from catalog/extended.json and the developer profile; Aurora DX already bundles just on the image, and the Homebrew copy only shadowed it via the prepended Linuxbrew PATH entry.
+    verification: "mise exec node@24.18.1 -- ./scripts/verify passed all 72 tests, formatting, linting, compilation, shell checks, catalog validation, and no-write previews."
+    verify_command: ./scripts/verify
+  close-dev-workflow-gaps:
+    status: done
+    updated_at: 2026-11-17
+    scope: Add rust, xh, and mkcert (Homebrew core) to catalog/extended.json and the developer profile, closing gaps identified against Aurora DX devmode for Rust/web-dev tooling; document running ujust bbrew per machine for k8s-tools/ai Brewfile bundles in docs/machine-commissioning.md.
+    added: [rust, xh, mkcert]
+    verify_command: ./scripts/verify
+  add-pnpm:
+    status: done
+    updated_at: 2026-11-17
+    scope: Add pnpm (Homebrew core) to catalog/extended.json and the developer profile; corepack conflict with the same-named binaries noted in catalog notes and README.
+    verification: "mise exec node@24.18.1 -- ./scripts/verify passed all 72 tests, formatting, linting, compilation, shell checks, catalog validation, and no-write previews. Direct smoke: --status reported pnpm missing; --only pnpm preview had zero blockers and a single pending brew action."
+    verify_command: ./scripts/verify
+  cli-ux-and-mise-pin:
+    status: done
+    updated_at: 2026-11-17
+    scope: >
+      Pin contributor tool versions in mise.toml (node 24.18.1, uv 0.13.1, go 1.26); make --list
+      honor --profile/--only/--skip and support --format json; add difflib-based "did you mean"
+      hints to unknown --profile/--only/--skip/--trust errors; report periodic download progress
+      to stderr in archives.download (8 MiB steps plus a final line, with entry id as label);
+      add ./setup.sh --completion {bash,zsh} printing a script sourced from the live catalog.
+    verification: >
+      ./scripts/verify passed all 77 tests, formatting, linting, compilation, shell checks,
+      catalog validation, and no-write previews, now runnable without a manual mise exec
+      workaround after `mise install`. Direct smoke: --list --profile base and --list --only
+      micro,rust --format json both filtered correctly; --completion bash/zsh scripts sourced
+      into a live bash shell completed --only/--profile correctly by prefix; typo suggestions
+      verified for --only and --profile, and confirmed absent for an unrelated token.
+    verify_command: ./scripts/verify
+  runbook-default-shell-note:
+    status: done
+    updated_at: 2026-11-17
+    scope: Document in docs/machine-commissioning.md that the setup never calls chsh; add the manual `chsh -s "$(command -v zsh)"` step and logout/login requirement before the deployed Zsh integration takes effect.
+    verify_command: ./scripts/verify
+  remove-devmode-duplicates:
+    status: done
+    updated_at: 2026-11-17
+    scope: >
+      Remove jetbrains-mono-nerd-font and vlc from catalog/extended.json and their
+      profile/launcher/README references; Aurora DX devmode already bundles JetBrains Mono Nerd
+      Font, and Aurora ships Haruna as its default video player. The generic font-method
+      machinery and VLC's launcher-less flatpak route are retained as live infrastructure (no
+      current catalog consumer) for any future entry of either kind.
+    removed: [jetbrains-mono-nerd-font, vlc]
+    verification: >
+      ./scripts/verify passed all 77 tests, formatting, linting, compilation, shell checks,
+      catalog validation (94 entries), and no-write previews; test_font_setup.py's
+      FontSetupSafety class was migrated from pulling a real catalog font entry to a synthetic
+      fixture so font-method CLI coverage survives the catalog removal. Direct smoke: `--only
+      vlc,jetbrains-mono-nerd-font` rejected both as unknown IDs without a stray "did you mean".
+    verify_command: ./scripts/verify
+  theme-coverage-omp-kiro:
+    status: done
+    updated_at: 2026-11-17
+    scope: >
+      Close the two theme-coverage gaps found diffing dotfiles/ against the vixygrey-mac-setup
+      reference: OMP had zero theme, and Kiro only had inline workbench.colorCustomizations
+      covering 41 keys. Ported OMP's dracula-sakura.json (omp's own schema) to
+      dotfiles/.omp/agent/themes/, and the full Kiro VS Code theme extension
+      (vixygrey.dracula-sakura-1.0.0: package.json + a 140-color/16-tokenColor/
+      16-semanticTokenColor theme) to dotfiles/.kiro/extensions/. Kiro's settings.json now also
+      sets workbench.colorTheme/preferredDarkColorTheme to activate the extension, additively:
+      the existing inline overrides stay, since scripts/validate-palette.py requires them.
+      OMP's own activation key was deliberately left for the user to add to
+      ~/.omp/agent/config.yml themselves, since that file also carries model routing and
+      provider settings this setup has never touched (documented in README).
+    verification: >
+      ./scripts/verify passed all 77 tests, formatting, linting, compilation, shell checks,
+      palette validation, catalog validation, and no-write previews. Direct smoke: patched
+      aurora()/geteuid to exercise a real --theme-only --apply into an isolated temporary home;
+      confirmed all three new files deployed byte-for-byte and Kiro's settings.json carried both
+      the new workbench.colorTheme key and the original workbench.colorCustomizations block.
+    verify_command: ./scripts/verify

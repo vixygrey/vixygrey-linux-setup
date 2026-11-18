@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import json
 import io
 import os
@@ -148,6 +149,44 @@ class ArchiveSafety(unittest.TestCase):
                 list(archives.payload_for(path, {"format": "deb"}))
 
 
+class DownloadProgress(unittest.TestCase):
+    class _FakeResponse(io.BytesIO):
+        def __init__(self, data: bytes, url: str, content_length: bool):
+            super().__init__(data)
+            self.url = url
+            self.headers = {"Content-Length": str(len(data))} if content_length else {}
+
+    def _download(self, size: int, content_length: bool):
+        payload = b"a" * size
+        artifact = {
+            "url": "https://example.invalid/artifact.bin",
+            "sha256": hashlib.sha256(payload).hexdigest(),
+        }
+        response = self._FakeResponse(payload, artifact["url"], content_length)
+        with tempfile.TemporaryDirectory() as temporary:
+            destination = Path(temporary) / "artifact"
+            with (
+                patch.object(archives.urllib.request, "urlopen", return_value=response),
+                contextlib.redirect_stderr(io.StringIO()) as captured,
+            ):
+                archives.download(artifact, destination, label="widget")
+            self.assertEqual(destination.read_bytes(), payload)
+        return [line for line in captured.getvalue().splitlines() if line]
+
+    def test_small_download_reports_a_single_final_line_with_total(self):
+        lines = self._download(2 * 1024 * 1024, content_length=True)
+        self.assertEqual(len(lines), 1)
+        self.assertTrue(lines[0].startswith("DOWNLOAD widget:"))
+        self.assertIn("of 2.0 MiB", lines[0])
+
+    def test_large_download_reports_periodic_progress_without_a_total(self):
+        lines = self._download(20 * 1024 * 1024, content_length=False)
+        self.assertEqual(len(lines), 3)
+        self.assertTrue(all(line.startswith("DOWNLOAD widget:") for line in lines))
+        self.assertTrue(all("of " not in line for line in lines))
+        self.assertEqual(lines[-1], "DOWNLOAD widget: 20.0 MiB")
+
+
 class CommandSafety(unittest.TestCase):
     def test_typo_and_empty_selection_do_not_fall_back_to_installing_everything(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -212,6 +251,114 @@ class CommandSafety(unittest.TestCase):
                 "flameshot: review https://flathub.org/apps/org.flameshot.Flameshot and explicitly --trust flameshot",
                 document["blockers"],
             )
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_list_filters_by_profile_and_only_and_supports_json(self):
+        environment = {"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"}
+        with tempfile.TemporaryDirectory() as temporary:
+            unfiltered = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--list"],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            filtered = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--list", "--profile", "base"],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(filtered.returncode, 0, filtered.stderr)
+            self.assertLess(len(filtered.stdout), len(unfiltered.stdout))
+            self.assertIn("micro [", filtered.stdout)
+            self.assertNotIn("zed [", filtered.stdout)
+            json_result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "setup.py"),
+                    "--list",
+                    "--only",
+                    "micro,rust",
+                    "--format",
+                    "json",
+                ],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(json_result.returncode, 0, json_result.stderr)
+            document = json.loads(json_result.stdout)
+            self.assertEqual(document["kind"], "catalog")
+            self.assertEqual(
+                sorted(entry["id"] for entry in document["entries"]), ["micro", "rust"]
+            )
+            self.assertEqual(
+                next(entry for entry in document["entries"] if entry["id"] == "micro")["profiles"],
+                ["base"],
+            )
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_unknown_selection_and_profile_entries_suggest_close_matches(self):
+        environment = {"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"}
+        with tempfile.TemporaryDirectory() as temporary:
+            only_result = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--apps-only", "--only", "mcro"],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(only_result.returncode, 2)
+            self.assertIn("did you mean micro", only_result.stderr)
+            profile_result = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--apps-only", "--profile", "develper"],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(profile_result.returncode, 2)
+            self.assertIn("did you mean developer", profile_result.stderr)
+            unrelated_result = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--apps-only", "--only", "zzzzzzzzzzz"],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(unrelated_result.returncode, 2)
+            self.assertNotIn("did you mean", unrelated_result.stderr)
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_completion_prints_a_script_and_rejects_other_modes(self):
+        environment = {"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"}
+        with tempfile.TemporaryDirectory() as temporary:
+            for shell, markers in (
+                ("bash", ("_setup_sh_complete", "--only", "micro")),
+                ("zsh", ("#compdef setup.sh", "--only", "micro")),
+            ):
+                with self.subTest(shell=shell):
+                    result = subprocess.run(
+                        [sys.executable, str(ROOT / "setup.py"), "--completion", shell],
+                        env={**environment, "HOME": temporary},
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    for marker in markers:
+                        self.assertIn(marker, result.stdout)
+            blocked = subprocess.run(
+                [sys.executable, str(ROOT / "setup.py"), "--completion", "bash", "--status"],
+                env={**environment, "HOME": temporary},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(blocked.returncode, 2)
             self.assertEqual(list(Path(temporary).iterdir()), [])
 
     def test_profiles_reject_unknown_names_and_invalid_members(self):

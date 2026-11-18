@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 import platform
 import posixpath
 import shlex
+import sys
 import tarfile
 import tempfile
 import urllib.request
@@ -269,24 +270,39 @@ def migrate_receipt(entry: dict, files: Files) -> None:
     _save_receipt(entry, files, updated, original)
 
 
-def download(artifact: dict, destination: Path) -> None:
+def _report_progress(label: str, size: int, total: int | None) -> None:
+    prefix = f"DOWNLOAD {label}: " if label else "DOWNLOAD: "
+    amount = f"{size / (1024 * 1024):.1f} MiB"
+    if total:
+        amount += f" of {total / (1024 * 1024):.1f} MiB"
+    print(f"{prefix}{amount}", file=sys.stderr, flush=True)
+
+
+def download(artifact: dict, destination: Path, label: str = "") -> None:
     url = artifact["url"]
     if not url.startswith("https://"):
         raise SafetyError("Artifacts must use HTTPS")
     request = urllib.request.Request(url, headers={"User-Agent": "vixygrey-linux-setup"})
-    import hashlib
-
     checksum = hashlib.sha256()
     size = 0
+    reported = 0
+    progress_step = 8 * 1024 * 1024
     with urllib.request.urlopen(request, timeout=60) as response, destination.open("xb") as stream:
         if not response.url.startswith("https://"):
             raise SafetyError("Artifact redirected away from HTTPS")
+        total = response.headers.get("Content-Length")
+        total = int(total) if total and str(total).isdigit() else None
         while chunk := response.read(1024 * 1024):
             size += len(chunk)
             if size > MAX_DOWNLOAD:
                 raise SafetyError("Artifact exceeds download size limit")
             checksum.update(chunk)
             stream.write(chunk)
+            if size - reported >= progress_step:
+                reported = size
+                _report_progress(label, size, total)
+    if size != reported:
+        _report_progress(label, size, total)
     if checksum.hexdigest() != artifact["sha256"]:
         raise SafetyError("Artifact SHA256 mismatch; no payload has been installed")
 
@@ -391,7 +407,7 @@ def _install_font(entry: dict, files: Files) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="vixygrey-font-") as temporary:
         root = Path(temporary)
         source = root / "artifact"
-        download(artifact, source)
+        download(artifact, source, label=entry["id"])
         staged = root / "staged"
         staged.mkdir()
         outputs = {}
@@ -474,7 +490,7 @@ def install(entry: dict, files: Files) -> list[str]:
             )
     with tempfile.TemporaryDirectory(prefix="vixygrey-download-") as temporary:
         path = Path(temporary) / "artifact"
-        download(artifact, path)
+        download(artifact, path, label=entry["id"])
         payload = payload_for(path, artifact)
         base = f".local/share/vixygrey/apps/{entry['id']}/{entry['version']}"
         members = set()

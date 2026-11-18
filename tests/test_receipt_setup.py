@@ -41,7 +41,7 @@ class ReceiptSetup(unittest.TestCase):
         self.downloads = 0
         self.source = self.root / "fixture.tar"
 
-        def download(artifact, destination):
+        def download(artifact, destination, label=""):
             self.downloads += 1
             shutil.copyfile(self.source, destination)
             self.assertEqual(digest(destination.read_bytes()), artifact["sha256"])
