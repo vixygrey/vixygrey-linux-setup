@@ -92,6 +92,23 @@ When the machine needs Docker Engine, use Aurora DX according to its
 choice. On a standard Aurora image, it includes `ujust devmode`; Aurora then requires `ujust dx-group`
 and a logout/login before Docker access works. Docker group access is effectively root-equivalent.
 
+After devmode, also run `ujust bbrew` and select the Brewfile bundles the target machine needs
+(for example `k8s-tools` for `kubectl`/`helm`/`k9s`/`kind` when doing AWS/EKS work, or `ai` for
+Ramalama/llmman). This repository's catalog deliberately does not duplicate those bundles; `ujust
+bbrew` is the sanctioned way to get them and is a manual per-machine step, not something
+`./setup.sh` runs or checks for you.
+
+The theme deployment installs `.zshrc` and `~/.config/vixygrey/setup.zsh`, but the setup never
+runs `chsh` or otherwise changes your login shell. If Zsh should be the default, set it yourself:
+
+```sh
+chsh -s "$(command -v zsh)"
+```
+
+Then log out and back in (or start a new session) before the deployed prompt, aliases, and
+Zoxide/fzf hooks take effect. Skipping this step leaves the files deployed but inactive under
+whatever shell is already the default.
+
 After prerequisites are present, use this sequence:
 
 ```sh
@@ -108,7 +125,38 @@ After prerequisites are present, use this sequence:
 Run `--apply` only after reviewing the selection and plan. Source approval, conflict preservation,
 and explicit replacement rules remain in force.
 
-## 6. Target-specific follow-ons
+## 6. Cross-machine dotfile sync (chezmoi)
+
+This setup deploys the Dracula-Sakura theme and catalog applications; it does not sync general
+personal configuration across your workstations. If you keep several machines aligned, do that
+with `chezmoi` as a separate, manual step run **after** `./setup.sh --apply` on each machine.
+`chezmoi` is a plain catalog entry (`brew`, not in any profile), so select it explicitly:
+
+```sh
+./setup.sh --apps-only --only chezmoi --apply
+chezmoi init --apply <your-dotfiles-remote>
+```
+
+Keep ownership of every path non-overlapping, so the two tools never fight over the same file:
+
+- This repository owns everything under `dotfiles/`: `.zshrc`, `~/.config/vixygrey/setup.zsh`,
+  and the Dracula-Sakura app configs (Starship, Kitty, btop, Bat, Yazi, Micro, Fastfetch,
+  Lazydocker, Trippy, the KDE color scheme, and the Kiro/OMP theme files). They are generated
+  from `theme/palette.json` and reproduced identically by `./setup.sh --theme-only --apply` on
+  every workstation; that command already is your cross-machine sync for appearance. Do not also
+  put these paths under chezmoi: `chezmoi apply` overwrites to match its source, and this
+  setup's conflict-preserving deploy would then treat the chezmoi-written file as a permanently
+  preserved divergence on every later run.
+- `dotfiles/.zshrc` sources `~/.zshrc.local` when present, and this setup never creates or
+  writes that file. Point chezmoi at `~/.zshrc.local` and any other personal configuration this
+  repository does not manage: git identity, SSH config, personal shell functions/aliases,
+  secrets, and anything outside `dotfiles/`.
+
+On a new machine, run `./setup.sh --apply` (and `--theme-only --apply` if deploying the theme
+separately) first, then `chezmoi init --apply`; chezmoi layers your synced personal
+configuration on top without touching anything this repository manages.
+
+## 7. Target-specific follow-ons
 
 Keep target-specific validation separate from this machine-neutral runbook:
 

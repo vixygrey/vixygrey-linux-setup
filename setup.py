@@ -226,6 +226,15 @@ def tokens(values) -> set[str]:
     return {token.strip() for value in values for token in value.split(",") if token.strip()}
 
 
+def suggest(unknown: set[str], candidates: dict[str, str]) -> str:
+    hints = []
+    for name in sorted(unknown):
+        match = difflib.get_close_matches(name, candidates.keys(), n=1, cutoff=0.6)
+        if match:
+            hints.append(f"{candidates[match[0]]} (not {name!r})")
+    return "; ".join(hints)
+
+
 PLAN_SCHEMA_VERSION = 3
 
 
@@ -1111,6 +1120,51 @@ class Setup:
         )
 
 
+def completion_script(
+    shell: str,
+    parser: argparse.ArgumentParser,
+    entries: list[dict],
+    profile_map: dict[str, list[str]],
+) -> str:
+    flags = sorted({option for action in parser._actions for option in action.option_strings})
+    ids = sorted({entry["id"] for entry in entries})
+    names = sorted(profile_map)
+    if shell == "zsh":
+        return (
+            "#compdef setup.sh\n"
+            "_setup_sh() {\n"
+            f"  local -a flags ids names\n"
+            f"  flags=({' '.join(flags)})\n"
+            f"  ids=({' '.join(ids)})\n"
+            f"  names=({' '.join(names)})\n"
+            '  case "$words[CURRENT-1]" in\n'
+            "    --only|--skip|--trust) _values -s , 'catalog id' $ids; return ;;\n"
+            "    --profile) _values -s , 'profile' $names; return ;;\n"
+            "    --format) _values 'format' text json; return ;;\n"
+            "    --completion) _values 'shell' bash zsh; return ;;\n"
+            "  esac\n"
+            "  _describe 'flag' flags\n"
+            "}\n"
+            "compdef _setup_sh setup.sh ./setup.sh\n"
+        )
+    return (
+        "_setup_sh_complete() {\n"
+        "  local cur prev\n"
+        '  cur="${COMP_WORDS[COMP_CWORD]}"\n'
+        '  prev="${COMP_WORDS[COMP_CWORD-1]}"\n'
+        '  case "$prev" in\n'
+        f'    --only|--skip|--trust) COMPREPLY=($(compgen -W "{" ".join(ids)}" -- "$cur")); return 0 ;;\n'
+        f'    --profile) COMPREPLY=($(compgen -W "{" ".join(names)}" -- "$cur")); return 0 ;;\n'
+        '    --format) COMPREPLY=($(compgen -W "text json" -- "$cur")); return 0 ;;\n'
+        '    --completion) COMPREPLY=($(compgen -W "bash zsh" -- "$cur")); return 0 ;;\n'
+        "  esac\n"
+        f'  COMPREPLY=($(compgen -W "{" ".join(flags)}" -- "$cur"))\n'
+        "}\n"
+        "complete -F _setup_sh_complete setup.sh\n"
+        "complete -F _setup_sh_complete ./setup.sh\n"
+    )
+
+
 def main(argv=None) -> int:
     if sys.version_info < (3, 11):
         raise SafetyError("Python 3.11+ is required")
@@ -1181,6 +1235,11 @@ def main(argv=None) -> int:
         action="store_true",
         help="Activate KDE colors, preserving the wallpaper and other desktop settings",
     )
+    parser.add_argument(
+        "--completion",
+        choices=("bash", "zsh"),
+        help="Print a shell completion script for the given shell and exit",
+    )
     args = parser.parse_args(argv)
     if args.diff and any(
         (
@@ -1194,11 +1253,12 @@ def main(argv=None) -> int:
             args.validate_catalog,
             args.desktop,
             args.replace,
+            args.completion,
         )
     ):
         parser.error(
             "--diff cannot be combined with apply, JSON, plan output, reports, "
-            "listing, desktop, or replacement"
+            "listing, desktop, completion, or replacement"
         )
     if args.validate_catalog:
         if any(
@@ -1218,6 +1278,7 @@ def main(argv=None) -> int:
                 args.theme_only,
                 args.replace,
                 args.desktop,
+                args.completion,
             )
         ):
             parser.error("--validate-catalog cannot be combined with other options")
@@ -1239,6 +1300,7 @@ def main(argv=None) -> int:
             args.theme_only,
             args.replace,
             args.desktop,
+            args.completion,
         )
     ):
         parser.error("--apply-plan cannot be combined with other plan options")
@@ -1251,6 +1313,7 @@ def main(argv=None) -> int:
             args.plan_out,
             args.replace,
             args.desktop,
+            args.completion,
         )
     ):
         parser.error(
@@ -1271,11 +1334,10 @@ def main(argv=None) -> int:
             args.theme_only,
             args.replace,
             args.desktop,
+            args.completion,
         )
     ):
         parser.error("--doctor cannot be combined with selection, apply, or planning options")
-    if args.list and args.format is not None:
-        parser.error("--list does not support --format")
     if args.plan_out and args.format != "json":
         parser.error("--plan-out requires --format json")
     args.format = args.format or "text"
@@ -1294,11 +1356,16 @@ def main(argv=None) -> int:
         parser.error("Application selection flags cannot be used with --theme-only")
     entries = catalog()
     profile_map = profiles(entries)
+    if args.completion:
+        print(completion_script(args.completion, parser, entries, profile_map))
+        return 0
     profile_names = {name.lower() for name in tokens(args.profile)}
     unknown_profiles = profile_names - profile_map.keys()
     if unknown_profiles:
+        hint = suggest(unknown_profiles, {name: name for name in profile_map})
         parser.error(
             f"Unknown --profile entries: {', '.join(sorted(unknown_profiles))}; use --list"
+            + (f"; did you mean {hint}?" if hint else "")
         )
     args.profile = sorted(profile_names)
     aliases = {}
@@ -1312,23 +1379,43 @@ def main(argv=None) -> int:
         raw = {name.lower() for name in tokens(getattr(args, flag))}
         unknown = raw - aliases.keys()
         if unknown:
-            parser.error(f"Unknown --{flag} entries: {', '.join(sorted(unknown))}; use --list")
+            hint = suggest(unknown, aliases)
+            parser.error(
+                f"Unknown --{flag} entries: {', '.join(sorted(unknown))}; use --list"
+                + (f"; did you mean {hint}?" if hint else "")
+            )
         setattr(args, flag, [aliases[name] for name in raw])
+    value = intent(args)
+    filtered = select(entries, value, selected_profile_ids(profile_map, args.profile))
     if args.list:
         memberships = profile_memberships(profile_map)
-        for entry in entries:
-            profile_note = (
-                "; profiles " + ",".join(memberships[entry["id"]])
-                if entry["id"] in memberships
-                else ""
-            )
+        if args.format == "json":
             print(
-                f"{entry['id']} [{entry['method']}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
+                json.dumps(
+                    {
+                        "entries": [
+                            {**entry, "profiles": memberships.get(entry["id"], [])}
+                            for entry in filtered
+                        ],
+                        "kind": "catalog",
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
             )
+        else:
+            for entry in filtered:
+                profile_note = (
+                    "; profiles " + ",".join(memberships[entry["id"]])
+                    if entry["id"] in memberships
+                    else ""
+                )
+                print(
+                    f"{entry['id']} [{entry['method']}{profile_note}] {entry['package']}\n  {entry['notes']}\n  {entry['source']}"
+                )
         return 0
     setup = Setup(args)
-    value = intent(args)
-    setup.selected = select(entries, value, selected_profile_ids(profile_map, args.profile))
+    setup.selected = filtered
     if args.diff:
         setup.diff(args.diff)
         return 0

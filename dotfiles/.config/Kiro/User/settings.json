@@ -1,4 +1,6 @@
 {
+  "workbench.colorTheme": "Dracula-Sakura",
+  "workbench.preferredDarkColorTheme": "Dracula-Sakura",
   "editor.fontFamily": "'JetBrainsMono Nerd Font', monospace",
   "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
   "workbench.colorCustomizations": {
