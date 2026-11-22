@@ -202,6 +202,9 @@ def validate_catalog(entries: list[dict]) -> None:
                     raise SafetyError(f"{identifier}: duplicate command: {command}")
                 commands[architecture].add(command)
                 relative_path(member)
+        for formula in entry.get("runtime_libs", []):
+            if entry["method"] != "archive" or not re.fullmatch(r"[a-z0-9][a-z0-9@+._-]*", formula):
+                raise SafetyError(f"{identifier}: invalid runtime_libs entry")
 
 
 def aurora() -> bool:
@@ -830,6 +833,9 @@ class Setup:
             self.manager("npm", "node")
         if method in {"uv", "python-helper"}:
             self.manager("uv", "uv")
+        if method == "archive":
+            for formula in entry.get("runtime_libs", []):
+                self.dependency(formula)
         if method == "python-helper":
             relative, base, marker, command, wrapper = self.helper_paths(entry)
             if base.exists() and (
