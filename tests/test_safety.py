@@ -683,6 +683,57 @@ class CommandSafety(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(list(Path(temporary).iterdir()), [])
 
+    def test_runtime_libs_requires_archive_method_and_valid_formula(self):
+        base = {
+            "id": "demo",
+            "name": "demo",
+            "method": "brew",
+            "package": "demo",
+            "source": "https://example.invalid/demo",
+            "notes": "",
+            "third_party": False,
+        }
+        with self.assertRaises(SafetyError):
+            setup.validate_catalog([{**base, "runtime_libs": ["openssl@3"]}])
+        architecture = archives.machine_arch()
+        archive_base = {
+            **base,
+            "method": "archive",
+            "version": "1.0.0",
+            "artifacts": {
+                architecture: {
+                    "url": "https://example.invalid/demo.tar.gz",
+                    "sha256": "0" * 64,
+                },
+                ("aarch64" if architecture == "x86_64" else "x86_64"): {
+                    "url": "https://example.invalid/demo-other.tar.gz",
+                    "sha256": "0" * 64,
+                },
+            },
+            "commands": {"demo": "bin/demo"},
+        }
+        with self.assertRaises(SafetyError):
+            setup.validate_catalog([{**archive_base, "runtime_libs": ["Not Valid!"]}])
+        setup.validate_catalog([{**archive_base, "runtime_libs": ["openssl@3"]}])
+
+    def test_wrapper_exports_ld_library_path_only_when_runtime_libs_declared(self):
+        architecture = archives.machine_arch()
+        entry = {
+            "id": "demo",
+            "method": "archive",
+            "version": "1.0.0",
+            "artifacts": {architecture: {"url": "https://example.invalid/demo.tar.gz"}},
+            "commands": {"demo": "bin/demo"},
+        }
+        plain = archives.wrappers(entry, Path("/home/demo"))
+        self.assertNotIn(b"LD_LIBRARY_PATH", plain[".local/bin/demo"])
+        entry["runtime_libs"] = ["openssl@3"]
+        wrapped = archives.wrappers(entry, Path("/home/demo"))
+        self.assertIn(
+            b'export LD_LIBRARY_PATH="/home/linuxbrew/.linuxbrew/opt/openssl@3/lib',
+            wrapped[".local/bin/demo"],
+        )
+
 
 class PythonHelperStatus(unittest.TestCase):
     def setUp(self):

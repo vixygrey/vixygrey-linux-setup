@@ -189,8 +189,9 @@
     "method": "archive",
     "package": "llama.cpp",
     "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b11669",
-    "notes": "Official prebuilt Ubuntu Vulkan release; requires a working host Vulkan driver and must pass a runtime smoke check on Aurora. The executables and their shared libraries are under llama-b11669 in the archive. This does not substitute a CPU-only build.",
+    "notes": "Official prebuilt Ubuntu Vulkan release; requires a working host Vulkan driver and must pass a runtime smoke check on Aurora. The executables and their shared libraries are under llama-b11669 in the archive. This does not substitute a CPU-only build. The upstream binaries link against OpenSSL 3's soname (libssl.so.3/libcrypto.so.3), which newer Fedora-family bases like Aurora 45 no longer ship by default (replaced by OpenSSL 4); runtime_libs installs Homebrew's keg-only openssl@3 and the generated wrapper points LD_LIBRARY_PATH at it so the prebuilt binaries still run.",
     "version": "b11669",
+    "runtime_libs": ["openssl@3"],
     "artifacts": {
       "x86_64": {
         "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-x64.tar.gz",

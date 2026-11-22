@@ -391,9 +391,20 @@ def payload_for(path: Path, artifact: dict):
 
 def wrappers(entry: dict, home: Path) -> dict[str, bytes]:
     base = home / ".local/share/vixygrey/apps" / entry["id"] / entry["version"]
+    runtime_libs = entry.get("runtime_libs", [])
+    prefix = ""
+    if runtime_libs:
+        libdirs = ":".join(
+            f"/home/linuxbrew/.linuxbrew/opt/{formula}/lib" for formula in runtime_libs
+        )
+        prefix = f'export LD_LIBRARY_PATH="{libdirs}${{LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}}"\n'
     return {
         f".local/bin/{command}": (
-            "#!/bin/sh\nexec " + shlex.quote(str(base / relative_path(member))) + ' "$@"\n'
+            "#!/bin/sh\n"
+            + prefix
+            + "exec "
+            + shlex.quote(str(base / relative_path(member)))
+            + ' "$@"\n'
         ).encode()
         for command, member in commands_for(entry).items()
     }
