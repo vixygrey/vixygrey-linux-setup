@@ -99,15 +99,28 @@ bbrew` is the sanctioned way to get them and is a manual per-machine step, not s
 `./setup.sh` runs or checks for you.
 
 The theme deployment installs `.zshrc` and `~/.config/vixygrey/setup.zsh`, but the setup never
-runs `chsh` or otherwise changes your login shell. If Zsh should be the default, set it yourself:
+runs `chsh` or otherwise changes your login shell. Aurora is a Fedora Kinoite-family atomic
+desktop and deliberately does not ship `util-linux-user`, so plain `chsh` is not available, and
+Fedora's own atomic-desktop guidance recommends against changing the login shell on these images
+at all: the shell path is not guaranteed to survive an image reset or upgrade, which has caused
+documented login lockouts
+([fedora-silverblue#228](https://github.com/fedora-silverblue/issue-tracker/issues/228),
+[#307](https://github.com/fedora-silverblue/issue-tracker/issues/307)).
+
+Activate Zsh per terminal profile instead, which needs no privilege and carries none of that
+risk. In Konsole: **Settings → Manage Profiles**, edit your profile, set **Command** to
+`/usr/bin/zsh`. New tabs start Zsh interactively, which sources `.zshrc` and activates the
+deployed prompt, aliases, and Zoxide/fzf hooks exactly as if it were the login shell.
+
+Only change the actual login shell (for example, for SSH sessions) if you specifically need
+that, and prefer `usermod` over `chsh` even where `chsh` exists, since it needs no setuid binary:
 
 ```sh
-chsh -s "$(command -v zsh)"
+sudo usermod --shell "$(command -v zsh)" "$USER"
 ```
 
-Then log out and back in (or start a new session) before the deployed prompt, aliases, and
-Zoxide/fzf hooks take effect. Skipping this step leaves the files deployed but inactive under
-whatever shell is already the default.
+Confirm the path is listed in `/etc/shells` first, or `pkexec` and other PAM-aware tools will
+error afterward. Log out and back in before the change takes effect.
 
 After prerequisites are present, use this sequence:
 
