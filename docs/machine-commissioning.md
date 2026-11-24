@@ -82,8 +82,8 @@ The setup owns only its existing user-state locations:
 Choose the location for every other large data class per machine:
 
 - **Worktrees and reproducible build caches:** use the data location selected in the private record.
-- **Container images and volumes:** inspect the selected Docker runtime before reserving space or
-  configuring bind mounts. This repository does not assume a runtime storage path.
+- **Container images and volumes:** inspect the selected Podman storage driver before reserving
+  space or configuring bind mounts. This repository does not assume a runtime storage path.
 - **Local models:** choose a data location only when the machine uses a supported local-model path.
   Record the capacity requirement and revisit it during the target-specific model validation.
 
@@ -118,19 +118,17 @@ bundles, Ryoku has no equivalent single-command extra-bundle installer: anything
 catalog and Ryoku's own defaults is a manual `pacman`/`yay`/RyoStore decision, not something
 `./setup.sh` runs or checks for you.
 
-When the machine needs Docker Engine:
+Podman is installed by the normal catalog/profile flow (a plain `pacman` package, no manual group
+or service setup, unlike Docker Engine). If a selected tool needs Podman's Docker-API-compatible
+socket (lazydocker, oxker), enable it yourself:
 
 ```sh
-sudo pacman -S --needed docker docker-compose
-sudo systemctl enable --now docker
-sudo usermod -aG docker "$USER"
-# log out and back in before docker works without sudo
+systemctl --user enable --now podman.socket
+export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"
 ```
 
-This is a manual host choice. **Docker group access is effectively root-equivalent.** Ryoku's own
-`ryoku-docker`/`ryoku-cobalt` tool is unrelated: it is a narrow, fixed-argument-vector helper
-behind its own link-downloader feature, not a general Docker CLI surface, and it deliberately
-never grants the logged-in user docker-group access either.
+This is an unprivileged per-user systemd unit, not a root-equivalent group grant; `./setup.sh`
+still never runs `systemctl enable` for you, consistent with every other application.
 
 The theme deployment installs `.zshrc` and `~/.config/vixygrey/setup.zsh`, but the setup never
 runs `chsh` or otherwise changes your login shell. Ryoku is a normal mutable Arch/CachyOS system,
@@ -207,7 +205,7 @@ configuration on top without touching anything this repository manages.
 
 Keep target-specific validation separate from this machine-neutral runbook:
 
-- Ryoku install, desktop, Docker, and Vulkan acceptance: issue #25.
+- Ryoku install, desktop, Podman, and Vulkan acceptance: issue #25.
 - AMD Radeon local-model validation and model capacity evidence: issue #18.
 - Additional storage and GPU presentation in Fastfetch or btop: issue #24.
 

@@ -1,8 +1,8 @@
 # Vixygrey Linux Setup
 
-Personal setup for **Ryoku 1.0 (Amaterasu), CachyOS edition**, as a graphical workstation with selected useful CLI and TUI tools, Docker Engine, and the Dracula-Sakura appearance from the existing Mac setup.
+Personal setup for **Ryoku 1.0 (Amaterasu), CachyOS edition**, as a graphical workstation with selected useful CLI and TUI tools, Podman, and the Dracula-Sakura appearance from the existing Mac setup.
 
-The catalog explicitly lists the selected applications and their installation sources. `soffice` is part of LibreOffice. Docker Engine is a normal Arch/CachyOS package, installed and group-approved manually, never by this setup. Kiro and iamlive use pinned upstream Linux payloads. OMP remains the primary AI development tool.
+The catalog explicitly lists the selected applications and their installation sources. `soffice` is part of LibreOffice. Podman installs like any other `pacman` package, no group or service setup required. Kiro and iamlive use pinned upstream Linux payloads. OMP remains the primary AI development tool.
 
 ## Before using it
 
@@ -16,18 +16,30 @@ Before the first apply on any machine, complete the [machine commissioning runbo
 
 Ryoku/CachyOS's software model is `pacman` and AUR (via `yay`) for system packages, with Flatpak available as a secondary sandboxed-app channel it ships by default. This setup never changes your login shell, never alters groups, and never runs `systemctl enable` itself; the only privileged commands it ever issues are the single reviewed `sudo pacman -S --needed <package>` or `yay -S --needed <package>` call for each selected catalog entry that needs one.
 
-### Docker Engine
+### Podman
 
-Docker Engine is a normal Arch/CachyOS package, not something Ryoku provisions for you:
+Podman is a daemonless, rootless-by-default container engine; the `podman` catalog entry installs
+it as a normal `pacman -S --needed podman` package, since rootless `podman run`/`podman build`
+need no group membership, systemd service, or privilege escalation the way Docker Engine did.
+Rootless mode relies on per-user `/etc/subuid`/`/etc/subgid` ranges, which modern
+`useradd`/`systemd-sysusers` allocate automatically for normal accounts; nothing else to set up.
+
+`podman-docker` and `podman-compose` are separate opt-in catalog entries: the former emulates the
+`docker`/`docker-compose` CLI as thin wrappers over Podman (conflicts with the real `docker`
+package, which is not in this catalog); the latter runs `docker-compose.yml` files against Podman.
+Neither exposes the Docker Engine HTTP API socket.
+
+Some third-party TUIs (lazydocker, oxker) speak that HTTP API directly rather than shelling out to
+a `docker`-named binary, so they need Podman's own compatible socket instead:
 
 ```sh
-sudo pacman -S --needed docker docker-compose
-sudo systemctl enable --now docker
-sudo usermod -aG docker "$USER"
-# log out and back in before docker works without sudo
+systemctl --user enable --now podman.socket
+export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"
 ```
 
-**Docker group access is effectively root access.** These operations are deliberately not automated by this setup. The setup checks `/usr/bin/docker` and `/usr/bin/dockerd`, then queries only the local `/var/run/docker.sock`, not an existing remote Docker context. Missing or inaccessible Engine access blocks the full plan unless `docker-engine` is explicitly skipped. (Ryoku's own `ryoku-docker`/`ryoku-cobalt` tool is unrelated: it is a narrow, fixed-argument-vector helper behind its link-downloader feature, not a general Docker CLI surface, and deliberately never grants the logged-in user docker-group access either.)
+This is an unprivileged per-user systemd unit, not a root-equivalent group grant the way Docker's
+was, but this setup still never runs `systemctl enable` for you, consistent with every other
+application in the catalog; enable it yourself if you select one of those tools.
 
 ## Preview and install
 
@@ -123,7 +135,7 @@ and pinned PyYAML version using the same check as installation planning. An inta
 `installed` without renewed source approval; missing or invalid helpers still require approval
 and uv before repair.
 
-`--doctor` reports the current Ryoku/CachyOS, architecture, pacman, yay, Flatpak, Docker, theme
+`--doctor` reports the current Ryoku/CachyOS, architecture, pacman, yay, Flatpak, theme
 (Ryogami availability), Vulkan, and root/home free-space readiness. It never installs, repairs,
 downloads, locks, or creates state. Both commands are observation-only and cannot be combined
 with `--apply`, replacement, desktop activation, or plan-writing options.
@@ -156,7 +168,7 @@ Third-party AUR packages, vendor artifacts, and catalog-marked Flatpaks need exp
 For the full catalog, omit `--only` and approve each reported third-party ID with `--trust`. Flags accept comma-separated IDs and can be repeated. There is no implicit trust-all or ignore-errors mode. **Any blocker prevents installation from starting.** Use `--skip` only for applications you intentionally exclude:
 
 ```sh
-./setup.sh --skip docker-engine
+./setup.sh --skip podman
 ```
 
 ### Theme and existing machines
@@ -338,7 +350,7 @@ search, the AUR, and upstream Linux documentation.
 - **gitlogue:** replays local Git history and requires Git plus a repository with commits. Setup does not set its theme or start watch mode.
 - **VisiData:** Arch's official package manages the Python environment and supplies `vd` and `visidata`. Optional formats such as XLSX and Parquet need dependencies in that environment; setup does not add them or promise every upstream format.
 - **dnsglobe:** queries public DNS resolvers, including direct DNS on port 53, which restricted networks may block. Displayed resolver regions are not independent probes physically running in those regions. Setup does not change firewall rules or configure EDNS Client Subnet. Sourced from AUR; approve it with `--trust dnsglobe`.
-- **oxker:** can control containers through an accessible Docker daemon. Socket access can be root-equivalent; setup does not change Docker groups, sockets, services, or contexts. Lazydocker remains available. Sourced from AUR; approve it with `--trust oxker`.
+- **oxker:** speaks the Docker Engine HTTP API like lazydocker, so it needs Podman's compatible socket (see Podman above) to manage Podman containers; setup does not enable that socket or change groups. Lazydocker remains available. Sourced from AUR; approve it with `--trust oxker`.
 - **llmfit:** recommends models from detected hardware; GPU detection depends on host drivers and probes. Recommendations do not prove Vulkan llama.cpp compatibility. Setup does not download models, configure providers, or start services.
 - **croc:** encrypted transfers can use public relays. Protect transfer codes and use trusted endpoints. Setup does not configure a relay, open firewall ports, or start transfers.
 - **grex:** generates candidate regular expressions from examples. Review unintended matches and compatibility with the intended regex engine.
@@ -509,7 +521,7 @@ The safety suite covers preservation, backups, symlink/traversal rejection, exec
 
 During development on the reference Mac, isolated smoke runs exercised actual theme deployment and repeat planning; Bat, Starship, lnav, Fastfetch, interactive Zsh, and the btop TUI; PyYAML installation and parsing; and checksum-verified AWS, Eilmeldung, Kitty, OMP, Nerd Font, Kiro, and iamlive payload installation without executing the Linux binaries. A live local HTTPS fixture also verified executable deployment under a home path containing spaces and rejection of a changed download before any home writes. These historical checks do not establish current catalog support for removed applications.
 
-**The full application install, Linux binary execution, Vulkan device detection, `sudo pacman`/`yay` privilege escalation, and Ryogami wallpaper activation have not been run on a Ryoku target.** A local Docker daemon was unavailable. Validate the plan on the intended machine before approving an apply run, and validate the desktop there before treating its appearance as verified.
+**The full application install, Linux binary execution, Vulkan device detection, `sudo pacman`/`yay` privilege escalation, and Ryogami wallpaper activation have not been run on a Ryoku target.** A local Podman install was unavailable. Validate the plan on the intended machine before approving an apply run, and validate the desktop there before treating its appearance as verified.
 
 ## License
 
