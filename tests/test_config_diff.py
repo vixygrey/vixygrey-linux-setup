@@ -17,7 +17,8 @@ import setup
 from safe_files import SafetyError
 
 ROOT = Path(__file__).resolve().parents[1]
-KITTY = ".config/kitty/kitty.conf"
+KITTY_SOURCE = ".config/kitty/kitty.conf"
+KITTY = ".config/ryoku/user_edits/kitty/kitty.conf"
 
 
 class ConfigDiff(unittest.TestCase):
@@ -81,7 +82,7 @@ class ConfigDiff(unittest.TestCase):
         }
 
     def test_real_cli_unified_diff_missing_unchanged_and_repetitions(self):
-        desired = (ROOT / "dotfiles" / KITTY).read_bytes()
+        desired = (ROOT / "dotfiles" / KITTY_SOURCE).read_bytes()
         original = self.current(KITTY, b"private local setting\n")
         metadata = original.stat().st_mtime_ns
         before = self.home_snapshot()
@@ -114,25 +115,25 @@ class ConfigDiff(unittest.TestCase):
         self.assertIn("-private local setting\n\\ No newline at end of file\n+", result.stdout)
 
     def test_selected_launchers_and_theme_scope_exclude_other_files(self):
-        name = ".local/share/applications/vixygrey-zed.desktop"
-        allowed = self.cli("--apps-only", "--only", "zed", "--diff", name)
+        name = ".local/share/applications/vixygrey-kiro.desktop"
+        allowed = self.cli("--apps-only", "--only", "kiro", "--diff", name)
         self.assertEqual(allowed.returncode, 0, allowed.stderr)
         self.assertIn("MISSING (new) " + name, allowed.stdout)
         for flags, disallowed in [
             (("--theme-only",), name),
             (("--apps-only", "--only", "git"), name),
-            (("--apps-only", "--only", "zed"), KITTY),
-            (("--apps-only", "--only", "zed", "--skip", "zed"), name),
+            (("--apps-only", "--only", "kiro"), KITTY),
+            (("--apps-only", "--only", "kiro", "--skip", "kiro"), name),
             (("--theme-only",), ".local/state/vixygrey-setup/receipts.json"),
         ]:
             with self.subTest(flags=flags, name=disallowed):
                 result = self.cli(*flags, "--diff", disallowed)
                 self.assertEqual(result.returncode, 2)
                 self.assertEqual(result.stdout, "")
-        zed = next(entry for entry in setup.catalog() if entry["id"] == "zed")
+        kiro = next(entry for entry in setup.catalog() if entry["id"] == "kiro")
         self.assertIn(
             "MISSING (new) " + name,
-            self.local_diff([name], apps_only=True, selected=[zed]),
+            self.local_diff([name], apps_only=True, selected=[kiro]),
         )
 
     def test_incompatible_modes_fail_before_catalog_or_home_effects(self):
@@ -194,7 +195,7 @@ class ConfigDiff(unittest.TestCase):
         self.assertEqual((result.returncode, result.stdout), (2, ""))
 
     def test_repo_root_source_and_source_ancestor_symlinks_are_protected(self):
-        root, source = self.source(KITTY, b"desired\n")
+        root, source = self.source(KITTY_SOURCE, b"desired\n")
         self.current(KITTY, b"private\n")
         with patch.object(setup, "ROOT", root):
             self.assertIn("-private", self.local_diff([KITTY]))
@@ -226,7 +227,7 @@ class ConfigDiff(unittest.TestCase):
                 self.current(KITTY, data)
                 result = self.cli("--theme-only", "--diff", KITTY)
                 self.assertEqual((result.returncode, result.stdout), (2, ""))
-        root, source = self.source(KITTY, b"x" * (setup.DIFF_FILE_LIMIT + 1))
+        root, source = self.source(KITTY_SOURCE, b"x" * (setup.DIFF_FILE_LIMIT + 1))
         with patch.object(setup, "ROOT", root), self.assertRaises(SafetyError):
             self.local_diff([KITTY])
         self.current(KITTY, b"mine\n")
@@ -236,13 +237,13 @@ class ConfigDiff(unittest.TestCase):
                 self.local_diff([KITTY])
 
     def test_unrequested_oversized_repository_file_is_not_read(self):
-        root, _ = self.source(KITTY, b"desired\n")
+        root, _ = self.source(KITTY_SOURCE, b"desired\n")
         self.source(".config/other/huge", b"x" * (setup.DIFF_FILE_LIMIT + 1))
         with patch.object(setup, "ROOT", root):
             self.assertIn("MISSING (new) " + KITTY, self.local_diff([KITTY]))
 
     def test_late_unsafe_content_and_output_limit_do_not_disclose_prior_diff(self):
-        root, _ = self.source(KITTY, b"repo\n")
+        root, _ = self.source(KITTY_SOURCE, b"repo\n")
         second = ".config/demo/second"
         self.source(second, b"repo\n")
         self.current(KITTY, b"PRIVATE_MARKER_DO_NOT_PRINT\n")
@@ -278,11 +279,11 @@ class ConfigDiff(unittest.TestCase):
                 )
                 self.assertEqual((result.returncode, result.stdout), (2, ""))
                 self.assertIn("nonstandard", result.stderr)
-        launcher = ".local/share/applications/vixygrey-zed.desktop"
+        launcher = ".local/share/applications/vixygrey-kiro.desktop"
         result = self.cli(
             "--apps-only",
             "--only",
-            "zed",
+            "kiro",
             "--diff",
             launcher,
             environment={"XDG_DATA_HOME": str(self.home / "other")},

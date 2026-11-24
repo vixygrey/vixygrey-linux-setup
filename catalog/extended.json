@@ -2,21 +2,30 @@
   {
     "id": "aws-cli",
     "name": "aws",
-    "method": "brew",
-    "package": "awscli",
+    "method": "pacman",
+    "package": "aws-cli",
     "source": "https://github.com/aws/aws-cli",
-    "notes": "Official AWS command-line interface; Homebrew core provides Linux bottles.",
+    "notes": "Official AWS command-line interface; Arch extra repo.",
     "aliases": ["awscli"],
     "third_party": false
   },
   {
     "id": "granted",
     "name": "granted",
-    "method": "brew",
+    "method": "aur",
     "package": "granted",
     "source": "https://github.com/fwdcloudsec/granted",
     "notes": "AWS access utility; the assume shell integration is provided by Granted.",
     "aliases": ["assume"],
+    "third_party": true
+  },
+  {
+    "id": "aws-vault",
+    "name": "aws-vault",
+    "method": "pacman",
+    "package": "aws-vault",
+    "source": "https://github.com/99designs/aws-vault",
+    "notes": "Stores AWS credentials in the OS keystore and injects temporary credentials into a subshell; Arch extra repo.",
     "third_party": false
   },
   {
@@ -31,31 +40,91 @@
     "third_party": true
   },
   {
+    "id": "kubectl",
+    "name": "kubectl",
+    "method": "pacman",
+    "package": "kubectl",
+    "source": "https://kubernetes.io/",
+    "notes": "Kubernetes CLI; Arch extra repo (split package of kubernetes). kubeconfig and cluster access remain yours to configure.",
+    "third_party": false
+  },
+  {
+    "id": "helm",
+    "name": "Helm",
+    "method": "pacman",
+    "package": "helm",
+    "source": "https://helm.sh/",
+    "notes": "Kubernetes package manager; Arch extra repo.",
+    "third_party": false
+  },
+  {
+    "id": "k9s",
+    "name": "k9s",
+    "method": "pacman",
+    "package": "k9s",
+    "source": "https://k9scli.io/",
+    "notes": "Terminal UI for Kubernetes clusters; Arch extra repo. Uses the kubeconfig already on the system; none is configured by this setup.",
+    "third_party": false
+  },
+  {
+    "id": "opentofu",
+    "name": "OpenTofu",
+    "method": "pacman",
+    "package": "opentofu",
+    "source": "https://opentofu.org/",
+    "notes": "Open-source Terraform fork for infrastructure provisioning; Arch extra repo. State backends, providers, and credentials remain yours to configure.",
+    "aliases": ["tofu"],
+    "third_party": false
+  },
+  {
+    "id": "stu",
+    "name": "stu",
+    "method": "aur",
+    "package": "stu",
+    "source": "https://github.com/lusingander/stu",
+    "notes": "Terminal UI explorer for Amazon S3: browse buckets/objects, preview, and download. No official Arch package; AUR package stu, maintained by orhun (same maintainer as the existing oxker entry). Uses whatever AWS credentials are already configured.",
+    "third_party": true
+  },
+  {
     "id": "aws-sam-cli",
     "name": "aws sam cli",
-    "method": "brew",
+    "method": "aur",
     "package": "aws-sam-cli",
     "source": "https://github.com/aws/aws-sam-cli",
-    "notes": "Official AWS SAM CLI; Homebrew core provides Linux bottles.",
+    "notes": "Official AWS SAM CLI; AUR package aws-sam-cli, actively maintained.",
     "aliases": ["sam"],
-    "third_party": false
+    "third_party": true
   },
   {
     "id": "cfn-lint",
     "name": "cfn-lint",
-    "method": "brew",
-    "package": "cfn-lint",
+    "method": "pacman",
+    "package": "python-cfn-lint",
     "source": "https://github.com/aws-cloudformation/cfn-lint",
-    "notes": "CloudFormation template linter from Homebrew core.",
+    "notes": "CloudFormation template linter; Arch extra repo package python-cfn-lint.",
     "third_party": false
   },
   {
     "id": "iamlive",
     "name": "iamlive",
-    "method": "brew",
-    "package": "iann0036/iamlive/iamlive",
+    "method": "archive",
+    "package": "iamlive",
+    "version": "1.1.28",
     "source": "https://github.com/iann0036/iamlive",
-    "notes": "IAM policy generator; its official tap explicitly provides amd64 and arm64 Linux artifacts.",
+    "notes": "IAM policy generator; no official Arch or AUR package exists, so this pins the upstream project's own GitHub release Linux tarballs directly.",
+    "artifacts": {
+      "x86_64": {
+        "url": "https://github.com/iann0036/iamlive/releases/download/v1.1.28/iamlive_1.1.28_linux_amd64.tar.gz",
+        "sha256": "aef1d41d27c5b9a513f0b96b9ff5ed0fc9c076cea5b024d50311e6a76aae13f7"
+      },
+      "aarch64": {
+        "url": "https://github.com/iann0036/iamlive/releases/download/v1.1.28/iamlive_1.1.28_linux_arm64.tar.gz",
+        "sha256": "1cf213838f4e6bdc9091e3ae1e516643d11bb011e64ec6480f3a3b6dd3bb15ff"
+      }
+    },
+    "commands": {
+      "iamlive": "iamlive"
+    },
     "third_party": true
   },
   {
@@ -86,128 +155,129 @@
   {
     "id": "checkov",
     "name": "checkov",
-    "method": "brew",
+    "method": "uv",
     "package": "checkov",
     "source": "https://github.com/bridgecrewio/checkov",
-    "notes": "Infrastructure-as-code security scanner from Homebrew core.",
+    "notes": "Infrastructure-as-code security scanner; no official Arch or AUR package exists, so this installs the upstream PyPI release via uv.",
+    "version": "3.4.7",
     "third_party": false
   },
   {
     "id": "gitleaks",
     "name": "gitleaks",
-    "method": "brew",
+    "method": "pacman",
     "package": "gitleaks",
     "source": "https://github.com/gitleaks/gitleaks",
-    "notes": "Secret scanner from Homebrew core.",
+    "notes": "Secret scanner; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "age",
     "name": "age",
-    "method": "brew",
+    "method": "pacman",
     "package": "age",
     "source": "https://github.com/FiloSottile/age",
-    "notes": "File encryption tool from Homebrew core.",
+    "notes": "File encryption tool; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "actionlint",
     "name": "actionlint",
-    "method": "brew",
+    "method": "pacman",
     "package": "actionlint",
     "source": "https://github.com/rhysd/actionlint",
-    "notes": "GitHub Actions workflow linter from Homebrew core.",
+    "notes": "GitHub Actions workflow linter; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "ruff",
     "name": "ruff",
-    "method": "brew",
+    "method": "pacman",
     "package": "ruff",
     "source": "https://github.com/astral-sh/ruff",
-    "notes": "Python linter and formatter from Homebrew core.",
+    "notes": "Python linter and formatter; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "shellcheck",
     "name": "shellcheck",
-    "method": "brew",
+    "method": "pacman",
     "package": "shellcheck",
     "source": "https://github.com/koalaman/shellcheck",
-    "notes": "Shell script static analyzer from Homebrew core.",
+    "notes": "Shell script static analyzer; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "shfmt",
     "name": "shfmt",
-    "method": "brew",
+    "method": "pacman",
     "package": "shfmt",
     "source": "https://github.com/mvdan/sh",
-    "notes": "Shell formatter from Homebrew core.",
+    "notes": "Shell formatter; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "typos",
     "name": "typos",
-    "method": "brew",
-    "package": "typos-cli",
+    "method": "pacman",
+    "package": "typos",
     "source": "https://github.com/crate-ci/typos",
-    "notes": "Source-code spell checker; Homebrew formula is named typos-cli and installs typos.",
+    "notes": "Source-code spell checker; Arch extra repo package is named typos.",
     "aliases": ["typos-cli"],
     "third_party": false
   },
   {
     "id": "mise",
     "name": "mise",
-    "method": "brew",
+    "method": "pacman",
     "package": "mise",
     "source": "https://github.com/jdx/mise",
-    "notes": "Polyglot tool-version manager from Homebrew core.",
+    "notes": "Polyglot tool-version manager; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "uv",
     "name": "uv",
-    "method": "brew",
+    "method": "pacman",
     "package": "uv",
     "source": "https://github.com/astral-sh/uv",
-    "notes": "Python package and project manager from Homebrew core.",
+    "notes": "Python package and project manager; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "rust",
     "name": "Rust",
-    "method": "brew",
+    "method": "pacman",
     "package": "rust",
     "source": "https://github.com/rust-lang/rust",
-    "notes": "Official Homebrew core formula providing rustc, cargo, and the bundled rustfmt/clippy tools. This is a single stable toolchain, not rustup; link it under rustup with `rustup toolchain link system \"$(brew --prefix rust)\"` or install rustup separately for toolchain channels and cross targets.",
+    "notes": "Arch extra repo formula providing rustc, cargo, and the bundled rustfmt/clippy tools. This is a single stable toolchain, not rustup; link it under rustup with `rustup toolchain link system /usr` or install rustup separately for toolchain channels and cross targets.",
     "third_party": false
   },
   {
     "id": "xh",
     "name": "xh",
-    "method": "brew",
+    "method": "pacman",
     "package": "xh",
     "source": "https://github.com/ducaale/xh",
-    "notes": "Friendly HTTPie-like HTTP client from Homebrew core.",
+    "notes": "Friendly HTTPie-like HTTP client; Arch extra repo.",
     "third_party": false
   },
   {
     "id": "mkcert",
     "name": "mkcert",
-    "method": "brew",
+    "method": "pacman",
     "package": "mkcert",
     "source": "https://github.com/FiloSottile/mkcert",
-    "notes": "Local development CA tool from Homebrew core. Running mkcert -install changes the local trust store and is never done automatically by this setup.",
+    "notes": "Local development CA tool; Arch extra repo. Running mkcert -install changes the local trust store and is never done automatically by this setup.",
     "third_party": false
   },
   {
     "id": "pnpm",
     "name": "pnpm",
-    "method": "brew",
+    "method": "pacman",
     "package": "pnpm",
     "source": "https://github.com/pnpm/pnpm",
-    "notes": "Fast, disk-space-efficient JS package manager from Homebrew core. The Homebrew formula conflicts with Homebrew's separate corepack formula, which this catalog does not install.",
+    "notes": "Fast, disk-space-efficient JS package manager; Arch extra repo.",
     "third_party": false
   },
   {
@@ -244,10 +314,10 @@
   {
     "id": "chezmoi",
     "name": "chezmoi",
-    "method": "brew",
+    "method": "pacman",
     "package": "chezmoi",
     "source": "https://github.com/twpayne/chezmoi",
-    "notes": "Dotfile manager from Homebrew core.",
+    "notes": "Dotfile manager; Arch extra repo.",
     "third_party": false
   },
   {
@@ -272,42 +342,32 @@
     "third_party": false
   },
   {
-    "id": "drawio",
-    "name": "draw.io",
-    "method": "flatpak",
-    "package": "com.jgraph.drawio.desktop",
-    "source": "https://github.com/jgraph/drawio-desktop",
-    "notes": "Linux desktop application published on Flathub.",
-    "aliases": ["drawio"],
-    "third_party": true
-  },
-  {
     "id": "imagemagick",
     "name": "imagemagick",
-    "method": "brew",
+    "method": "pacman",
     "package": "imagemagick",
     "source": "https://imagemagick.org/",
-    "notes": "Image manipulation tools from Homebrew core.",
+    "notes": "Image manipulation tools; Arch extra repo.",
     "aliases": ["ImageMagick"],
     "third_party": false
   },
   {
     "id": "oxipng",
     "name": "oxiping",
-    "method": "brew",
+    "method": "pacman",
     "package": "oxipng",
     "source": "https://github.com/shssoichiro/oxipng",
-    "notes": "The requested oxiping spelling resolves to oxipng, the multithreaded PNG optimizer in Homebrew core.",
+    "notes": "The requested oxiping spelling resolves to oxipng, the multithreaded PNG optimizer in Arch's extra repo.",
     "aliases": ["oxipng"],
     "third_party": false
   },
   {
     "id": "jpegoptim",
     "name": "jpegoptim",
-    "method": "brew",
+    "method": "pacman",
     "package": "jpegoptim",
     "source": "https://github.com/tjko/jpegoptim",
-    "notes": "JPEG optimizer from Homebrew core.",
+    "notes": "JPEG optimizer; Arch extra repo.",
     "third_party": false
   },
   {
@@ -340,11 +400,11 @@
   {
     "id": "chamber",
     "name": "chamber",
-    "method": "brew",
+    "method": "aur",
     "package": "chamber",
     "source": "https://github.com/segmentio/chamber",
-    "notes": "AWS SSM Parameter Store secrets CLI from Homebrew core.",
-    "third_party": false
+    "notes": "AWS SSM Parameter Store secrets CLI; AUR package chamber, not orphaned and unflagged for being out of date.",
+    "third_party": true
   },
   {
     "id": "kitty",
@@ -381,111 +441,204 @@
     "third_party": false
   },
   {
-    "id": "bruno",
-    "name": "Bruno",
-    "method": "archive",
-    "package": "bruno",
-    "source": "https://docs.usebruno.com/get-started/bruno-basics/download",
-    "notes": "Official pinned Debian desktop payloads for x86_64 and aarch64, extracted user-locally without maintainer scripts or host writes; unlike the publisher-documented Flatpak, which currently supports only x86_64, the native payload uses host libraries and can access local collections and host tooling.",
-    "version": "4.2.1",
-    "artifacts": {
-      "x86_64": {
-        "url": "https://github.com/usebruno/bruno/releases/download/v4.2.1/bruno_4.2.1_amd64_linux.deb",
-        "sha256": "7c36f0d7f15899bb48ab298d362da2741edc392c702faf13dd96ee12afd47a88",
-        "format": "deb"
-      },
-      "aarch64": {
-        "url": "https://github.com/usebruno/bruno/releases/download/v4.2.1/bruno_4.2.1_arm64_linux.deb",
-        "sha256": "ea55359c8cd4e48d20cae7c5f01ed3b6e1c6f242d1d8900c8eea2b64510c4893",
-        "format": "deb"
-      }
-    },
-    "commands": {
-      "bruno": "opt/Bruno/bruno"
-    },
+    "id": "posting",
+    "name": "Posting",
+    "method": "uv",
+    "package": "posting",
+    "source": "https://github.com/darrenburns/posting",
+    "notes": "Terminal HTTP client (Postman/Insomnia-like) built with Textual; requests are stored as plain YAML files. Installed as a uv tool, so it needs no desktop portal, Electron sandbox, or GUI launcher.",
+    "version": "2.11.1",
     "third_party": true
   },
   {
     "id": "gitlogue",
     "name": "gitlogue",
-    "method": "brew",
+    "method": "pacman",
     "package": "gitlogue",
     "source": "https://github.com/unhappychoice/gitlogue",
-    "notes": "Animated Git history replay; Homebrew core provides Linux bottles for x86_64 and arm64. Requires Git and a repository with commit history.",
+    "notes": "Animated Git history replay; Arch extra repo. Requires Git and a repository with commit history.",
     "third_party": false
   },
   {
     "id": "visidata",
     "name": "VisiData",
-    "method": "brew",
+    "method": "pacman",
     "package": "visidata",
     "source": "https://github.com/saulpw/visidata",
-    "notes": "Terminal tabular-data explorer, exposed as vd and visidata. Homebrew core provides an architecture-independent bottle and manages its Python environment; formats such as XLSX and Parquet need optional dependencies not provisioned by setup.",
+    "notes": "Terminal tabular-data explorer, exposed as vd and visidata. Arch extra repo provides the package; formats such as XLSX and Parquet need optional dependencies not provisioned by setup.",
     "aliases": ["vd"],
+    "third_party": false
+  },
+  {
+    "id": "zellij",
+    "name": "Zellij",
+    "method": "pacman",
+    "package": "zellij",
+    "source": "https://github.com/zellij-org/zellij",
+    "notes": "Terminal multiplexer with persistent, detachable sessions; Arch extra repo.",
+    "third_party": false
+  },
+  {
+    "id": "aerc",
+    "name": "aerc",
+    "method": "pacman",
+    "package": "aerc",
+    "source": "https://aerc-mail.org/",
+    "notes": "Terminal email client (IMAP/SMTP/Maildir, PGP); Arch extra repo. Accounts, mail, and PGP keys remain yours to configure; does not import Thunderbird's accounts or provide calendar support.",
+    "third_party": false
+  },
+  {
+    "id": "ncdu",
+    "name": "ncdu",
+    "method": "pacman",
+    "package": "ncdu",
+    "source": "https://dev.yorhel.nl/ncdu",
+    "notes": "Interactive disk usage analyzer; Arch extra repo. Complements duf (filesystem-level usage) by showing which directories consume space.",
+    "third_party": false
+  },
+  {
+    "id": "lnav",
+    "name": "lnav",
+    "method": "pacman",
+    "package": "lnav",
+    "source": "https://lnav.org/",
+    "notes": "Curses log file navigator with SQL-style querying across log files; Arch extra repo.",
+    "third_party": false
+  },
+  {
+    "id": "jless",
+    "name": "jless",
+    "method": "pacman",
+    "package": "jless",
+    "source": "https://github.com/PaulJuliusMartinez/jless",
+    "notes": "Interactive JSON viewer; Arch extra repo. Complements jq (which processes JSON) for browsing it.",
+    "third_party": false
+  },
+  {
+    "id": "bandwhich",
+    "name": "bandwhich",
+    "method": "pacman",
+    "package": "bandwhich",
+    "source": "https://github.com/imsnif/bandwhich",
+    "notes": "Terminal bandwidth monitor by process/connection; Arch extra repo. Reading network sockets may require running it with elevated privileges depending on kernel configuration; setup never does this for you.",
+    "third_party": false
+  },
+  {
+    "id": "procs",
+    "name": "procs",
+    "method": "pacman",
+    "package": "procs",
+    "source": "https://github.com/dalance/procs",
+    "notes": "Modern process viewer; Arch extra repo. Does not replace ps, which this setup leaves untouched.",
+    "third_party": false
+  },
+  {
+    "id": "duf",
+    "name": "duf",
+    "method": "pacman",
+    "package": "duf",
+    "source": "https://github.com/muesli/duf",
+    "notes": "Disk usage/free utility with a readable table layout; Arch extra repo. Does not replace df, which this setup leaves untouched.",
     "third_party": false
   },
   {
     "id": "dnsglobe",
     "name": "dnsglobe",
-    "method": "brew",
+    "method": "aur",
     "package": "dnsglobe",
     "source": "https://github.com/514-labs/dnsglobe",
-    "notes": "DNS propagation TUI; Homebrew core provides Linux bottles for x86_64 and arm64 without an extra tap. Requires outbound access to public DNS resolvers; no firewall or capability changes are applied.",
-    "third_party": false
+    "notes": "DNS propagation TUI; AUR package dnsglobe, actively maintained. Requires outbound access to public DNS resolvers; no firewall or capability changes are applied.",
+    "third_party": true
   },
   {
     "id": "oxker",
     "name": "oxker",
-    "method": "brew",
+    "method": "aur",
     "package": "oxker",
     "source": "https://github.com/mrjackwills/oxker",
-    "notes": "Docker container TUI; Homebrew core provides Linux bottles for x86_64 and arm64. Requires access to an existing Docker daemon, which can be root-equivalent; setup does not change groups, sockets, services, or contexts.",
-    "third_party": false
+    "notes": "Docker container TUI; AUR package oxker, actively maintained. Requires access to an existing Docker daemon, which can be root-equivalent; setup does not change groups, sockets, services, or contexts.",
+    "third_party": true
   },
   {
     "id": "llmfit",
     "name": "llmfit",
-    "method": "brew",
+    "method": "pacman",
     "package": "llmfit",
     "source": "https://github.com/AlexsJones/llmfit",
-    "notes": "Hardware-aware LLM recommendations; Homebrew core provides Linux bottles for x86_64 and arm64. GPU detection depends on host drivers and probes; setup does not download models or start services.",
+    "notes": "Hardware-aware LLM recommendations; Arch extra repo. GPU detection depends on host drivers and probes; setup does not download models or start services.",
     "third_party": false
   },
   {
     "id": "croc",
     "name": "croc",
-    "method": "brew",
+    "method": "pacman",
     "package": "croc",
     "source": "https://github.com/schollz/croc",
-    "notes": "Encrypted file transfer; Homebrew core provides Linux bottles for x86_64 and arm64. Transfers require network access and can use public relays; protect transfer codes. No relay or automatic transfers are configured.",
+    "notes": "Encrypted file transfer; Arch extra repo. Transfers require network access and can use public relays; protect transfer codes. No relay or automatic transfers are configured.",
     "third_party": false
   },
   {
     "id": "grex",
     "name": "grex",
-    "method": "brew",
+    "method": "pacman",
     "package": "grex",
     "source": "https://github.com/pemistahl/grex",
-    "notes": "Generates regular expressions from examples; Homebrew core provides Linux bottles for x86_64 and arm64. Review generated expressions for unintended matches and target-engine compatibility.",
+    "notes": "Generates regular expressions from examples; Arch extra repo. Review generated expressions for unintended matches and target-engine compatibility.",
     "third_party": false
   },
   {
     "id": "kondo",
     "name": "kondo",
-    "method": "brew",
+    "method": "pacman",
     "package": "kondo",
     "source": "https://github.com/tbillington/kondo",
-    "notes": "CLI for deleting project dependencies and build artifacts; Homebrew core provides Linux bottles for x86_64 and arm64. Cleanup is destructive and must be invoked explicitly by the user; setup never runs it or installs kondo-ui.",
+    "notes": "CLI for deleting project dependencies and build artifacts; Arch extra repo. Cleanup is destructive and must be invoked explicitly by the user; setup never runs it or installs kondo-ui.",
     "third_party": false
   },
   {
     "id": "worktrunk",
     "name": "Worktrunk",
-    "method": "brew",
+    "method": "pacman",
     "package": "worktrunk",
     "source": "https://github.com/max-sixty/worktrunk",
-    "notes": "Git worktree manager exposed as wt; Homebrew core provides Linux bottles for x86_64 and arm64. Requires Git and conflicts with wiredtiger's wt executable. Shell integration, project hooks, agent plugins, and LLM providers are not configured.",
+    "notes": "Git worktree manager exposed as wt; Arch extra repo. Requires Git and conflicts with wiredtiger's wt executable. Shell integration, project hooks, agent plugins, and LLM providers are not configured.",
     "aliases": ["wt"],
     "third_party": false
+  },
+  {
+    "id": "atuin",
+    "name": "atuin",
+    "method": "pacman",
+    "package": "atuin",
+    "source": "https://github.com/atuinsh/atuin",
+    "notes": "Shell history sync and search; Arch extra repo. `atuin register`/`atuin login` to sync across machines is a manual, credential-bearing step this setup never runs.",
+    "third_party": false
+  },
+  {
+    "id": "glow",
+    "name": "glow",
+    "method": "pacman",
+    "package": "glow",
+    "source": "https://github.com/charmbracelet/glow",
+    "notes": "Terminal Markdown renderer; Arch extra repo.",
+    "third_party": false
+  },
+  {
+    "id": "d2",
+    "name": "d2",
+    "method": "aur",
+    "package": "d2-bin",
+    "source": "https://github.com/terrastruct/d2",
+    "notes": "Declarative diagram scripting language; no official Arch package, AUR d2-bin is an actively maintained prebuilt binary.",
+    "third_party": true
+  },
+  {
+    "id": "gcalcli",
+    "name": "gcalcli",
+    "method": "aur",
+    "package": "gcalcli",
+    "source": "https://github.com/insanum/gcalcli",
+    "notes": "Google Calendar command-line interface; no official Arch package, AUR gcalcli is actively maintained. First run requires your own Google OAuth setup; no credentials are configured by this setup.",
+    "third_party": true
   }
 ]

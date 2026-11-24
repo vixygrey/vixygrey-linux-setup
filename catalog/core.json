@@ -18,31 +18,67 @@
     "third_party": true
   },
   {
-    "id": "google-chrome",
-    "name": "google chrome",
-    "method": "flatpak",
-    "package": "com.google.Chrome",
-    "source": "https://flathub.org/apps/com.google.Chrome",
-    "notes": "Flathub package for Google's proprietary Chrome build; this is a vendor/noncore application.",
+    "id": "obsidian",
+    "name": "Obsidian",
+    "method": "pacman",
+    "package": "obsidian",
+    "source": "https://obsidian.md",
+    "notes": "Arch's official extra repo packages Obsidian directly (not an AppImage wrapper); this is a vendor/noncore application under Obsidian's own proprietary license. Sync, plugins, and vault location remain yours to configure.",
     "third_party": true
   },
   {
+    "id": "syncthing",
+    "name": "Syncthing",
+    "method": "pacman",
+    "package": "syncthing",
+    "source": "https://github.com/syncthing/syncthing",
+    "notes": "Peer-to-peer file sync; Arch extra repo. Pairing devices, folder shares, and the Android companion app are manual steps this setup never performs. The `syncthing.service` user unit is not enabled automatically.",
+    "third_party": false
+  },
+  {
+    "id": "thunderbird",
+    "name": "Thunderbird",
+    "method": "pacman",
+    "package": "thunderbird",
+    "source": "https://www.thunderbird.net/",
+    "notes": "Mail and calendar client; Arch extra repo. Accounts, mail, and calendar sync are yours to configure; none are imported.",
+    "third_party": false
+  },
+  {
+    "id": "satty",
+    "name": "Satty",
+    "method": "pacman",
+    "package": "satty",
+    "source": "https://github.com/gabm/Satty",
+    "notes": "Wayland screenshot annotation tool, typically piped from grim/slurp; Arch extra repo. No screenshot keybinding is configured by this setup.",
+    "third_party": false
+  },
+  {
     "id": "docker-engine",
-    "name": "Docker Engine on Aurora DX",
+    "name": "Docker Engine",
     "method": "system",
     "package": "docker",
-    "source": "https://docs.getaurora.dev/dx/aurora-dx-intro/",
-    "notes": "User-approved replacement for Docker Desktop. Aurora DX supplies Docker Engine. On standard Aurora, run ujust devmode and follow its reboot prompts; then ujust dx-group and log out/in. Group access is root-equivalent. The setup checks the local Engine and never switches images, changes groups, or enables services automatically.",
+    "source": "https://wiki.archlinux.org/title/Docker",
+    "notes": "Manual install: `sudo pacman -S --needed docker docker-compose`, then `sudo systemctl enable --now docker`, then `sudo usermod -aG docker $USER` and log out/in. Docker group access is root-equivalent, so this setup never runs those commands itself. The setup only checks the local Engine and never switches packages, changes groups, or enables services automatically.",
     "aliases": ["docker", "docker engine"],
     "third_party": false
   },
   {
     "id": "micro",
     "name": "micro",
-    "method": "brew",
+    "method": "pacman",
     "package": "micro",
     "source": "https://github.com/micro-editor/micro",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
+    "third_party": false
+  },
+  {
+    "id": "neovim",
+    "name": "Neovim",
+    "method": "pacman",
+    "package": "neovim",
+    "source": "https://github.com/neovim/neovim",
+    "notes": "Arch extra repo. Ryoku ships its own LazyVim-based config under ~/.config/nvim by default; this setup layers omp.nvim and a handful of LazyVim extras on top via the ~/.config/ryoku/user_edits/nvim overlay rather than replacing Ryoku's config.",
     "third_party": false
   },
   {
@@ -97,352 +133,337 @@
     "third_party": true
   },
   {
-    "id": "zed",
-    "name": "Zed",
+    "id": "dracula-sakura-wallpaper",
+    "name": "Dracula Sakura wallpaper",
     "method": "archive",
-    "package": "Zed",
-    "version": "1.24.2",
-    "source": "https://github.com/zed-industries/zed/releases/tag/v1.24.2",
-    "notes": "Official pinned Linux tarballs; computed SHA-256 values match the upstream release digests. zed.app/bin/zed is the CLI and desktop launcher; zed.app/libexec/zed-editor is the GUI executable. Requires a Vulkan 1.3 driver, glibc >= 2.31 on x86_64 or >= 2.35 on aarch64, and XDG FileChooser, OpenURI, and Secret or Secrets portals. Zed Agent terminal sandboxing additionally requires a non-setuid bwrap on PATH and working unprivileged user namespaces; without it Zed may warn and run agent commands unsandboxed. This setup does not install host packages or disable sandboxing.",
+    "package": "dracula-sakura-wallpaper",
+    "version": "1",
+    "source": "https://wallhaven.cc/w/8og89j",
+    "notes": "Wallhaven-hosted artwork (original by Ornimid, via Pixiv) whose dominant colors (#424153, #ea4c88, #993399) match the Dracula-Sakura palette's base/rose/lilac. Applied via `ryogami wallpaper set` so Ryoku's matugen pipeline derives the live desktop palette from it; this is an approximation of theme/palette.json, not an exact static colorscheme. Wallhaven purity rating is sketchy, not SFW.",
     "artifacts": {
       "x86_64": {
-        "url": "https://github.com/zed-industries/zed/releases/download/v1.24.2/zed-linux-x86_64.tar.gz",
-        "sha256": "020a3b02a9f4bb5e0015bad7cc644262bf4ea32cd7ef6f7f4691946d43af0f89"
+        "url": "https://w.wallhaven.cc/full/8o/wallhaven-8og89j.jpg",
+        "sha256": "bbc9270962d4ec908333d2d59d7ab4e95799e63ec5fa275793aeefc43552c019",
+        "format": "raw",
+        "filename": "dracula-sakura.jpg"
       },
       "aarch64": {
-        "url": "https://github.com/zed-industries/zed/releases/download/v1.24.2/zed-linux-aarch64.tar.gz",
-        "sha256": "96a54806a7e286452078bdfc94b63c7bf6b8324ffcb16c5c60ff1fd96743ea45"
+        "url": "https://w.wallhaven.cc/full/8o/wallhaven-8og89j.jpg",
+        "sha256": "bbc9270962d4ec908333d2d59d7ab4e95799e63ec5fa275793aeefc43552c019",
+        "format": "raw",
+        "filename": "dracula-sakura.jpg"
       }
-    },
-    "commands": {
-      "zed": "zed.app/bin/zed",
-      "zed-editor": "zed.app/libexec/zed-editor"
     },
     "third_party": true
   },
   {
     "id": "zoxide",
     "name": "zoxide",
-    "method": "brew",
+    "method": "pacman",
     "package": "zoxide",
     "source": "https://github.com/ajeetdsouza/zoxide",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "fzf",
     "name": "fzf",
-    "method": "brew",
+    "method": "pacman",
     "package": "fzf",
     "source": "https://github.com/junegunn/fzf",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "delta",
     "name": "delta",
-    "method": "brew",
+    "method": "pacman",
     "package": "git-delta",
     "source": "https://github.com/dandavison/delta",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64. The executable is delta.",
+    "notes": "Arch extra repo. The executable is delta.",
     "third_party": false
   },
   {
     "id": "bat",
     "name": "bat",
-    "method": "brew",
+    "method": "pacman",
     "package": "bat",
     "source": "https://github.com/sharkdp/bat",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "eza",
     "name": "eza",
-    "method": "brew",
+    "method": "pacman",
     "package": "eza",
     "source": "https://eza.rocks",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "aria2",
     "name": "aria2",
-    "method": "brew",
+    "method": "pacman",
     "package": "aria2",
     "source": "https://aria2.github.io/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "btop",
     "name": "btop",
-    "method": "brew",
+    "method": "pacman",
     "package": "btop",
     "source": "https://github.com/aristocratos/btop",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "llama-cpp-vulkan",
     "name": "llama.cpp w/ vulkan",
-    "method": "archive",
-    "package": "llama.cpp",
-    "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b11669",
-    "notes": "Official prebuilt Ubuntu Vulkan release; requires a working host Vulkan driver and must pass a runtime smoke check on Aurora. The executables and their shared libraries are under llama-b11669 in the archive. This does not substitute a CPU-only build. The upstream binaries link against OpenSSL 3's soname (libssl.so.3/libcrypto.so.3), which newer Fedora-family bases like Aurora 45 no longer ship by default (replaced by OpenSSL 4); runtime_libs installs Homebrew's keg-only openssl@3 and the generated wrapper points LD_LIBRARY_PATH at it so the prebuilt binaries still run.",
-    "version": "b11669",
-    "runtime_libs": ["openssl@3"],
-    "artifacts": {
-      "x86_64": {
-        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-x64.tar.gz",
-        "sha256": "e8709e5ba6c1b093dea7f3de57f4aba842f9a188fba6b465782d65d6fcfa4d9f"
-      },
-      "aarch64": {
-        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-arm64.tar.gz",
-        "sha256": "d283522e479c0d532e3a04d715dd852ffb2d95925caa6d41ef2ba53a65e46a51"
-      }
-    },
-    "commands": {
-      "llama-cli": "llama-b11669/llama-cli",
-      "llama-server": "llama-b11669/llama-server"
-    },
-    "third_party": true
+    "method": "pacman",
+    "package": "llama-cpp",
+    "source": "https://archlinux.org/packages/extra/x86_64/llama-cpp/",
+    "notes": "Arch's official extra-repo build, compiled natively against Arch's current openssl (no OpenSSL 3/4 soname mismatch the way upstream's prebuilt Ubuntu binaries had). ggml's backend acceleration is split into optional packages; runtime_libs installs ggml-vulkan so llama-cli/llama-server can use the Vulkan backend. Installation must still pass a runtime smoke check: a working host Vulkan driver is required, and this does not substitute a CPU-only build.",
+    "runtime_libs": ["ggml-vulkan"],
+    "third_party": false
   },
   {
     "id": "starship",
     "name": "starship",
-    "method": "brew",
+    "method": "pacman",
     "package": "starship",
     "source": "https://starship.rs/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "direnv",
     "name": "direnv",
-    "method": "brew",
+    "method": "pacman",
     "package": "direnv",
     "source": "https://direnv.net/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "gum",
     "name": "gum",
-    "method": "brew",
+    "method": "pacman",
     "package": "gum",
     "source": "https://github.com/charmbracelet/gum",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "fastfetch",
     "name": "fastfetch",
-    "method": "brew",
+    "method": "pacman",
     "package": "fastfetch",
     "source": "https://github.com/fastfetch-cli/fastfetch",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "vivid",
     "name": "vivid",
-    "method": "brew",
+    "method": "pacman",
     "package": "vivid",
     "source": "https://github.com/sharkdp/vivid",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "zsh-autosuggestions",
     "name": "zsh-authsuggestions",
-    "method": "brew",
+    "method": "pacman",
     "package": "zsh-autosuggestions",
     "source": "https://github.com/zsh-users/zsh-autosuggestions",
-    "notes": "The requested spelling maps to the established Homebrew core formula. It is shell source rather than an architecture-specific binary.",
+    "notes": "The requested spelling maps to the established Arch extra repo package. It is shell source rather than an architecture-specific binary.",
     "aliases": ["zsh-autosuggestions"],
     "third_party": false
   },
   {
     "id": "zsh-syntax-highlighting",
     "name": "zsh-syntax-highlighting",
-    "method": "brew",
+    "method": "pacman",
     "package": "zsh-syntax-highlighting",
     "source": "https://github.com/zsh-users/zsh-syntax-highlighting",
-    "notes": "Homebrew core installs the portable Zsh plugin source on Linux.",
+    "notes": "Arch extra repo installs the portable Zsh plugin source on Linux.",
     "third_party": false
   },
   {
     "id": "ripgrep",
     "name": "ripgrep",
-    "method": "brew",
+    "method": "pacman",
     "package": "ripgrep",
     "source": "https://github.com/BurntSushi/ripgrep",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "fd",
     "name": "fd",
-    "method": "brew",
+    "method": "pacman",
     "package": "fd",
     "source": "https://github.com/sharkdp/fd",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "ast-grep",
     "name": "ast-grep",
-    "method": "brew",
+    "method": "pacman",
     "package": "ast-grep",
     "source": "https://ast-grep.github.io/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "yazi",
     "name": "yazi",
-    "method": "brew",
+    "method": "pacman",
     "package": "yazi",
     "source": "https://yazi-rs.github.io/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "ouch",
     "name": "ouch",
-    "method": "brew",
+    "method": "pacman",
     "package": "ouch",
     "source": "https://github.com/ouch-org/ouch",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "rsync",
     "name": "rsync",
-    "method": "brew",
+    "method": "pacman",
     "package": "rsync",
     "source": "https://rsync.samba.org/",
-    "notes": "Homebrew core publishes current Linux bottles for both x86_64 and arm64 rather than relying on Aurora's host copy.",
+    "notes": "Arch extra repo publishes current packages for both x86_64 and arm64 rather than relying on an older host copy.",
     "third_party": false
   },
   {
     "id": "rclone",
     "name": "rclone",
-    "method": "brew",
+    "method": "pacman",
     "package": "rclone",
     "source": "https://rclone.org/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "watchexec",
     "name": "watchexec",
-    "method": "brew",
+    "method": "pacman",
     "package": "watchexec",
     "source": "https://watchexec.github.io/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "jq",
     "name": "jq",
-    "method": "brew",
+    "method": "pacman",
     "package": "jq",
     "source": "https://jqlang.github.io/jq/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "yq",
     "name": "yq",
-    "method": "brew",
-    "package": "yq",
+    "method": "pacman",
+    "package": "go-yq",
     "source": "https://github.com/mikefarah/yq",
-    "notes": "This is Mike Farah's yq; Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "This is Mike Farah's yq; packaged in Arch extra as go-yq, which conflicts with the unrelated python yq package.",
     "third_party": false
   },
   {
     "id": "git",
     "name": "git",
-    "method": "brew",
+    "method": "pacman",
     "package": "git",
     "source": "https://git-scm.com/",
-    "notes": "Homebrew core publishes current Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo publishes current packages for both x86_64 and arm64.",
     "third_party": false
   },
   {
     "id": "gh",
     "name": "gh",
-    "method": "brew",
-    "package": "gh",
+    "method": "pacman",
+    "package": "github-cli",
     "source": "https://cli.github.com/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo; the package is named github-cli and provides the gh executable.",
     "third_party": false
   },
   {
     "id": "pre-commit",
     "name": "pre-commit",
-    "method": "brew",
+    "method": "pacman",
     "package": "pre-commit",
     "source": "https://pre-commit.com/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "trippy",
     "name": "trippy",
-    "method": "brew",
+    "method": "pacman",
     "package": "trippy",
     "source": "https://trippy.rs/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64; some tracing modes may require Linux network capabilities.",
+    "notes": "Arch extra repo; some tracing modes may require Linux network capabilities.",
     "third_party": false
   },
   {
     "id": "gping",
     "name": "gping",
-    "method": "brew",
+    "method": "pacman",
     "package": "gping",
     "source": "https://github.com/orf/gping",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "doggo",
     "name": "doggo",
-    "method": "brew",
+    "method": "pacman",
     "package": "doggo",
     "source": "https://doggo.mrkaran.dev/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "nmap",
     "name": "nmap",
-    "method": "brew",
+    "method": "pacman",
     "package": "nmap",
     "source": "https://nmap.org/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64; privileged scan types still require appropriate permissions.",
+    "notes": "Arch extra repo; privileged scan types still require appropriate permissions.",
     "third_party": false
   },
   {
     "id": "ssh-audit",
     "name": "ssh-audit",
-    "method": "brew",
+    "method": "pacman",
     "package": "ssh-audit",
     "source": "https://github.com/jtesta/ssh-audit",
-    "notes": "Homebrew core builds this portable Python CLI on Linux; a Linux bottle is not currently published.",
+    "notes": "Arch extra repo packages this portable Python CLI.",
     "third_party": false
   },
   {
     "id": "lazyssh",
     "name": "lazzyssh",
-    "method": "brew",
+    "method": "aur",
     "package": "lazyssh",
     "source": "https://github.com/Adembc/lazyssh",
-    "notes": "The requested spelling maps to Adembc lazyssh, the Homebrew core terminal SSH manager with Linux bottles for both architectures.",
+    "notes": "The requested spelling maps to Adembc lazyssh. AUR package lazyssh, actively maintained, no official repo equivalent exists.",
     "aliases": ["lazyssh"],
-    "third_party": false
+    "third_party": true
   },
   {
     "id": "dbeaver",
@@ -450,61 +471,80 @@
     "method": "flatpak",
     "package": "io.dbeaver.DBeaverCommunity",
     "source": "https://dbeaver.io/download/",
-    "notes": "The publisher lists this Flathub package for Linux. Replaces Harlequin, usql, and the standalone DuckDB CLI for graphical database work. Configure DuckDB and download its JDBC driver inside DBeaver; local datasets must be accessible through Flatpak permissions. Explicit source approval is required.",
+    "notes": "The publisher lists this Flathub package for Linux. Graphical database work; configure DuckDB and download its JDBC driver inside DBeaver. Local datasets must be accessible through Flatpak permissions. Explicit source approval is required.",
+    "third_party": true
+  },
+  {
+    "id": "harlequin",
+    "name": "Harlequin",
+    "method": "uv",
+    "package": "harlequin",
+    "source": "https://harlequin.sh/",
+    "notes": "Terminal SQL IDE with a bundled DuckDB and SQLite adapter; other database adapters are separate PyPI extras not installed by this entry. Upstream itself recommends uv over pip/pipx.",
+    "version": "2.17.0",
     "third_party": true
   },
   {
     "id": "lazydocker",
     "name": "lazydocker",
-    "method": "brew",
+    "method": "pacman",
     "package": "lazydocker",
     "source": "https://github.com/jesseduffield/lazydocker",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64; it requires access to an existing compatible container engine.",
+    "notes": "Arch extra repo; it requires access to an existing compatible container engine.",
+    "third_party": false
+  },
+  {
+    "id": "lazygit",
+    "name": "lazygit",
+    "method": "pacman",
+    "package": "lazygit",
+    "source": "https://github.com/jesseduffield/lazygit",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "dive",
     "name": "dive",
-    "method": "brew",
+    "method": "pacman",
     "package": "dive",
     "source": "https://github.com/wagoodman/dive",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64; engine-backed image sources require a separately configured container engine.",
+    "notes": "Arch extra repo; engine-backed image sources require a separately configured container engine.",
     "third_party": false
   },
   {
     "id": "hadolint",
     "name": "hadolint",
-    "method": "brew",
+    "method": "aur",
     "package": "hadolint",
     "source": "https://github.com/hadolint/hadolint",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
+    "notes": "AUR package hadolint, no official repo equivalent exists.",
+    "third_party": true
   },
   {
     "id": "trivy",
     "name": "trivy",
-    "method": "brew",
+    "method": "pacman",
     "package": "trivy",
     "source": "https://trivy.dev/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   },
   {
     "id": "semgrep",
     "name": "semgrep",
-    "method": "brew",
-    "package": "semgrep",
+    "method": "aur",
+    "package": "semgrep-bin",
     "source": "https://semgrep.dev/",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
-    "third_party": false
+    "notes": "AUR package semgrep-bin, actively maintained, installs upstream prebuilt binaries; no official repo equivalent exists.",
+    "third_party": true
   },
   {
     "id": "cosign",
     "name": "cosign",
-    "method": "brew",
+    "method": "pacman",
     "package": "cosign",
     "source": "https://github.com/sigstore/cosign",
-    "notes": "Homebrew core publishes Linux bottles for both x86_64 and arm64.",
+    "notes": "Arch extra repo.",
     "third_party": false
   }
 ]

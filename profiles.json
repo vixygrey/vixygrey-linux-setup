@@ -1,16 +1,43 @@
 {
   "ai": ["llama-cpp-vulkan", "llmfit"],
-  "base": ["micro", "bat", "eza", "git", "starship", "ripgrep", "fd", "jq", "zoxide", "fzf"],
-  "cloud": ["aws-cli", "granted", "aws-sam-cli", "cfn-lint", "chamber", "dnsglobe"],
+  "base": [
+    "micro",
+    "neovim",
+    "bat",
+    "eza",
+    "git",
+    "starship",
+    "ripgrep",
+    "fd",
+    "jq",
+    "zoxide",
+    "fzf"
+  ],
+  "cloud": [
+    "aws-cli",
+    "granted",
+    "aws-vault",
+    "aws-sam-cli",
+    "cfn-lint",
+    "chamber",
+    "dnsglobe",
+    "kubectl",
+    "helm",
+    "k9s",
+    "opentofu",
+    "stu"
+  ],
   "desktop": [
     "flameshot",
     "ghostwriter",
     "libreoffice",
-    "drawio",
     "bitwarden",
     "dbeaver",
-    "zed",
-    "bruno"
+    "obsidian",
+    "syncthing",
+    "thunderbird",
+    "satty",
+    "dracula-sakura-wallpaper"
   ],
   "developer": [
     "direnv",
@@ -27,15 +54,35 @@
     "ast-grep",
     "gh",
     "delta",
-    "zed",
-    "bruno",
+    "posting",
+    "d2",
     "gitlogue",
+    "lazygit",
     "oxker",
     "grex",
     "kondo",
     "worktrunk",
     "yq"
   ],
-  "security": ["trivy", "semgrep", "gitleaks", "cosign", "checkov", "iamlive", "ssh-audit"],
-  "terminal": ["btop", "fastfetch", "vivid", "yazi", "ouch", "visidata", "croc"]
+  "security": ["trivy", "semgrep", "gitleaks", "cosign", "checkov", "iamlive", "ssh-audit", "age"],
+  "terminal": [
+    "btop",
+    "fastfetch",
+    "vivid",
+    "yazi",
+    "ouch",
+    "visidata",
+    "croc",
+    "atuin",
+    "glow",
+    "zellij",
+    "procs",
+    "duf",
+    "harlequin",
+    "aerc",
+    "ncdu",
+    "lnav",
+    "jless",
+    "bandwhich"
+  ]
 }

@@ -25,7 +25,7 @@ def launchers(entry: dict, home: Path):
                 f'#!/bin/sh\nexec flatpak run {entry["package"]} "$@"\n'.encode(),
                 0o755,
             )
-    if identifier not in {"kitty", "kiro", "zed", "bruno"}:
+    if identifier not in {"kitty", "kiro"}:
         return
     base = home / ".local/share/vixygrey/apps" / identifier / entry["version"]
     if identifier == "kitty":
@@ -35,20 +35,6 @@ def launchers(entry: dict, home: Path):
             "share/icons/hicolor/256x256/apps/kitty.png",
             "System;TerminalEmulator;",
         )
-    elif identifier == "zed":
-        name, command, icon, category = (
-            "Zed",
-            "zed.app/bin/zed",
-            "zed.app/share/icons/hicolor/512x512/apps/zed.png",
-            "Utility;TextEditor;Development;IDE;",
-        )
-    elif identifier == "bruno":
-        name, command, icon, category = (
-            "Bruno",
-            "opt/Bruno/bruno",
-            "usr/share/icons/hicolor/512x512/apps/bruno.png",
-            "Development;",
-        )
     else:
         name, command, icon, category = (
             "Kiro",
@@ -56,16 +42,9 @@ def launchers(entry: dict, home: Path):
             "Kiro/resources/app/resources/linux/code.png",
             "Development;IDE;",
         )
-    arguments = " %U" if identifier in {"zed", "bruno"} else ""
     content = (
         "[Desktop Entry]\nType=Application\n"
-        f"Name={name}\nExec={desktop_quote(str(base / command))}{arguments}\n"
+        f"Name={name}\nExec={desktop_quote(str(base / command))}\n"
         f"Icon={base / icon}\nTerminal=false\nCategories={category}\n"
     )
-    if identifier == "zed":
-        content += (
-            "StartupNotify=true\nMimeType=text/plain;application/x-zerosize;x-scheme-handler/zed;\n"
-        )
-    elif identifier == "bruno":
-        content += "StartupWMClass=Bruno\nMimeType=x-scheme-handler/bruno;\n"
     yield f".local/share/applications/vixygrey-{identifier}.desktop", content.encode(), 0o644

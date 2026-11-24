@@ -2,7 +2,6 @@
 """Validate managed Dracula-Sakura colors without modifying application configuration."""
 
 import argparse
-import configparser
 import json
 import plistlib
 import re
@@ -18,7 +17,6 @@ STARSHIP = CONFIG / "starship.toml"
 BAT = CONFIG / "bat/themes/Dracula-Sakura.tmTheme"
 MICRO = CONFIG / "micro/colorschemes/dracula-sakura.micro"
 BTOP = CONFIG / "btop/themes/dracula-sakura.theme"
-KDE = Path("dotfiles/.local/share/color-schemes/DraculaSakura.colors")
 SURFACES = (
     KITTY,
     KIRO,
@@ -26,7 +24,6 @@ SURFACES = (
     BAT,
     MICRO,
     BTOP,
-    KDE,
     CONFIG / "bat/config",
     CONFIG / "micro/settings.json",
     CONFIG / "btop/btop.conf",
@@ -97,14 +94,6 @@ CORE = {
         "selected_bg": "selection",
         "inactive_fg": "comment",
         "meter_bg": "panel",
-    },
-    KDE: {
-        "Colors:Window.BackgroundNormal": "bg",
-        "Colors:Window.ForegroundNormal": "fg",
-        "Colors:Selection.BackgroundNormal": "selection",
-        "Colors:Selection.ForegroundNormal": "fg",
-        "WM.activeBackground": "panel",
-        "WM.inactiveBackground": "bg",
     },
 }
 SYNTAX = {
@@ -351,38 +340,6 @@ def validate(root):
     btop = line_fields(root / BTOP, re.compile(r'theme\[([^\]]+)\]="([^"]*)"'))
     check(BTOP, btop)
 
-    kde_path = root / KDE
-    parser = configparser.ConfigParser(interpolation=None)
-    parser.optionxform = lambda optionstr: optionstr
-    with kde_path.open(encoding="utf-8") as source:
-        parser.read_file(source)
-    kde = {}
-    for section in parser.sections():
-        for key, value in parser.items(section):
-            if (
-                section.startswith("Colors:")
-                or (
-                    section == "WM"
-                    and ("Background" in key or "Foreground" in key or "Blend" in key)
-                )
-                or (section.startswith("ColorEffects:") and key == "Color")
-            ):
-                chunks = value.split(",")
-                require(
-                    len(chunks) == 3
-                    and all(re.fullmatch(r"\d{1,3}", c) and int(c) <= 255 for c in chunks),
-                    kde_path,
-                    f"{section}.{key}",
-                    f"invalid RGB {value!r}",
-                )
-                kde[f"{section}.{key}"] = "#" + "".join(f"{int(c):02x}" for c in chunks)
-    check(KDE, kde)
-    require(
-        parser.get("General", "ColorScheme", fallback=None) == "DraculaSakura",
-        kde_path,
-        "General.ColorScheme",
-        "wrong theme name",
-    )
     for relative, field, extension in (
         (CONFIG / "bat/config", "--theme", ".tmTheme"),
         (CONFIG / "btop/btop.conf", "color_theme", ".theme"),
@@ -522,7 +479,6 @@ def main():
         json.JSONDecodeError,
         tomllib.TOMLDecodeError,
         plistlib.InvalidFileException,
-        configparser.Error,
     ) as exc:
         print(f"palette validation failed: {exc}", file=sys.stderr)
         return 1

@@ -273,7 +273,7 @@ class CommandSafety(unittest.TestCase):
             self.assertEqual(filtered.returncode, 0, filtered.stderr)
             self.assertLess(len(filtered.stdout), len(unfiltered.stdout))
             self.assertIn("micro [", filtered.stdout)
-            self.assertNotIn("zed [", filtered.stdout)
+            self.assertNotIn("obsidian [", filtered.stdout)
             json_result = subprocess.run(
                 [
                     sys.executable,
@@ -452,7 +452,7 @@ class CommandSafety(unittest.TestCase):
             command = home / ".local/bin/omp"
             command.parent.mkdir(parents=True)
             command.write_text("mine")
-            managed = home / ".config/kitty/kitty.conf"
+            managed = home / ".config/ryoku/user_edits/kitty/kitty.conf"
             managed.parent.mkdir(parents=True)
             managed.write_text("mine")
             before = {
@@ -488,7 +488,8 @@ class CommandSafety(unittest.TestCase):
                 document["apps"], [{"id": "omp", "method": "archive", "state": "stale-receipt"}]
             )
             self.assertIn(
-                {"path": ".config/kitty/kitty.conf", "state": "preserved"}, document["files"]
+                {"path": ".config/ryoku/user_edits/kitty/kitty.conf", "state": "preserved"},
+                document["files"],
             )
             after = {
                 path.relative_to(home): path.read_bytes()
@@ -615,7 +616,7 @@ class CommandSafety(unittest.TestCase):
             self.assertFalse(any(launcher.exists() for launcher in launchers))
             with (
                 patch.dict(os.environ, environment, clear=True),
-                patch.object(setup, "aurora", return_value=True),
+                patch.object(setup, "ryoku_cachyos", return_value=True),
                 patch.object(setup.os, "geteuid", return_value=1000),
                 contextlib.redirect_stdout(io.StringIO()),
             ):
@@ -683,18 +684,22 @@ class CommandSafety(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(list(Path(temporary).iterdir()), [])
 
-    def test_runtime_libs_requires_archive_method_and_valid_formula(self):
+    def test_runtime_libs_requires_archive_or_pacman_method_and_valid_formula(self):
         base = {
             "id": "demo",
             "name": "demo",
-            "method": "brew",
+            "method": "flatpak",
             "package": "demo",
             "source": "https://example.invalid/demo",
             "notes": "",
             "third_party": False,
         }
         with self.assertRaises(SafetyError):
-            setup.validate_catalog([{**base, "runtime_libs": ["openssl@3"]}])
+            setup.validate_catalog([{**base, "runtime_libs": ["openssl-3"]}])
+        pacman_base = {**base, "method": "pacman"}
+        with self.assertRaises(SafetyError):
+            setup.validate_catalog([{**pacman_base, "runtime_libs": ["Not Valid!"]}])
+        setup.validate_catalog([{**pacman_base, "runtime_libs": ["openssl-3"]}])
         architecture = archives.machine_arch()
         archive_base = {
             **base,
@@ -714,25 +719,7 @@ class CommandSafety(unittest.TestCase):
         }
         with self.assertRaises(SafetyError):
             setup.validate_catalog([{**archive_base, "runtime_libs": ["Not Valid!"]}])
-        setup.validate_catalog([{**archive_base, "runtime_libs": ["openssl@3"]}])
-
-    def test_wrapper_exports_ld_library_path_only_when_runtime_libs_declared(self):
-        architecture = archives.machine_arch()
-        entry = {
-            "id": "demo",
-            "method": "archive",
-            "version": "1.0.0",
-            "artifacts": {architecture: {"url": "https://example.invalid/demo.tar.gz"}},
-            "commands": {"demo": "bin/demo"},
-        }
-        plain = archives.wrappers(entry, Path("/home/demo"))
-        self.assertNotIn(b"LD_LIBRARY_PATH", plain[".local/bin/demo"])
-        entry["runtime_libs"] = ["openssl@3"]
-        wrapped = archives.wrappers(entry, Path("/home/demo"))
-        self.assertIn(
-            b'export LD_LIBRARY_PATH="/home/linuxbrew/.linuxbrew/opt/openssl@3/lib',
-            wrapped[".local/bin/demo"],
-        )
+        setup.validate_catalog([{**archive_base, "runtime_libs": ["openssl-3"]}])
 
 
 class PythonHelperStatus(unittest.TestCase):
