@@ -54,13 +54,31 @@
     "third_party": false
   },
   {
-    "id": "docker-engine",
-    "name": "Docker Engine",
-    "method": "system",
-    "package": "docker",
-    "source": "https://wiki.archlinux.org/title/Docker",
-    "notes": "Manual install: `sudo pacman -S --needed docker docker-compose`, then `sudo systemctl enable --now docker`, then `sudo usermod -aG docker $USER` and log out/in. Docker group access is root-equivalent, so this setup never runs those commands itself. The setup only checks the local Engine and never switches packages, changes groups, or enables services automatically.",
+    "id": "podman",
+    "name": "Podman",
+    "method": "pacman",
+    "package": "podman",
+    "source": "https://podman.io/",
+    "notes": "Daemonless, rootless-by-default container engine; Arch extra repo. Unlike Docker Engine, rootless `podman run`/`podman build` need no group membership, systemd service, or privilege escalation, so this installs like any other package. Rootless mode relies on per-user `/etc/subuid`/`/etc/subgid` ranges; modern `useradd`/`systemd-sysusers` allocate these automatically for normal user accounts. The optional Docker-API-compatible socket (`systemctl --user enable --now podman.socket`) is not enabled by this setup; see README for tools that need it.",
     "aliases": ["docker", "docker engine"],
+    "third_party": false
+  },
+  {
+    "id": "podman-docker",
+    "name": "podman-docker",
+    "method": "pacman",
+    "package": "podman-docker",
+    "source": "https://github.com/containers/podman",
+    "notes": "Emulates the `docker` and `docker-compose` CLI as thin wrappers over Podman; Arch extra repo, split from the podman package (pulls in podman as a dependency). Conflicts with the real `docker` package, which is not in this catalog. CLI-argument compatibility only: it does not by itself expose the Docker Engine HTTP API socket that some third-party TUIs expect (see podman's own entry and README).",
+    "third_party": false
+  },
+  {
+    "id": "podman-compose",
+    "name": "podman-compose",
+    "method": "pacman",
+    "package": "podman-compose",
+    "source": "https://github.com/containers/podman-compose",
+    "notes": "Runs docker-compose.yml files against Podman instead of Docker; Arch extra repo.",
     "third_party": false
   },
   {
@@ -490,7 +508,7 @@
     "method": "pacman",
     "package": "lazydocker",
     "source": "https://github.com/jesseduffield/lazydocker",
-    "notes": "Arch extra repo; it requires access to an existing compatible container engine.",
+    "notes": "Arch extra repo; speaks the Docker Engine HTTP API, not Podman's native CLI. Needs `DOCKER_HOST` pointed at Podman's API socket (`systemctl --user enable --now podman.socket`, an unprivileged user service this setup does not enable itself) to manage Podman containers.",
     "third_party": false
   },
   {

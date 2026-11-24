@@ -556,7 +556,7 @@
     "method": "aur",
     "package": "oxker",
     "source": "https://github.com/mrjackwills/oxker",
-    "notes": "Docker container TUI; AUR package oxker, actively maintained. Requires access to an existing Docker daemon, which can be root-equivalent; setup does not change groups, sockets, services, or contexts.",
+    "notes": "Container TUI; AUR package oxker, actively maintained. Speaks the Docker Engine HTTP API like lazydocker, so it needs `DOCKER_HOST` pointed at Podman's API socket (`systemctl --user enable --now podman.socket`, unprivileged, not enabled by this setup) to manage Podman containers.",
     "third_party": true
   },
   {

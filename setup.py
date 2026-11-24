@@ -33,7 +33,6 @@ METHODS = {
     "archive",
     "font",
     "python-helper",
-    "system",
 }
 FLATHUB = "https://dl.flathub.org/repo/"
 WALLPAPER_ID = "dracula-sakura-wallpaper"
@@ -496,30 +495,6 @@ class Setup:
         method, package = entry["method"], entry["package"]
         if method == "python-helper":
             return self.helper_installed(entry)
-        if method == "system":
-            docker = Path("/usr/bin/docker")
-            if (
-                package != "docker"
-                or not docker.is_file()
-                or not Path("/usr/bin/dockerd").is_file()
-            ):
-                return False
-            result = subprocess.run(
-                [
-                    str(docker),
-                    "--host",
-                    "unix:///var/run/docker.sock",
-                    "info",
-                    "--format",
-                    "{{.ServerVersion}}",
-                ],
-                text=True,
-                capture_output=True,
-                env=self.env,
-                check=False,
-                timeout=15,
-            )
-            return result.returncode == 0 and bool(result.stdout.strip())
         if method in {"pacman", "aur"}:
             if package not in self.pacman_installed():
                 return False
@@ -675,8 +650,6 @@ class Setup:
                 return {"id": identifier, "method": method, "state": "command-conflict"}
         if entry.get("third_party") and identifier not in self.trust:
             return {"id": identifier, "method": method, "state": "blocked"}
-        if method == "system":
-            return {"id": identifier, "method": method, "state": "blocked"}
         managers = {
             "pacman": "pacman",
             "aur": "yay",
@@ -744,13 +717,6 @@ class Setup:
             ("flatpak", "flatpak ships by default on Ryoku; reinstall it if missing."),
         ):
             check(command, "ready" if self.executable(command) else "blocked", remediation)
-        docker = {"method": "system", "package": "docker"}
-        check(
-            "docker",
-            "ready" if self.is_installed(docker) else "blocked",
-            "Install docker and docker-compose via pacman, enable and start docker.service, "
-            "add yourself to the docker group, then log out and back in.",
-        )
         check(
             "theme",
             "ready" if self.executable("ryogami") else "blocked",
@@ -786,12 +752,6 @@ class Setup:
 
     def plan_app(self, entry: dict):
         identifier, method, package = entry["id"], entry["method"], entry["package"]
-        if method == "system":
-            if self.is_installed(entry):
-                print(f"AVAILABLE {identifier}: local Docker Engine is accessible")
-            else:
-                self.blocks.append(f"{identifier}: {entry['notes']} [{entry['source']}]")
-            return
         if method in {"archive", "font"}:
             archives.artifact_for(entry)
         details = self.font_details(entry) if method == "font" else {}
