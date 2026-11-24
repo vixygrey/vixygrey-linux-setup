@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preview-first Aurora personal setup. Python 3.11+, standard library only."""
+"""Preview-first Ryoku (CachyOS) personal setup. Python 3.11+, standard library only."""
 
 from __future__ import annotations
 
@@ -25,7 +25,8 @@ from safe_files import Files, SafetyError, digest, relative_path
 
 ROOT = Path(__file__).resolve().parent
 METHODS = {
-    "brew",
+    "pacman",
+    "aur",
     "flatpak",
     "npm",
     "uv",
@@ -35,9 +36,25 @@ METHODS = {
     "system",
 }
 FLATHUB = "https://dl.flathub.org/repo/"
+WALLPAPER_ID = "dracula-sakura-wallpaper"
 PROFILE_PATH = ROOT / "profiles.json"
 DIFF_FILE_LIMIT = 64 * 1024
 DIFF_OUTPUT_LIMIT = 256 * 1024
+
+
+# Top-level ~/.config entries Ryoku's own package ships a base config for
+# (docs/structure.md's ryoku/apps/ listing). ryoku materialize/update re-lays
+# those from its own package on every update, so only its documented
+# ~/.config/ryoku/user_edits/... overlay survives; writing the literal path
+# directly would be silently reverted on the next `ryoku update`.
+RYOKU_OWNED_CONFIG = {"kitty", "fastfetch", "yazi", "starship.toml", "nvim"}
+
+
+def theme_destination(relative: str) -> str:
+    parts = Path(relative).parts
+    if len(parts) >= 2 and parts[0] == ".config" and parts[1] in RYOKU_OWNED_CONFIG:
+        return str(Path(".config/ryoku/user_edits", *parts[1:]))
+    return relative
 
 
 def dotfile_sources():
@@ -47,7 +64,8 @@ def dotfile_sources():
         if source.is_symlink():
             raise SafetyError(f"Repository dotfile must not be a symlink: {str(source)!r}")
         if source.is_file():
-            yield str(source.relative_to(ROOT / "dotfiles")), source
+            relative = str(source.relative_to(ROOT / "dotfiles"))
+            yield theme_destination(relative), source
 
 
 def diff_text(data: bytes, name: str) -> str:
@@ -203,11 +221,13 @@ def validate_catalog(entries: list[dict]) -> None:
                 commands[architecture].add(command)
                 relative_path(member)
         for formula in entry.get("runtime_libs", []):
-            if entry["method"] != "archive" or not re.fullmatch(r"[a-z0-9][a-z0-9@+._-]*", formula):
+            if entry["method"] not in {"archive", "pacman"} or not re.fullmatch(
+                r"[a-z0-9][a-z0-9@+._-]*", formula
+            ):
                 raise SafetyError(f"{identifier}: invalid runtime_libs entry")
 
 
-def aurora() -> bool:
+def ryoku_cachyos() -> bool:
     if sys.platform != "linux":
         return False
     release = {}
@@ -215,14 +235,9 @@ def aurora() -> bool:
         if "=" in line and not line.startswith("#"):
             key, value = line.split("=", 1)
             release[key] = value.strip("\"'")
-    values = [release.get(key, "").lower() for key in ("ID", "IMAGE_ID", "VARIANT_ID", "NAME")]
-    if any(re.search(r"(^|[/ :_-])aurora($|[/ :_-])", value) for value in values):
-        return True
-    image = Path("/usr/share/ublue-os/image-info.json")
-    if image.is_file():
-        info = json.loads(image.read_text())
-        return str(info.get("image-name", "")).startswith("aurora")
-    return False
+    if release.get("ID", "").lower() != "cachyos":
+        return False
+    return Path("/usr/bin/ryoku").is_file()
 
 
 def tokens(values) -> set[str]:
@@ -308,7 +323,7 @@ def plan_document(setup, value: dict) -> dict:
         "intent": value,
         "preflight": {
             "architecture": archives.machine_arch(),
-            "is_aurora": aurora(),
+            "is_ryoku_cachyos": ryoku_cachyos(),
             "platform": sys.platform,
         },
         "preserved_conflicts": setup.preserved,
@@ -416,13 +431,9 @@ class Setup:
         paths = [
             f"{home}/.local/bin",
             f"{home}/.local/share/vixygrey/npm/bin",
-            "/home/linuxbrew/.linuxbrew/bin",
-            "/home/linuxbrew/.linuxbrew/sbin",
         ]
         self.env["PATH"] = os.pathsep.join(paths + [self.env.get("PATH", "")])
         self.env.update(
-            HOMEBREW_NO_AUTO_UPDATE="1",
-            HOMEBREW_NO_ANALYTICS="1",
             UV_TOOL_BIN_DIR=f"{home}/.local/bin",
             npm_config_update_notifier="false",
         )
@@ -431,7 +442,7 @@ class Setup:
         self.preserved: list[str] = []
         self.dependencies = set()
         self.trust = tokens(args.trust)
-        self.brew_packages = None
+        self.pacman_packages = None
         self.manager_packages = {}
         self.selected: list[dict] = []
 
@@ -454,25 +465,25 @@ class Setup:
                 f"Command failed with exit {result.returncode}; stopped without marking it installed"
             )
 
-    def brew_installed(self) -> set[str]:
-        if self.brew_packages is None:
-            self.brew_packages = set()
-            if self.executable("brew"):
-                result = self.run(["brew", "list", "--formula", "--full-name"], capture=True)
+    def pacman_installed(self) -> set[str]:
+        if self.pacman_packages is None:
+            self.pacman_packages = set()
+            if self.executable("pacman"):
+                result = self.run(["pacman", "-Qq"], capture=True)
                 if result.returncode:
-                    raise SafetyError("Cannot read installed Homebrew formulas")
-                self.brew_packages = set(result.stdout.splitlines())
-        return self.brew_packages
+                    raise SafetyError("Cannot read installed pacman packages")
+                self.pacman_packages = set(result.stdout.splitlines())
+        return self.pacman_packages
 
     def dependency(self, formula: str):
         if not re.fullmatch(r"[a-z0-9][a-z0-9@+._-]*", formula):
-            raise SafetyError(f"Implicit prerequisites must be Homebrew core formulas: {formula}")
-        if formula in self.dependencies or formula in self.brew_installed():
+            raise SafetyError(f"Implicit prerequisites must be pacman package names: {formula}")
+        if formula in self.dependencies or formula in self.pacman_installed():
             return
         self.dependencies.add(formula)
-        if not self.executable("brew"):
+        if not self.executable("pacman"):
             self.blocks.append(
-                f"Homebrew required for {formula}; use Aurora’s supported Homebrew provisioning"
+                f"pacman required for {formula}; apply requires a Ryoku CachyOS host"
             )
         else:
             self.steps.append(("dependency", formula))
@@ -509,8 +520,15 @@ class Setup:
                 timeout=15,
             )
             return result.returncode == 0 and bool(result.stdout.strip())
-        if method == "brew":
-            return package in self.brew_installed()
+        if method in {"pacman", "aur"}:
+            if package not in self.pacman_installed():
+                return False
+            if entry["id"] == "llama-cpp-vulkan":
+                # Package presence alone doesn't prove the GPU backend works; pacman has no
+                # receipt to invalidate the way archive installs do, so track verification
+                # with our own marker, written only after a passing install_app() smoke check.
+                return self.files.target(".local/state/vixygrey-setup/vulkan-verified").is_file()
+            return True
         if method == "flatpak":
             if not self.executable("flatpak"):
                 return False
@@ -609,6 +627,11 @@ class Setup:
         receipt["cache_pending"] = False
         archives.save_font_receipt(entry, self.files, receipt)
 
+    def wallpaper_path(self, entry: dict) -> Path:
+        artifact = archives.artifact_for(entry)
+        base = f".local/share/vixygrey/apps/{entry['id']}/{entry['version']}"
+        return self.files.target(f"{base}/{artifact['filename']}")
+
     def app_status(self, entry: dict) -> dict:
         identifier, method = entry["id"], entry["method"]
         if method in {"archive", "font"}:
@@ -655,7 +678,8 @@ class Setup:
         if method == "system":
             return {"id": identifier, "method": method, "state": "blocked"}
         managers = {
-            "brew": "brew",
+            "pacman": "pacman",
+            "aur": "yay",
             "flatpak": "flatpak",
             "npm": "npm",
             "uv": "uv",
@@ -700,35 +724,37 @@ class Setup:
             checks.append({"id": identifier, "remediation": remediation, "state": state, **values})
 
         check(
-            "aurora",
-            "ready" if aurora() else "blocked",
-            "Run --apply only from Aurora Linux as a non-root user.",
+            "ryoku_cachyos",
+            "ready" if ryoku_cachyos() else "blocked",
+            "Run --apply only from Ryoku (CachyOS edition) as a non-root user.",
         )
         architecture = archives.machine_arch()
         check(
             "architecture",
-            "ready" if architecture in {"x86_64", "aarch64"} else "blocked",
-            "Use a supported x86_64 or aarch64 Aurora machine.",
+            "ready" if architecture == "x86_64" else "blocked",
+            "Use a supported x86_64 machine; Ryoku 1.0 ships x86_64 only.",
             value=architecture,
         )
         for command, remediation in (
-            ("brew", "Complete Aurora's supported Homebrew provisioning."),
-            ("flatpak", "Install or enable Flatpak through normal Aurora provisioning."),
+            ("pacman", "pacman is required and ships with every Arch/CachyOS base install."),
+            (
+                "yay",
+                "yay is required for AUR entries; Ryoku's CachyOS edition ships it by default.",
+            ),
+            ("flatpak", "flatpak ships by default on Ryoku; reinstall it if missing."),
         ):
             check(command, "ready" if self.executable(command) else "blocked", remediation)
         docker = {"method": "system", "package": "docker"}
         check(
             "docker",
             "ready" if self.is_installed(docker) else "blocked",
-            "Provision Aurora DX, run ujust dx-group, then log out and back in.",
-        )
-        plasma = "KDE" in os.environ.get("XDG_CURRENT_DESKTOP", "").upper() and self.executable(
-            "plasma-apply-colorscheme"
+            "Install docker and docker-compose via pacman, enable and start docker.service, "
+            "add yourself to the docker group, then log out and back in.",
         )
         check(
-            "plasma",
-            "ready" if plasma else "blocked",
-            "Use an active KDE Plasma session with plasma-apply-colorscheme available.",
+            "theme",
+            "ready" if self.executable("ryogami") else "blocked",
+            "Use an active Ryoku desktop session with ryogami (the wallpaper daemon) available.",
         )
         llama = self.executable("llama-cli")
         if llama:
@@ -739,13 +765,13 @@ class Setup:
             check(
                 "vulkan",
                 "ready" if vulkan else "blocked",
-                "Install the Vulkan llama.cpp selection and confirm a working Aurora GPU driver.",
+                "Install the Vulkan llama.cpp selection and confirm a working Ryoku/CachyOS GPU driver.",
             )
         else:
             check(
                 "vulkan",
                 "missing",
-                "Install the Vulkan llama.cpp selection and confirm a working Aurora GPU driver.",
+                "Install the Vulkan llama.cpp selection and confirm a working Ryoku/CachyOS GPU driver.",
             )
         for identifier, path in (("root-space", Path("/")), ("home-space", self.files.home)):
             usage = shutil.disk_usage(path)
@@ -786,7 +812,7 @@ class Setup:
                 return
             print(f"INSTALLED {identifier}")
             return
-        if method == "brew" and package in self.dependencies:
+        if method == "pacman" and package in self.dependencies:
             print(f"PLANNED {identifier} as a prerequisite")
             return
         if entry.get("third_party", False) and identifier not in self.trust:
@@ -804,9 +830,13 @@ class Setup:
                     raise SafetyError(f"Not a directory: {destination}")
             except SafetyError as error:
                 self.blocks.append(f"{identifier}: {error}")
-        if method == "brew" and not self.executable("brew"):
+        if method == "pacman" and not self.executable("pacman"):
             self.blocks.append(
-                f"{identifier}: Homebrew is missing; this tool never downloads and executes its installer"
+                f"{identifier}: pacman is unavailable in preview; apply requires a Ryoku CachyOS host"
+            )
+        if method == "aur" and not self.executable("yay"):
+            self.blocks.append(
+                f"{identifier}: yay is unavailable in preview; apply requires a Ryoku CachyOS host"
             )
         if method == "flatpak":
             if not self.executable("flatpak"):
@@ -830,10 +860,10 @@ class Setup:
                             "User flathub remote has an unexpected URL; refusing to use or replace it"
                         )
         if method == "npm":
-            self.manager("npm", "node")
+            self.manager("npm", "npm")
         if method in {"uv", "python-helper"}:
             self.manager("uv", "uv")
-        if method == "archive":
+        if method in {"archive", "pacman"}:
             for formula in entry.get("runtime_libs", []):
                 self.dependency(formula)
         if method == "python-helper":
@@ -854,7 +884,7 @@ class Setup:
                     self.blocks.append(
                         f"{identifier}: command path {name} conflicts; explicitly --replace it or skip the app"
                     )
-        if method == "brew":
+        if method == "pacman":
             self.dependencies.add(package)
         self.steps.append(("app", entry))
 
@@ -880,17 +910,19 @@ class Setup:
         if self.executable("bat") or any(entry["id"] == "bat" for entry in self.selected):
             self.steps.append(("bat-cache", None))
         if self.args.desktop:
-            if "KDE" not in os.environ.get(
-                "XDG_CURRENT_DESKTOP", ""
-            ).upper() or not self.executable("plasma-apply-colorscheme"):
+            wallpaper = next(
+                (entry for entry in self.selected if entry["id"] == WALLPAPER_ID), None
+            )
+            if wallpaper is None:
                 self.blocks.append(
-                    "--desktop requires an active KDE Plasma session and plasma-apply-colorscheme"
+                    f"--desktop requires the {WALLPAPER_ID} catalog entry to be selected and trusted"
                 )
-            scheme = ".local/share/color-schemes/DraculaSakura.colors"
-            source = ROOT / "dotfiles" / scheme
-            if self.files.status(scheme, source.read_bytes()) in {"preserve", "protected"}:
-                self.blocks.append("Cannot apply a preserved/conflicting KDE color scheme")
-            self.steps.append(("desktop", None))
+            elif not self.executable("ryogami"):
+                self.blocks.append(
+                    "--desktop requires ryogami (the Ryoku wallpaper daemon) to be available"
+                )
+            else:
+                self.steps.append(("desktop", str(self.wallpaper_path(wallpaper))))
 
     def diff(self, requested: list[str]) -> None:
         names = list(dict.fromkeys(safe_diff_name(name) for name in requested))
@@ -972,8 +1004,10 @@ class Setup:
     def install_app(self, entry: dict):
         method, package = entry["method"], entry["package"]
         version = entry.get("version", "")
-        if method == "brew":
-            self.command(["brew", "install", "--formula", package])
+        if method == "pacman":
+            self.command(["sudo", "pacman", "-S", "--needed", package])
+        elif method == "aur":
+            self.command(["yay", "-S", "--needed", package])
         elif method == "flatpak":
             self.command(
                 [
@@ -1031,27 +1065,31 @@ class Setup:
                 self.cache_font(entry)
         else:
             raise SafetyError(f"No installer for method: {method}")
+        if entry["id"] == "llama-cpp-vulkan":
+            marker = self.files.target(".local/state/vixygrey-setup/vulkan-verified")
+            result = self.run(["llama-cli", "--list-devices"], capture=True)
+            print(result.stdout, end="")
+            print(result.stderr, end="", file=sys.stderr)
+            if result.returncode or not re.search(r"(?m)^\s*Vulkan\d+\s*:", result.stdout):
+                marker.unlink(missing_ok=True)
+                raise SafetyError(
+                    "The Vulkan build was installed, but no working Vulkan device was detected; "
+                    "check Ryoku/CachyOS GPU drivers before rerunning"
+                )
+            marker.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            marker.touch()
         if method == "python-helper":
             if not self.helper_installed(entry):
                 raise SafetyError(f"{entry['id']}: helper verification failed")
         elif not self.is_installed(entry):
             # Package state was cached before apply; refresh the relevant manager only.
-            self.brew_packages = None
+            self.pacman_packages = None
             self.manager_packages.clear()
             if not self.is_installed(entry):
                 raise SafetyError(
                     f"{entry['id']}: package manager did not confirm the requested installation"
                 )
         print(f"CONFIRMED {entry['id']}", flush=True)
-        if entry["id"] == "llama-cpp-vulkan":
-            result = self.run(["llama-cli", "--list-devices"], capture=True)
-            print(result.stdout, end="")
-            print(result.stderr, end="", file=sys.stderr)
-            if result.returncode or not re.search(r"(?m)^\s*Vulkan\d+\s*:", result.stdout):
-                self.files.target(archives.receipt_path(entry)).unlink(missing_ok=True)
-                raise SafetyError(
-                    "The Vulkan build was installed, but no working Vulkan device was detected; check Aurora GPU drivers before rerunning"
-                )
 
     def apply(self):
         lock = self.files.target(".local/state/vixygrey-setup/lock")
@@ -1067,14 +1105,14 @@ class Setup:
             self.blocks.clear()
             self.preserved.clear()
             self.dependencies.clear()
-            self.brew_packages = None
+            self.pacman_packages = None
             self.manager_packages.clear()
             self.plan()
             if self.blocks:
                 raise SafetyError("Preflight changed; no installation was started")
             for kind, payload in self.steps:
                 if kind == "dependency":
-                    self.command(["brew", "install", "--formula", payload])
+                    self.command(["sudo", "pacman", "-S", "--needed", payload])
                 elif kind == "flathub":
                     self.command(
                         [
@@ -1099,7 +1137,7 @@ class Setup:
                     if status in {"preserve", "protected"}:
                         self.preserved.append(name)
                 elif kind == "desktop":
-                    self.command(["plasma-apply-colorscheme", "DraculaSakura"])
+                    self.command(["ryogami", "wallpaper", "set", "--screen", "*", payload])
                 elif kind == "bat-cache":
                     self.command(["bat", "cache", "--build"])
 
@@ -1239,7 +1277,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--desktop",
         action="store_true",
-        help="Activate KDE colors, preserving the wallpaper and other desktop settings",
+        help="Set the Dracula-Sakura wallpaper via ryogami; Ryoku's matugen derives the live palette from it",
     )
     parser.add_argument(
         "--completion",
@@ -1433,9 +1471,10 @@ def main(argv=None) -> int:
         return 0
     if approved and approved["catalog_digest"] != catalog_digest():
         raise SafetyError("Plan catalog digest does not match this checkout")
-    if args.apply and (os.geteuid() == 0 or not aurora()):
+    if args.apply and (os.geteuid() == 0 or not ryoku_cachyos()):
         raise SafetyError(
-            "Apply requires Aurora Linux and a non-root user. Preview is supported on other hosts."
+            "Apply requires Ryoku (CachyOS edition) and a non-root user. Preview is supported "
+            "on other hosts."
         )
     if approved and approved["selected_ids"] != sorted(entry["id"] for entry in setup.selected):
         raise SafetyError("Plan selection intent does not match the current catalog")

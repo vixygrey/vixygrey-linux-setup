@@ -1,6 +1,6 @@
 # Machine commissioning
 
-Use this runbook before the first `--apply` on any Aurora machine. It is a manual checklist,
+Use this runbook before the first `--apply` on any Ryoku machine. It is a manual checklist,
 not installer behavior. It does not choose partitions, mount points, power policy, backup
 locations, or credentials for you.
 
@@ -14,13 +14,35 @@ Before writing data:
 
 1. Record the current firmware or BIOS version and whether an update is required according to the
    hardware vendor's guidance.
-2. Follow Aurora's [installation guide](https://docs.getaurora.dev/guides/install-guide), including
-   its current Secure Boot guidance. Do not copy changing installer steps or recovery material into
-   this repository.
-3. Record the encryption decision for every internal storage device. The installer does not create,
-   modify, or unlock encrypted volumes.
-4. Select the desktop-managed power profile appropriate for the machine. Do not add a competing
-   power-tuning daemon without a separate, reviewed decision.
+2. Follow Ryoku's [installation guide](https://ryoku.dev) (the CachyOS edition ISO, or the
+   [existing-CachyOS one-liner](https://github.com/Ryoku-dev/ryoku/blob/main/docs/install-without-iso.md#existing-cachyos)),
+   including its current Secure Boot guidance. Do not copy changing installer steps or recovery
+   material into this repository.
+3. Record the encryption decision for every internal storage device. Ryoku's installer configures
+   encrypted Btrfs with automatic snapper/snap-pac snapshots unless turned off; this repository's
+   installer does not create, modify, or unlock encrypted volumes itself.
+4. Ryoku ships `power-profiles-daemon` by default; use it for the machine's power profile. Do not
+   add a competing power-tuning daemon without a separate, reviewed decision.
+5. On an AMD APU system with a large unified-memory pool (for example, a Framework Desktop's
+   Ryzen AI Max), raising the GTT/TTM limits lets Vulkan address more of system RAM as VRAM for
+   local inference. This is a kernel command-line change, not something `./setup.sh` touches:
+   - The parameters: `amdgpu.gttsize=<MiB>` and `ttm.pages_limit=<4KiB pages>`. Size both to the
+     fraction of total RAM you want reservable as GPU memory (for example, on a 64 GiB machine,
+     `amdgpu.gttsize=57344 ttm.pages_limit=14680064` reserves roughly 56 GiB); do not reserve more
+     than the system needs to keep running.
+   - Ryoku's CachyOS edition boots Limine. CachyOS's own `limine-entry-tool` regenerates
+     `/boot/limine.conf` (or `/boot/efi/limine.conf`) from live `/proc/cmdline` state unless
+     `/etc/default/limine` exists; editing `/boot/limine.conf` directly gets silently overwritten
+     on the next kernel/initramfs rebuild. Create or edit `/etc/default/limine` and **append** with
+     `KERNEL_CMDLINE[default]+="amdgpu.gttsize=57344 ttm.pages_limit=14680064"` (`+=`, not `=`, or
+     you will drop the existing `root=`/`rootflags=`/etc. parameters), then run
+     `sudo limine-update`. Follow
+     [CachyOS's current boot-manager documentation](https://wiki.cachyos.org/configuration/boot_manager_configuration/)
+     for the exact procedure on your installed version, and verify with
+     `cat /boot/limine.conf | grep cmdline` before rebooting.
+   - After reboot, confirm with `dmesg | grep -i gtt`. Record the chosen values in the private
+     decision record; reverting requires removing the line from `/etc/default/limine` and rerunning
+     `sudo limine-update`.
 
 ## 2. Storage decision record
 
@@ -40,7 +62,7 @@ workspaces, or large caches on it.
 Do not assume a particular drive count, filesystem, mount point, or capacity. A second internal
 drive can improve capacity or local recovery options, but it is not an independent backup.
 
-After normal Aurora provisioning, capture the read-only result of:
+After normal Ryoku provisioning, capture the read-only result of:
 
 ```sh
 ./setup.sh --doctor --format json
@@ -60,8 +82,8 @@ The setup owns only its existing user-state locations:
 Choose the location for every other large data class per machine:
 
 - **Worktrees and reproducible build caches:** use the data location selected in the private record.
-- **Container images and volumes:** inspect the selected Aurora DX, Docker, or Podman runtime before
-  reserving space or configuring bind mounts. This repository does not assume a runtime storage path.
+- **Container images and volumes:** inspect the selected Docker runtime before reserving space or
+  configuring bind mounts. This repository does not assume a runtime storage path.
 - **Local models:** choose a data location only when the machine uses a supported local-model path.
   Record the capacity requirement and revisit it during the target-specific model validation.
 
@@ -70,7 +92,9 @@ Do not make a path a repository default merely because it suits one machine.
 ## 4. Backup and restore
 
 Backup software is not installed or configured by this setup. Choose it separately; the installer
-does not configure credentials, write retention policy, enable timers, or run backups.
+does not configure credentials, write retention policy, enable timers, or run backups. Ryoku's own
+snapper/snap-pac snapshots around pacman transactions are a rollback convenience, not a backup:
+they live on the same disk and do not protect against drive failure.
 
 Before relying on a machine:
 
@@ -82,46 +106,51 @@ Before relying on a machine:
 
 Keep backup destination details, credentials, passphrases, and restore evidence out of this repository.
 
-## 5. Aurora and developer prerequisites
+## 5. Ryoku and developer prerequisites
 
-Complete Aurora's normal provisioning first. Follow Aurora's [software guidance](https://docs.getaurora.dev/guides/software)
-for Flatpak, Homebrew, and containers. The setup does not bootstrap those prerequisites.
+Complete Ryoku's normal installation first. `pacman`, `yay`, and `flatpak` ship with every Ryoku
+CachyOS install; this setup does not bootstrap them. Ryoku's own
+[preinstalled inventory](https://github.com/Ryoku-dev/ryoku/blob/main/docs/preinstalled.md)
+already covers a broad base, developer-toolchain, and CLI/TUI set; this catalog adds only what is
+not already there, plus the pinned/versioned entries this setup wants exact control over
+(archive-method apps, uv/npm tools). Unlike Aurora's `ujust bbrew`/`ujust cncf` convenience
+bundles, Ryoku has no equivalent single-command extra-bundle installer: anything beyond this
+catalog and Ryoku's own defaults is a manual `pacman`/`yay`/RyoStore decision, not something
+`./setup.sh` runs or checks for you.
 
-When the machine needs Docker Engine, use Aurora DX according to its
-[developer-mode guidance](https://docs.getaurora.dev/dx/aurora-dx-intro). This is a manual host
-choice. On a standard Aurora image, it includes `ujust devmode`; Aurora then requires `ujust dx-group`
-and a logout/login before Docker access works. Docker group access is effectively root-equivalent.
+When the machine needs Docker Engine:
 
-After devmode, also run `ujust bbrew` and choose the Brewfile bundle the target machine needs
-(for example `ai-tools` for Ramalama/llmman/claude-code and friends). Cloud-native tooling
-(`kubectl`/`helm`/`k9s`/`kind` for AWS/EKS work) ships via the separate `ujust cncf` command, not
-through `bbrew`. This repository's catalog deliberately does not duplicate `bbrew`'s `cli`
-bundle or `cncf`'s tools; they are the sanctioned way to get them and are manual per-machine
-steps, not something `./setup.sh` runs or checks for you.
+```sh
+sudo pacman -S --needed docker docker-compose
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"
+# log out and back in before docker works without sudo
+```
+
+This is a manual host choice. **Docker group access is effectively root-equivalent.** Ryoku's own
+`ryoku-docker`/`ryoku-cobalt` tool is unrelated: it is a narrow, fixed-argument-vector helper
+behind its own link-downloader feature, not a general Docker CLI surface, and it deliberately
+never grants the logged-in user docker-group access either.
 
 The theme deployment installs `.zshrc` and `~/.config/vixygrey/setup.zsh`, but the setup never
-runs `chsh` or otherwise changes your login shell. Aurora is a Fedora Kinoite-family atomic
-desktop and deliberately does not ship `util-linux-user`, so plain `chsh` is not available, and
-Fedora's own atomic-desktop guidance recommends against changing the login shell on these images
-at all: the shell path is not guaranteed to survive an image reset or upgrade, which has caused
-documented login lockouts
-([fedora-silverblue#228](https://github.com/fedora-silverblue/issue-tracker/issues/228),
-[#307](https://github.com/fedora-silverblue/issue-tracker/issues/307)).
-
-Activate Zsh per terminal profile instead, which needs no privilege and carries none of that
-risk. In Konsole: **Settings → Manage Profiles**, edit your profile, set **Command** to
-`/usr/bin/zsh`. New tabs start Zsh interactively, which sources `.zshrc` and activates the
-deployed prompt, aliases, and Zoxide/fzf hooks exactly as if it were the login shell.
-
-Only change the actual login shell (for example, for SSH sessions) if you specifically need
-that, and prefer `usermod` over `chsh` even where `chsh` exists, since it needs no setuid binary:
+runs `chsh` or otherwise changes your login shell. Ryoku is a normal mutable Arch/CachyOS system,
+so `chsh` is fully available (unlike Aurora's Fedora Kinoite-family atomic desktop, which
+deliberately did not ship `util-linux-user` and warned against changing the login shell on
+atomic-desktop images at all). Changing the login shell here carries none of that specific risk,
+but this setup still does not do it for you, since it is a machine-wide, login-affecting change
+that deserves an explicit decision:
 
 ```sh
 sudo usermod --shell "$(command -v zsh)" "$USER"
 ```
 
-Confirm the path is listed in `/etc/shells` first, or `pkexec` and other PAM-aware tools will
-error afterward. Log out and back in before the change takes effect.
+Confirm the path is listed in `/etc/shells` first (Arch's `zsh`/`fish` packages register
+themselves there automatically), or `pkexec` and other PAM-aware tools will error afterward. Log
+out and back in before the change takes effect. If you would rather not touch the account's login
+shell, activate Zsh per terminal profile instead (for example, Kitty's `shell` setting, or your
+terminal's equivalent profile command field); new windows then start Zsh interactively, which
+sources `.zshrc` and activates the deployed prompt, aliases, and Zoxide/fzf hooks exactly as if it
+were the login shell.
 
 After prerequisites are present, use this sequence:
 
@@ -137,14 +166,16 @@ After prerequisites are present, use this sequence:
 ```
 
 Run `--apply` only after reviewing the selection and plan. Source approval, conflict preservation,
-and explicit replacement rules remain in force.
+and explicit replacement rules remain in force. `--apply` itself will prompt for your password
+once per `sudo pacman`/`yay`-sourced catalog entry it installs; review the printed command before
+approving each prompt.
 
 ## 6. Cross-machine dotfile sync (chezmoi)
 
 This setup deploys the Dracula-Sakura theme and catalog applications; it does not sync general
 personal configuration across your workstations. If you keep several machines aligned, do that
 with `chezmoi` as a separate, manual step run **after** `./setup.sh --apply` on each machine.
-`chezmoi` is a plain catalog entry (`brew`, not in any profile), so select it explicitly:
+`chezmoi` is a plain catalog entry (`pacman`, not in any profile), so select it explicitly:
 
 ```sh
 ./setup.sh --apps-only --only chezmoi --apply
@@ -154,13 +185,15 @@ chezmoi init --apply <your-dotfiles-remote>
 Keep ownership of every path non-overlapping, so the two tools never fight over the same file:
 
 - This repository owns everything under `dotfiles/`: `.zshrc`, `~/.config/vixygrey/setup.zsh`,
-  and the Dracula-Sakura app configs (Starship, Kitty, btop, Bat, Yazi, Micro, Fastfetch,
-  Lazydocker, Trippy, the KDE color scheme, and the Kiro/OMP theme files). They are generated
-  from `theme/palette.json` and reproduced identically by `./setup.sh --theme-only --apply` on
-  every workstation; that command already is your cross-machine sync for appearance. Do not also
-  put these paths under chezmoi: `chezmoi apply` overwrites to match its source, and this
-  setup's conflict-preserving deploy would then treat the chezmoi-written file as a permanently
-  preserved divergence on every later run.
+  the Ryoku-owned overlay files under `~/.config/ryoku/user_edits/` (Kitty, Fastfetch, Yazi,
+  Starship), and the remaining Dracula-Sakura app configs (Bat, Micro, btop, Lazydocker, Trippy,
+  and the Kiro/OMP theme files). They are generated from `theme/palette.json` and reproduced
+  identically by `./setup.sh --theme-only --apply` on every workstation; that command already is
+  your cross-machine sync for appearance. Do not also put these paths under chezmoi: `chezmoi
+apply` overwrites to match its source, and this setup's conflict-preserving deploy would then
+  treat the chezmoi-written file as a permanently preserved divergence on every later run. Also
+  keep chezmoi out of `~/.config/ryoku/` entirely: `ryoku materialize`/`ryoku update` already own
+  parts of that tree outside the `user_edits` overlay.
 - `dotfiles/.zshrc` sources `~/.zshrc.local` when present, and this setup never creates or
   writes that file. Point chezmoi at `~/.zshrc.local` and any other personal configuration this
   repository does not manage: git identity, SSH config, personal shell functions/aliases,
@@ -174,10 +207,10 @@ configuration on top without touching anything this repository manages.
 
 Keep target-specific validation separate from this machine-neutral runbook:
 
-- Aurora install, desktop, Docker, and Vulkan acceptance: issue #25.
+- Ryoku install, desktop, Docker, and Vulkan acceptance: issue #25.
 - AMD Radeon local-model validation and model capacity evidence: issue #18.
 - Additional storage and GPU presentation in Fastfetch or btop: issue #24.
 
-Each target should supply only sanitized facts to those follow-ons: Aurora version, architecture,
+Each target should supply only sanitized facts to those follow-ons: Ryoku version, architecture,
 selected catalog IDs, free-space evidence, and the private decision record's conclusions. Do not
 commit private machine identifiers or secrets.
