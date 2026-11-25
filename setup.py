@@ -21,7 +21,7 @@ sys.dont_write_bytecode = True
 
 import archives
 from app_files import launchers
-from safe_files import Files, SafetyError, digest, relative_path
+from safe_files import Files, SafetyError, digest, paint, relative_path
 
 ROOT = Path(__file__).resolve().parent
 METHODS = {
@@ -341,18 +341,18 @@ def print_report(document: dict, format_name: str):
         return
     if document["kind"] == "status":
         for entry in document["apps"]:
-            print(f"APP {entry['state']} {entry['id']} [{entry['method']}]")
+            print(f"APP {paint(entry['state'].upper())} {entry['id']} [{entry['method']}]")
             for record in entry.get("font_files", []):
-                print(f"FONT {record['state']} {record['path']}")
+                print(f"FONT {paint(record['state'].upper())} {record['path']}")
             for record in entry.get("retired_fonts", []):
-                print(f"RETAINED FONT {record['state']} {record['path']}")
+                print(f"RETAINED FONT {paint(record['state'].upper())} {record['path']}")
             if entry.get("cache_pending") and not entry["cache_available"]:
                 print("FONT CACHE fc-cache unavailable; cache remains pending")
         for entry in document["files"]:
-            print(f"FILE {entry['state']} {entry['path']}")
+            print(f"FILE {paint(entry['state'].upper())} {entry['path']}")
         return
     for check in document["checks"]:
-        print(f"CHECK {check['state']} {check['id']}: {check['remediation']}")
+        print(f"CHECK {paint(check['state'].upper())} {check['id']}: {check['remediation']}")
 
 
 def write_plan(path: str, data: bytes):
@@ -758,9 +758,9 @@ class Setup:
         if method == "font":
             for record in details["font_files"]:
                 if record["state"] != "unchanged":
-                    print(f"FONT {identifier}: {record['path']} {record['state']}")
+                    print(f"FONT {identifier}: {record['path']} {paint(record['state'].upper())}")
             for record in details["retired_fonts"]:
-                print(f"RETAINED FONT {record['path']} {record['state']}")
+                print(f"RETAINED FONT {record['path']} {paint(record['state'].upper())}")
         if self.is_installed(entry):
             if method in {"archive", "font"} and archives.needs_receipt_migration(
                 entry, self.files
@@ -770,10 +770,11 @@ class Setup:
                 print(f"FONT {identifier}: cache pending; retry without downloading")
                 self.steps.append(("font-cache", entry))
                 return
-            print(f"INSTALLED {identifier}")
+            if not self.args.quiet:
+                print(f"{paint('INSTALLED')} {identifier}")
             return
         if method == "pacman" and package in self.dependencies:
-            print(f"PLANNED {identifier} as a prerequisite")
+            print(f"{paint('PLANNED')} {identifier} as a prerequisite")
             return
         if entry.get("third_party", False) and identifier not in self.trust:
             self.blocks.append(
@@ -850,7 +851,8 @@ class Setup:
 
     def plan_file(self, name: str, data: bytes, mode: int = 0o600):
         status = self.files.status(name, data, mode)
-        print(f"{status.upper()} {name}")
+        if not (self.args.quiet and status == "unchanged"):
+            print(f"{paint(status.upper())} {name}")
         if status in {"preserve", "protected"}:
             self.preserved.append(name)
         elif status != "unchanged":
@@ -1049,7 +1051,7 @@ class Setup:
                 raise SafetyError(
                     f"{entry['id']}: package manager did not confirm the requested installation"
                 )
-        print(f"CONFIRMED {entry['id']}", flush=True)
+        print(f"{paint('CONFIRMED')} {entry['id']}", flush=True)
 
     def apply(self):
         lock = self.files.target(".local/state/vixygrey-setup/lock")
@@ -1093,7 +1095,7 @@ class Setup:
                 elif kind == "file":
                     name, data, mode = payload
                     status = self.files.put(name, data, mode)
-                    print(f"{status.upper()} {name}")
+                    print(f"{paint(status.upper())} {name}")
                     if status in {"preserve", "protected"}:
                         self.preserved.append(name)
                 elif kind == "desktop":
@@ -1113,12 +1115,12 @@ class Setup:
         for kind, payload in self.steps:
             if kind == "app":
                 print(
-                    f"INSTALL {payload['id']} via {payload['method']}: {payload['package']} {payload.get('version', '')}".rstrip()
+                    f"{paint('INSTALL')} {payload['id']} via {payload['method']}: {payload['package']} {payload.get('version', '')}".rstrip()
                 )
             elif kind not in {"file"}:
                 print(f"PLAN {kind}: {payload or ''}")
         for block in self.blocks:
-            print("BLOCKED " + block)
+            print(paint("BLOCKED") + " " + block)
         print(
             f"Plan: {len(self.steps)} actions, {len(self.blocks)} blockers, {len(self.preserved)} preserved conflicts."
         )
@@ -1178,6 +1180,11 @@ def main(argv=None) -> int:
     )
     parser.add_argument("--apply-plan", metavar="FILE", help="Apply a reviewed JSON plan")
     parser.add_argument("--format", choices=("text", "json"), default=None)
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Omit already-satisfied INSTALLED/UNCHANGED lines from text-format preview output",
+    )
     parser.add_argument(
         "--diff",
         action="append",

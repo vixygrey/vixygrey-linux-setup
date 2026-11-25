@@ -55,7 +55,9 @@ class FontSetupSafety(unittest.TestCase):
         transport.start()
         self.addCleanup(transport.stop)
         self.app = setup.Setup(
-            SimpleNamespace(replace=[], trust=[self.entry["id"]], profile=[], apps_only=True)
+            SimpleNamespace(
+                replace=[], trust=[self.entry["id"]], profile=[], apps_only=True, quiet=False
+            )
         )
         self.app.env["PATH"] = str(self.binary)
         self.app.selected = [self.entry]

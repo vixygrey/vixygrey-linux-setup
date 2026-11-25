@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vixygrey/vixygrey-linux-setup/schema/catalog.schema.json",
+  "title": "vixygrey-linux-setup catalog entries",
+  "description": "Mirrors setup.py's validate_catalog(); keep both in sync by hand.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/entry" },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "sha256"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https://",
+          "description": "Must be an HTTPS URL to a versioned, publisher-controlled release asset."
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Lowercase hex digest computed locally from the downloaded artifact."
+        },
+        "format": {
+          "type": "string",
+          "description": "Archive format override, e.g. \"raw\" for a bare executable payload."
+        },
+        "filename": {
+          "type": "string",
+          "description": "Destination filename for a \"raw\" format artifact."
+        },
+        "commands": {
+          "type": "object",
+          "description": "Per-architecture override of the top-level command-to-member mapping.",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "required": ["id", "name", "method", "package", "source", "notes", "third_party"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Stable catalog identifier used by --only/--skip/--trust and profiles.json."
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "method": {
+          "type": "string",
+          "enum": ["pacman", "aur", "flatpak", "npm", "uv", "archive", "font", "python-helper"]
+        },
+        "package": { "type": "string", "minLength": 1 },
+        "source": {
+          "type": "string",
+          "pattern": "^https://",
+          "description": "Must be an HTTPS URL to the authoritative upstream page."
+        },
+        "notes": { "type": "string", "minLength": 1 },
+        "third_party": { "type": "boolean" },
+        "version": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9.+_-]*$",
+          "description": "Required (and must be an exact pin) for npm/uv/archive/font/python-helper."
+        },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "runtime_libs": {
+          "type": "array",
+          "description": "Extra pacman formulas to install alongside an archive or pacman entry.",
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9@+._-]*$" }
+        },
+        "python": {
+          "type": "string",
+          "description": "python-helper only: passed as `uv --python <value>` to pin the interpreter."
+        },
+        "commands": {
+          "type": "object",
+          "description": "archive only: default command-name to archive-member mapping.",
+          "additionalProperties": { "type": "string" }
+        },
+        "artifacts": {
+          "type": "object",
+          "description": "archive only: exactly x86_64 and aarch64 artifacts, no other keys.",
+          "additionalProperties": false,
+          "properties": {
+            "x86_64": { "$ref": "#/$defs/artifact" },
+            "aarch64": { "$ref": "#/$defs/artifact" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "method": { "enum": ["npm", "uv", "archive", "font", "python-helper"] }
+            }
+          },
+          "then": { "required": ["version"] }
+        },
+        {
+          "if": { "properties": { "method": { "const": "archive" } } },
+          "then": { "required": ["artifacts"] },
+          "else": { "not": { "required": ["artifacts"] } }
+        },
+        {
+          "if": { "properties": { "method": { "enum": ["archive", "pacman"] } } },
+          "else": { "not": { "required": ["runtime_libs"] } }
+        }
+      ]
+    }
+  }
+}

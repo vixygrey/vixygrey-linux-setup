@@ -14,7 +14,7 @@ import tempfile
 import urllib.request
 import zipfile
 
-from safe_files import Files, SafetyError, digest, relative_path
+from safe_files import Files, SafetyError, digest, paint, relative_path
 
 MAX_DOWNLOAD = 512 * 1024 * 1024
 MAX_EXPANDED = 2 * 1024 * 1024 * 1024
@@ -466,7 +466,7 @@ def _install_font(entry: dict, files: Files) -> list[str]:
                     if status == "protected"
                     else f"approve exactly --replace {name}"
                 )
-                print(f"CONFLICT {name}: {advice}")
+                print(f"{paint('CONFLICT')} {name}: {advice}")
             return [name for name, _ in conflicts]
         for destination in sorted(outputs):
             name = PurePosixPath(destination).name
