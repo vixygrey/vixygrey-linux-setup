@@ -1,0 +1,147 @@
+# Dracula-Sakura theme for Helix. Colors are named references into [palette]
+# below, which mirrors theme/palette.json exactly; keep both in sync by hand.
+
+"ui.background" = "bg"
+"ui.background.separator" = "current"
+"ui.cursor" = { modifiers = ["reversed"] }
+"ui.cursor.primary" = { fg = "bg", bg = "rose" }
+"ui.cursor.primary.normal" = { fg = "bg", bg = "rose" }
+"ui.cursor.primary.insert" = { fg = "bg", bg = "mint" }
+"ui.cursor.primary.select" = { fg = "bg", bg = "lilac" }
+"ui.cursor.match" = { fg = "yellow", modifiers = ["bold"] }
+"ui.debug.breakpoint" = { fg = "red" }
+"ui.debug.active" = { fg = "yellow" }
+"ui.gutter" = { bg = "bg" }
+"ui.gutter.selected" = { fg = "rose", bg = "bg" }
+"ui.linenr" = { fg = "comment" }
+"ui.linenr.selected" = { fg = "rose", modifiers = ["bold"] }
+"ui.statusline" = { fg = "fg", bg = "panel" }
+"ui.statusline.inactive" = { fg = "comment", bg = "panel_soft" }
+"ui.statusline.normal" = { fg = "bg", bg = "rose", modifiers = ["bold"] }
+"ui.statusline.insert" = { fg = "bg", bg = "mint", modifiers = ["bold"] }
+"ui.statusline.select" = { fg = "bg", bg = "lilac", modifiers = ["bold"] }
+"ui.statusline.separator" = { fg = "comment" }
+"ui.bufferline" = { fg = "comment", bg = "panel_soft" }
+"ui.bufferline.active" = { fg = "fg", bg = "panel", modifiers = ["bold"] }
+"ui.bufferline.background" = { bg = "panel_soft" }
+"ui.popup" = { fg = "fg", bg = "panel" }
+"ui.popup.info" = { fg = "fg", bg = "panel" }
+"ui.picker.header" = { fg = "comment" }
+"ui.picker.header.column" = { fg = "muted" }
+"ui.picker.header.column.active" = { fg = "rose", modifiers = ["bold"] }
+"ui.window" = { fg = "current" }
+"ui.help" = { fg = "fg", bg = "panel" }
+"ui.text" = "fg"
+"ui.text.focus" = { fg = "bg", bg = "selection" }
+"ui.text.inactive" = "comment"
+"ui.text.info" = "muted"
+"ui.text.directory" = "cyan"
+"ui.virtual.ruler" = { bg = "panel_soft" }
+"ui.virtual.whitespace" = "current"
+"ui.virtual.indent-guide" = "current"
+"ui.virtual.inlay-hint" = { fg = "comment", modifiers = ["italic"] }
+"ui.virtual.inlay-hint.parameter" = { fg = "dim", modifiers = ["italic"] }
+"ui.virtual.inlay-hint.type" = { fg = "cyan", modifiers = ["italic"] }
+"ui.virtual.wrap" = "comment"
+"ui.virtual.jump-label" = { fg = "bg", bg = "yellow", modifiers = ["bold"] }
+"ui.menu" = { fg = "fg", bg = "panel" }
+"ui.menu.selected" = { fg = "bg", bg = "rose" }
+"ui.menu.scroll" = { fg = "rose", bg = "panel" }
+"ui.selection" = { bg = "selection" }
+"ui.selection.primary" = { bg = "selection" }
+"ui.highlight" = { bg = "current" }
+"ui.highlight.frameline" = { bg = "current" }
+"ui.cursorline.primary" = { bg = "panel_soft" }
+"ui.cursorline.secondary" = { bg = "panel_soft" }
+"ui.cursorcolumn.primary" = { bg = "panel_soft" }
+"ui.cursorcolumn.secondary" = { bg = "panel_soft" }
+"warning" = "yellow"
+"error" = "red"
+"info" = "cyan"
+"hint" = "mint"
+"diagnostic" = { underline = { color = "comment", style = "dotted" } }
+"diagnostic.hint" = { underline = { color = "mint", style = "dotted" } }
+"diagnostic.info" = { underline = { color = "cyan", style = "dotted" } }
+"diagnostic.warning" = { underline = { color = "yellow", style = "curl" } }
+"diagnostic.error" = { underline = { color = "red", style = "curl" } }
+"diagnostic.unnecessary" = { modifiers = ["dim"] }
+"diagnostic.deprecated" = { modifiers = ["crossed_out"] }
+"tabstop" = { bg = "selection" }
+
+attribute = "yellow"
+type = "cyan"
+"type.builtin" = { fg = "cyan", modifiers = ["italic"] }
+constructor = "rose"
+constant = "peach"
+"constant.builtin" = { fg = "peach", modifiers = ["bold"] }
+"constant.character.escape" = "mint"
+"constant.numeric" = "peach"
+string = "yellow"
+"string.regexp" = "mint"
+"string.special" = "lilac"
+comment = { fg = "comment", modifiers = ["italic"] }
+variable = "fg"
+"variable.builtin" = "rose"
+"variable.parameter" = { fg = "fg", modifiers = ["italic"] }
+"variable.other.member" = "muted"
+label = "cyan"
+punctuation = "dim"
+"punctuation.delimiter" = "dim"
+"punctuation.bracket" = "dim"
+"punctuation.special" = "lilac"
+keyword = "rose"
+"keyword.control.conditional" = "rose"
+"keyword.control.repeat" = "rose"
+"keyword.control.import" = "lilac"
+"keyword.control.return" = "rose"
+"keyword.control.exception" = "red"
+"keyword.operator" = "rose"
+"keyword.directive" = "lilac"
+"keyword.function" = "rose"
+"keyword.storage.type" = "cyan"
+"keyword.storage.modifier" = "lilac"
+operator = "dim"
+function = "mint"
+"function.builtin" = { fg = "mint", modifiers = ["italic"] }
+"function.method" = "mint"
+"function.macro" = "lilac"
+tag = "rose"
+"tag.builtin" = "rose"
+namespace = "cyan"
+special = "lilac"
+"markup.heading" = { fg = "rose", modifiers = ["bold"] }
+"markup.heading.marker" = "comment"
+"markup.list" = "yellow"
+"markup.list.checked" = "mint"
+"markup.list.unchecked" = "comment"
+"markup.bold" = { modifiers = ["bold"] }
+"markup.italic" = { modifiers = ["italic"] }
+"markup.strikethrough" = { modifiers = ["crossed_out"] }
+"markup.link.url" = { fg = "cyan", modifiers = ["underlined"] }
+"markup.link.text" = "lilac"
+"markup.link.label" = "muted"
+"markup.quote" = { fg = "comment", modifiers = ["italic"] }
+"markup.raw.inline" = { fg = "yellow", bg = "panel_soft" }
+"markup.raw.block" = { bg = "panel_soft" }
+"diff.plus" = "mint"
+"diff.minus" = "red"
+"diff.delta" = "yellow"
+
+[palette]
+bg = "#282a36"
+panel = "#323448"
+panel_soft = "#2f3144"
+current = "#4b4963"
+selection = "#6a5d86"
+fg = "#f8f8f2"
+muted = "#ddd2f7"
+dim = "#a297cb"
+comment = "#8a88c7"
+cyan = "#9be7ff"
+mint = "#8af7cf"
+peach = "#ffcf93"
+rose = "#ff9fe3"
+blush = "#ffc2ec"
+lilac = "#d4b2ff"
+red = "#ff7aa8"
+yellow = "#fff0a8"

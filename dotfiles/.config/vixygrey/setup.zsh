@@ -12,7 +12,7 @@ export npm_config_prefix="${npm_config_prefix:-$HOME/.local/share/vixygrey/npm}"
 export UV_TOOL_BIN_DIR="${UV_TOOL_BIN_DIR:-$HOME/.local/bin}"
 
 export BAT_THEME="${BAT_THEME:-Dracula-Sakura}"
-export EDITOR="${EDITOR:-nvim}"
+export EDITOR="${EDITOR:-hx}"
 export VISUAL="${VISUAL:-$EDITOR}"
 
 if command -v vivid >/dev/null 2>&1 && [[ -z "$LS_COLORS" ]]; then

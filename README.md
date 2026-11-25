@@ -112,8 +112,8 @@ To preview Kiro and Posting without deploying the rest of the theme:
 ```
 
 The `developer` profile also includes gitlogue, Lazygit, oxker, grex, Kondo, Worktrunk, Rust, xh,
-mkcert, pnpm, d2, and the existing Mike Farah yq entry. `terminal` adds VisiData, croc, atuin,
-glow, Zellij, procs, duf, Harlequin, aerc, ncdu, lnav, jless, and bandwhich; `cloud` adds
+mkcert, pnpm, Fresh, d2, and the existing Mike Farah yq entry. `terminal` adds VisiData, croc,
+atuin, glow, Herdr, procs, duf, Harlequin, aerc, ncdu, lnav, jless, and bandwhich; `cloud` adds
 dnsglobe, aws-vault, kubectl, Helm, k9s, OpenTofu, and stu; `ai` adds llmfit; `desktop` adds
 Syncthing, Thunderbird, and Satty alongside Obsidian.
 All use Arch's official `extra` repo or an actively-maintained AUR package (flagged `third_party`
@@ -127,20 +127,25 @@ repository. Both catalog files participate in the default full selection;
   --format json
 ```
 
-`vd` and `wt` are selection aliases for VisiData and Worktrunk. `gcalcli` is a standalone entry
+`vd`, `wt`, `hx`, and `herdr-bin` are selection aliases for VisiData, Worktrunk, Helix, and Herdr.
+`gcalcli` is a standalone entry
 in no profile; select it explicitly with `--only gcalcli --trust gcalcli`. Catalog and profile
 edits invalidate saved plans; regenerate them before applying.
 
-The `base` profile includes zoxide, fzf, and Neovim; `developer` includes delta (Arch package
+The `base` profile includes zoxide, fzf, and Helix; `developer` includes delta (Arch package
 `git-delta`). Bat, ripgrep, and fd remain in `base`, and btop remains in
 `terminal`. These tools install from Arch's official `extra` repo, with no custom repository or
 per-ID source approval. Several of them (bat, eza, fd, fzf, ripgrep, zoxide, starship, fastfetch,
-btop, yazi, neovim) already ship by default on a fresh Ryoku install; selecting them here is
-still explicit and reviewable, and `pacman -S --needed` is a harmless no-op when a package is
-already present.
+btop, yazi) already ship by default on a fresh Ryoku install; selecting them here is still
+explicit and reviewable, and `pacman -S --needed` is a harmless no-op when a package is already
+present. Ryoku also ships `neovim` as one of its own base-OS defaults; this catalog no longer
+selects or themes it now that Helix is the primary editor, but Ryoku's own provisioning keeps
+installing it regardless of what this catalog does (`pacman -R neovim` or editing
+`~/.local/state/ryoku/provisioned` yourself is the only way to actually remove it; see
+[Theme and existing machines](#theme-and-existing-machines)).
 
 ```sh
-./setup.sh --apps-only --only zoxide,fzf,bat,btop,ripgrep,fd,delta,neovim --format json
+./setup.sh --apps-only --only zoxide,fzf,bat,btop,ripgrep,fd,delta,helix --format json
 ```
 
 A preview can run on this Mac; `--apply` requires Ryoku (CachyOS edition) and a non-root user. Read-only package
@@ -213,7 +218,7 @@ For the full catalog, omit `--only` and approve each reported third-party ID wit
 
 Appearance files use the local Mac palette, with Linux-specific adaptations.
 
-- Kitty, Fastfetch, Yazi, Starship, and Neovim deploy under Ryoku's `~/.config/ryoku/user_edits/...`
+- Kitty, Fastfetch, Yazi, and Starship deploy under Ryoku's `~/.config/ryoku/user_edits/...`
   override overlay, since Ryoku's own package ships a base config at those paths and
   `ryoku materialize`/`ryoku update` would otherwise clobber a direct write on the next update.
   **Ryoku's `matugen` pipeline re-renders Kitty's and Starship's colors from the active wallpaper
@@ -226,16 +231,25 @@ Appearance files use the local Mac palette, with Linux-specific adaptations.
   shipped API for dropping in an arbitrary fixed palette the way KDE's `plasma-apply-colorscheme`
   did on Aurora. `--desktop` requires the wallpaper entry to already be selected, trusted, and
   installed, and requires `ryogami` to be available (an active Ryoku desktop session).
-- Neovim: Ryoku ships its own LazyVim-based `~/.config/nvim` by default, so this setup does not
-  replace it with a separate LazyVim starter clone. It layers three files through the
-  `user_edits` overlay: `lua/plugins/omp.lua` (the `l3aro/omp.nvim` plugin spec, `<leader>om` to
-  ask omp from the buffer or a visual selection; requires Neovim 0.11+), `lua/plugins/obsidian.lua`
-  (`obsidian-nvim/obsidian.nvim`, for editing your Obsidian vault from Neovim; ships with no
-  vault path configured, since this setup never creates or locates one — add your vault to its
-  `workspaces` table yourself, or open Neovim from inside it), and `lazyvim.json`
-  declaring the `lang.rust`, `lang.python`, `lang.typescript`, `lang.tailwind`, `lang.docker`, and
-  `lang.markdown` LazyVim extras, the same mechanism `:LazyExtras` itself writes to. Run
-  `:checkhealth omp_nvim` after the first launch to confirm the bridge installed correctly.
+- Helix and Herdr each get a custom Dracula-Sakura theme (`~/.config/helix/themes/dracula-sakura.toml`,
+  selected by `~/.config/helix/config.toml`; `~/.config/herdr/config.toml`'s `theme.custom.*` hex
+  overrides on top of Herdr's built-in catppuccin base). Neither is a Ryoku-owned path, so both
+  deploy to their literal location and are never touched by `ryoku update`. Fresh already ships a
+  built-in Dracula theme and its own philosophy is settings through its UI rather than dotfiles
+  (press `/` to search every setting), so this setup selects neither for you and does not author a
+  separate Dracula-Sakura variant for it.
+- Ryoku still ships `neovim` as one of its own base-OS defaults, separately from this catalog (see
+  [Profiles](#profiles)); this repository no longer selects, themes, or manages it now that Helix
+  is the primary editor. The Neovim-specific bridges this setup used to deploy
+  (`l3aro/omp.nvim` for live cursor/selection context, `obsidian-nvim/obsidian.nvim` for editing an
+  Obsidian vault from the editor) have **no direct Helix or Fresh equivalent today**; neither
+  project's plugin ecosystem has a comparable bridge yet. The side-by-side terminal-pane workflow
+  (OMP in one pane, Helix in another, with Herdr or Fresh's own panes/splits holding them together)
+  replaces the cursor-tracking bridge functionally, if not exactly. If you still want
+  Helix-flavored keybindings somewhere, Obsidian's community plugin browser has
+  [`obsidian-helix`](https://github.com/obsidian-helix/obsidian-helix) (keybindings inside
+  Obsidian's own editor, the opposite direction from the old `obsidian.nvim` bridge); like
+  Excalidraw below, it is vault-scoped and installed from inside Obsidian, not by this setup.
 - Btop, Bat, Micro, Lazydocker, Lazygit, and Trippy are not Ryoku-owned paths, so they deploy to their
   literal `~/.config/<app>/...` location unchanged and are never touched by `ryoku update`.
 - Kiro gets a full Dracula-Sakura color theme extension (`~/.kiro/extensions/vixygrey.dracula-sakura-1.0.0`: a manifest plus a 140-color, semantic-highlighting-aware theme), activated via `workbench.colorTheme` in its settings; the existing inline `workbench.colorCustomizations`/`editor.tokenColorCustomizations` overrides stay in place alongside it. OMP gets its own theme file at `~/.omp/agent/themes/dracula-sakura.json`, authored against OMP's own schema. Trippy also has a managed palette. Apps without a custom palette inherit terminal colors where supported; this does not claim to recolor every Flatpak or web interface.
@@ -365,7 +379,7 @@ search, the AUR, and upstream Linux documentation.
 - **iamlive:** no official Arch or AUR package exists, so this pins the upstream project's own GitHub release Linux tarballs directly, the same pattern used for Kiro.
 - **DBeaver Community:** the desktop profile selects the publisher-listed Flathub package, with explicit `--trust dbeaver` approval. Configure a DuckDB connection and download its JDBC driver inside DBeaver. Dataset access may require Flatpak permissions, especially on additional drives. Harlequin (below) covers the same ground from the terminal instead.
 - **Obsidian:** Arch's official `extra` repo packages Obsidian directly (not an AppImage wrapper), so it installs via `pacman` with explicit `--trust obsidian` approval, since it is a proprietary vendor application. Sync, plugins, and vault location remain yours to configure; no vault data is imported. **Excalidraw** (and every other Obsidian community plugin) cannot be installed by this setup: Obsidian plugins are fetched from inside the app into a specific vault's `.obsidian/plugins/` directory, and this setup never creates or locates a vault. Once you have one, install Excalidraw from Settings → Community plugins → Browse inside Obsidian itself.
-- **Removed applications:** Todoist, Discord, Google Chrome, Zed, Bruno, and draw.io are no longer in the catalog or profiles. Chrome is redundant with Chromium, which Ryoku can already install as its selected default browser during setup. Bruno was replaced by Posting; draw.io was replaced by the Excalidraw Obsidian plugin (see the Obsidian entry above). Existing installations and personal data are untouched. Regenerate saved plans after this catalog change; the removed IDs are no longer valid selection or approval arguments.
+- **Removed applications:** Todoist, Discord, Google Chrome, Zed, Bruno, draw.io, Neovim, and Zellij are no longer in the catalog or profiles. Chrome is redundant with Chromium, which Ryoku can already install as its selected default browser during setup. Bruno was replaced by Posting; draw.io was replaced by the Excalidraw Obsidian plugin (see the Obsidian entry above); Neovim was replaced by Helix (and Fresh); Zellij was replaced by Herdr. Existing installations and personal data are untouched; Ryoku still ships `neovim` itself as one of its own base-OS defaults regardless of this catalog (see Profiles). Regenerate saved plans after this catalog change; the removed IDs are no longer valid selection or approval arguments.
 - **Retired Notion launcher:** Notion is no longer in the catalog or profiles. Existing files are not automatically removed. If previously installed, review `~/.local/share/applications/vixygrey-notion.desktop` and remove that menu entry manually if no longer wanted. Browser data and accounts are untouched. Regenerate saved plans after this catalog change.
 - **Posting:** a terminal HTTP client installed as a uv tool; no Electron sandbox, desktop portal, or GUI launcher is needed. Collections are plain YAML files you manage yourself; none are imported.
 - **Granted / AWS / Bitwarden / OMP:** credentials, accounts, tokens, profiles, and login flows remain yours to configure. No credentials are imported from the Mac.
@@ -385,7 +399,7 @@ search, the AUR, and upstream Linux documentation.
 - **mkcert:** installs the CLI only. Running `mkcert -install` changes your local trust store and is never done automatically by this setup.
 - **pnpm / corepack:** Arch's official `pnpm` package has no declared conflict with Node's bundled `corepack`. If you already manage pnpm through `corepack`, skip this entry rather than installing a second copy.
 - **yq:** the existing entry is Mike Farah's Go implementation, packaged on Arch as `go-yq` (Arch's own `yq` package is the unrelated Python kislyuk/yq). Installing both registers conflicting `/usr/bin/yq` binaries; pacman will refuse the second one rather than silently overwrite it. The separate `yaml-py` interpreter helper remains available.
-- **Neovim / LazyVim / omp.nvim:** see [Theme and existing machines](#theme-and-existing-machines) for how the `omp.nvim` plugin and LazyVim extras are deployed through the `user_edits` overlay rather than a separate starter clone.
+- **Helix / Fresh / Herdr:** see [Theme and existing machines](#theme-and-existing-machines) for the Dracula-Sakura theme files, Ryoku's `neovim` default, and the dropped omp.nvim/obsidian.nvim bridges.
 - **atuin:** shell history sync and search. `atuin register`/`atuin login` to sync across machines is a manual, credential-bearing step; this setup only installs the binary.
 - **Syncthing:** peer-to-peer file sync. Pairing devices (including the Android companion app), folder shares, and enabling the `syncthing.service` user unit are manual steps this setup never performs.
 - **Thunderbird:** mail and calendar client. Accounts and sync are yours to configure; none are imported.
@@ -394,7 +408,9 @@ search, the AUR, and upstream Linux documentation.
 - **gcalcli:** no official Arch package; AUR `gcalcli` is a maintained package. The first run needs your own Google OAuth client setup; this setup does not configure Google credentials. Approve it with `--trust gcalcli`.
 - **aws-vault:** stores AWS credentials in the OS keystore rather than plaintext files; profiles and credential setup remain yours to configure.
 - **glow:** renders Markdown in the terminal; read-only, no configuration deployed.
-- **Lazygit:** gets the same Dracula Sakura theme as lazydocker (`gui.theme` in `config.yml`, identical color roles since both are jesseduffield gocui tools); no accounts to set up. **Zellij:** a standard Arch `extra` tool with no configuration deployed. **procs / duf:** aliased from `ps`/`df` in interactive shells (see Shell activation above); no accounts to set up.
+- **Lazygit:** gets the same Dracula Sakura theme as lazydocker (`gui.theme` in `config.yml`, identical color roles since both are jesseduffield gocui tools); no accounts to set up. **procs / duf:** aliased from `ps`/`df` in interactive shells (see Shell activation above); no accounts to set up.
+- **Fresh:** AUR package `fresh-editor`, maintained by the upstream author. `fresh FILE` works as a drop-in `$EDITOR`/`git core.editor`; its agent-workspace features can run any terminal command (including OMP) as a pane, but that is a plain terminal pane, not the cursor-tracking bridge `omp.nvim` provided. No account or SSH host is configured by this setup.
+- **Herdr:** AUR package `herdr-bin` (a prebuilt binary; the source-build `herdr` package is unmaintained). Purpose-built for supervising running coding-agent sessions rather than general-purpose terminal multiplexing, so it is not a drop-in Zellij replacement in every use case, just the one this setup now selects by default. No SSH machines or agent CLIs are configured; it only keeps whatever terminal sessions you start inside it alive across detach/reattach.
 - **Harlequin:** a terminal SQL IDE; ships with DuckDB and SQLite adapters, other databases need their own adapter package installed separately into the same uv environment (`uv tool install 'harlequin[postgres]'` etc.), which this setup does not do for you. Covers the same use case as DBeaver, from the terminal instead of a GUI.
 - **kubectl / Helm / k9s:** none of the three configure a kubeconfig, cluster context, or cloud credentials; they use whatever is already on the system.
 - **OpenTofu:** an open-source Terraform fork; state backends, providers, and cloud credentials remain yours to configure. This setup does not run `init`/`plan`/`apply` for you.

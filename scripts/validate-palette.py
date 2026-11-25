@@ -30,6 +30,9 @@ SURFACES = (
     CONFIG / "fastfetch/config.jsonc",
     CONFIG / "lazydocker/config.yml",
     CONFIG / "lazygit/config.yml",
+    CONFIG / "helix/config.toml",
+    CONFIG / "helix/themes/dracula-sakura.toml",
+    CONFIG / "herdr/config.toml",
     CONFIG / "trippy/trippy.toml",
     CONFIG / "yazi/theme.toml",
     CONFIG / "vixygrey/setup.zsh",
@@ -410,6 +413,17 @@ def validate(root):
     nested_colors(ff, fastfetch, palette)
     check_lazy_gui_theme(root / CONFIG / "lazydocker/config.yml", palette)
     check_lazy_gui_theme(root / CONFIG / "lazygit/config.yml", palette)
+    helix_config = root / CONFIG / "helix/config.toml"
+    helix_theme = root / CONFIG / "helix/themes/dracula-sakura.toml"
+    require(
+        tomllib.loads(helix_config.read_text(encoding="utf-8")).get("theme") == "dracula-sakura",
+        helix_config,
+        "theme",
+        "must select the managed dracula-sakura theme",
+    )
+    nested_colors(tomllib.loads(helix_theme.read_text(encoding="utf-8")), helix_theme, palette)
+    herdr_config = root / CONFIG / "herdr/config.toml"
+    nested_colors(tomllib.loads(herdr_config.read_text(encoding="utf-8")), herdr_config, palette)
     for relative, table, required in (
         (
             CONFIG / "trippy/trippy.toml",

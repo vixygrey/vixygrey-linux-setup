@@ -91,12 +91,13 @@
     "third_party": false
   },
   {
-    "id": "neovim",
-    "name": "Neovim",
+    "id": "helix",
+    "name": "Helix",
     "method": "pacman",
-    "package": "neovim",
-    "source": "https://github.com/neovim/neovim",
-    "notes": "Arch extra repo. Ryoku ships its own LazyVim-based config under ~/.config/nvim by default; this setup layers omp.nvim and a handful of LazyVim extras on top via the ~/.config/ryoku/user_edits/nvim overlay rather than replacing Ryoku's config.",
+    "package": "helix",
+    "source": "https://helix-editor.com",
+    "notes": "Modal terminal text editor with built-in LSP, tree-sitter highlighting, and fuzzy pickers; Arch extra repo. Binary is hx. Deploys a Dracula-Sakura theme (~/.config/helix/themes/dracula-sakura.toml, selected by ~/.config/helix/config.toml); Ryoku does not ship its own Helix config the way it does for Neovim, so this is a plain literal path, not a user_edits overlay.",
+    "aliases": ["hx"],
     "third_party": false
   },
   {
