@@ -1,0 +1,25 @@
+# Dracula-Sakura color overrides on top of Herdr's built-in catppuccin base.
+# See theme/palette.json for the named source of truth behind these hex values.
+[theme]
+name = "catppuccin"
+
+[theme.custom]
+accent = "#ff9fe3"
+panel_bg = "#323448"
+sidebar_bg = "#2f3144"
+active_row_bg = "#6a5d86"
+selection_bg = "#4b4963"
+surface0 = "#2f3144"
+surface1 = "#323448"
+surface_dim = "#282a36"
+overlay0 = "#4b4963"
+overlay1 = "#8a88c7"
+text = "#f8f8f2"
+subtext0 = "#ddd2f7"
+mauve = "#d4b2ff"
+green = "#8af7cf"
+yellow = "#fff0a8"
+red = "#ff7aa8"
+blue = "#9be7ff"
+teal = "#8af7cf"
+peach = "#ffcf93"

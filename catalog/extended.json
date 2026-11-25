@@ -451,6 +451,15 @@
     "third_party": true
   },
   {
+    "id": "fresh-editor",
+    "name": "Fresh",
+    "method": "aur",
+    "package": "fresh-editor",
+    "source": "https://github.com/sinelaw/fresh",
+    "notes": "Terminal IDE: no-modes editing (Ctrl+S/Ctrl+C, mouse support), LSP, project search, magit-style git diff review, huge-file support, SSH remote editing, and a TypeScript plugin system. AUR package fresh-editor, maintained by the upstream author. Ships a built-in Dracula theme (select it in-app; the project's own philosophy is settings through its UI, not dotfiles, so this setup does not author a separate Dracula-Sakura variant). `fresh FILE` works as a drop-in $EDITOR/git core.editor.",
+    "third_party": true
+  },
+  {
     "id": "gitlogue",
     "name": "gitlogue",
     "method": "pacman",
@@ -470,13 +479,14 @@
     "third_party": false
   },
   {
-    "id": "zellij",
-    "name": "Zellij",
-    "method": "pacman",
-    "package": "zellij",
-    "source": "https://github.com/zellij-org/zellij",
-    "notes": "Terminal multiplexer with persistent, detachable sessions; Arch extra repo.",
-    "third_party": false
+    "id": "herdr",
+    "name": "Herdr",
+    "method": "aur",
+    "package": "herdr-bin",
+    "source": "https://github.com/herdrdev/herdr",
+    "notes": "Terminal-native agent multiplexer: persistent panes for coding-agent sessions (Claude Code, Codex, OMP, etc.) that keep running in a background server across detach/reattach, SSH, and restarts, with per-agent status detection (OSC 7501). A different fit than Zellij's general-purpose splits/sessions: Herdr is purpose-built around supervising multiple running agents rather than general terminal multiplexing. AUR package herdr-bin (prebuilt binary, tracks upstream releases) is actively maintained; the source-build herdr package is unmaintained, so herdr-bin is preferred. Deploys a Dracula-Sakura color override (~/.config/herdr/config.toml); no accounts or remote machines are configured by this setup.",
+    "aliases": ["herdr-bin"],
+    "third_party": true
   },
   {
     "id": "aerc",

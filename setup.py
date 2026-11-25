@@ -46,7 +46,7 @@ DIFF_OUTPUT_LIMIT = 256 * 1024
 # those from its own package on every update, so only its documented
 # ~/.config/ryoku/user_edits/... overlay survives; writing the literal path
 # directly would be silently reverted on the next `ryoku update`.
-RYOKU_OWNED_CONFIG = {"kitty", "fastfetch", "yazi", "starship.toml", "nvim"}
+RYOKU_OWNED_CONFIG = {"kitty", "fastfetch", "yazi", "starship.toml"}
 
 
 def theme_destination(relative: str) -> str:
