@@ -32,6 +32,8 @@ if [[ -o interactive && -z "${AI_AGENT:-}" ]]; then
   command -v yazi >/dev/null 2>&1 && alias y='yazi'
   command -v gping >/dev/null 2>&1 && alias ping='gping'
   command -v doggo >/dev/null 2>&1 && alias dig='doggo'
+  command -v procs >/dev/null 2>&1 && alias ps='procs'
+  command -v duf >/dev/null 2>&1 && alias df='duf'
 fi
 
 if [[ -o interactive && -t 0 && -t 1 ]]; then

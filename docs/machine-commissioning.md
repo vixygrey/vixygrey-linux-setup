@@ -184,8 +184,9 @@ Keep ownership of every path non-overlapping, so the two tools never fight over 
 
 - This repository owns everything under `dotfiles/`: `.zshrc`, `~/.config/vixygrey/setup.zsh`,
   the Ryoku-owned overlay files under `~/.config/ryoku/user_edits/` (Kitty, Fastfetch, Yazi,
-  Starship), and the remaining Dracula-Sakura app configs (Bat, Micro, btop, Lazydocker, Trippy,
-  and the Kiro/OMP theme files). They are generated from `theme/palette.json` and reproduced
+  Starship), and the remaining Dracula-Sakura app configs (Bat, Micro, btop, Lazydocker, Lazygit,
+  Trippy, and the Kiro/OMP theme files). They are generated from `theme/palette.json` and
+  reproduced
   identically by `./setup.sh --theme-only --apply` on every workstation; that command already is
   your cross-machine sync for appearance. Do not also put these paths under chezmoi: `chezmoi
 apply` overwrites to match its source, and this setup's conflict-preserving deploy would then
