@@ -29,6 +29,7 @@ SURFACES = (
     CONFIG / "btop/btop.conf",
     CONFIG / "fastfetch/config.jsonc",
     CONFIG / "lazydocker/config.yml",
+    CONFIG / "lazygit/config.yml",
     CONFIG / "trippy/trippy.toml",
     CONFIG / "yazi/theme.toml",
     CONFIG / "vixygrey/setup.zsh",
@@ -142,6 +143,29 @@ def colors(values, palette, path, exception=()):
             key,
             f"color {color!r} is not in palette",
         )
+
+
+def check_lazy_gui_theme(path, palette):
+    # Shared by lazydocker and lazygit: both are jesseduffield gocui tools with an
+    # identical `gui.theme` color-field schema in their config.yml.
+    fields = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = re.fullmatch(r'    ([A-Za-z]+Color):\s*\["([^"]*)"(?:,\s*bold)?\]', line)
+        if match:
+            require(match[1] not in fields, path, match[1], "duplicate theme color")
+            fields[match[1]] = match[2]
+        elif re.match(r"    [A-Za-z]+Color:", line):
+            raise ValueError(f"{path}: {line.strip()}: invalid theme color field")
+    colors(fields, palette, path)
+    for key in (
+        "activeBorderColor",
+        "inactiveBorderColor",
+        "selectedLineBgColor",
+        "inactiveViewSelectedLineBgColor",
+        "optionsTextColor",
+        "defaultFgColor",
+    ):
+        require(key in fields, path, key, "missing theme role")
 
 
 def read_json(path):
@@ -384,26 +408,8 @@ def validate(root):
         for key in required:
             require(key in values, fastfetch, key, "missing color role")
     nested_colors(ff, fastfetch, palette)
-    lazy = root / CONFIG / "lazydocker/config.yml"
-    yaml_lines = lazy.read_text(encoding="utf-8").splitlines()
-    fields = {}
-    for line in yaml_lines:
-        match = re.fullmatch(r'    ([A-Za-z]+Color):\s*\["([^"]*)"(?:,\s*bold)?\]', line)
-        if match:
-            require(match[1] not in fields, lazy, match[1], "duplicate theme color")
-            fields[match[1]] = match[2]
-        elif re.match(r"    [A-Za-z]+Color:", line):
-            raise ValueError(f"{lazy}: {line.strip()}: invalid theme color field")
-    colors(fields, palette, lazy)
-    for key in (
-        "activeBorderColor",
-        "inactiveBorderColor",
-        "selectedLineBgColor",
-        "inactiveViewSelectedLineBgColor",
-        "optionsTextColor",
-        "defaultFgColor",
-    ):
-        require(key in fields, lazy, key, "missing theme role")
+    check_lazy_gui_theme(root / CONFIG / "lazydocker/config.yml", palette)
+    check_lazy_gui_theme(root / CONFIG / "lazygit/config.yml", palette)
     for relative, table, required in (
         (
             CONFIG / "trippy/trippy.toml",

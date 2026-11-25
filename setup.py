@@ -464,6 +464,20 @@ class Setup:
                 f"Command failed with exit {result.returncode}; stopped without marking it installed"
             )
 
+    def configure_delta_pager(self) -> None:
+        # Delta is useless until git is told to use it; wire the two settings its own docs
+        # call the minimal setup, but never override a pager/diffFilter you already chose.
+        for key, value in (
+            ("core.pager", "delta"),
+            ("interactive.diffFilter", "delta --color-only"),
+        ):
+            current = self.run(["git", "config", "--global", "--get", key], capture=True)
+            existing = current.stdout.strip() if current.returncode == 0 else ""
+            if existing and existing != value:
+                continue
+            if existing != value:
+                self.command(["git", "config", "--global", key, value])
+
     def pacman_installed(self) -> set[str]:
         if self.pacman_packages is None:
             self.pacman_packages = set()
@@ -752,6 +766,8 @@ class Setup:
 
     def plan_app(self, entry: dict):
         identifier, method, package = entry["id"], entry["method"], entry["package"]
+        if identifier == "delta":
+            self.steps.append(("git-delta-config", None))
         if method in {"archive", "font"}:
             archives.artifact_for(entry)
         details = self.font_details(entry) if method == "font" else {}
@@ -1102,6 +1118,8 @@ class Setup:
                     self.command(["ryogami", "wallpaper", "set", "--screen", "*", payload])
                 elif kind == "bat-cache":
                     self.command(["bat", "cache", "--build"])
+                elif kind == "git-delta-config":
+                    self.configure_delta_pager()
 
     def plan(self):
         if self.args.profile:

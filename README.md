@@ -236,7 +236,7 @@ Appearance files use the local Mac palette, with Linux-specific adaptations.
   declaring the `lang.rust`, `lang.python`, `lang.typescript`, `lang.tailwind`, `lang.docker`, and
   `lang.markdown` LazyVim extras, the same mechanism `:LazyExtras` itself writes to. Run
   `:checkhealth omp_nvim` after the first launch to confirm the bridge installed correctly.
-- Btop, Bat, Micro, Lazydocker, and Trippy are not Ryoku-owned paths, so they deploy to their
+- Btop, Bat, Micro, Lazydocker, Lazygit, and Trippy are not Ryoku-owned paths, so they deploy to their
   literal `~/.config/<app>/...` location unchanged and are never touched by `ryoku update`.
 - Kiro gets a full Dracula-Sakura color theme extension (`~/.kiro/extensions/vixygrey.dracula-sakura-1.0.0`: a manifest plus a 140-color, semantic-highlighting-aware theme), activated via `workbench.colorTheme` in its settings; the existing inline `workbench.colorCustomizations`/`editor.tokenColorCustomizations` overrides stay in place alongside it. OMP gets its own theme file at `~/.omp/agent/themes/dracula-sakura.json`, authored against OMP's own schema. Trippy also has a managed palette. Apps without a custom palette inherit terminal colors where supported; this does not claim to recolor every Flatpak or web interface.
 
@@ -312,15 +312,11 @@ Skipping fzf does not disable ordinary zoxide directory jumps.
 existing explicit `--replace .config/vixygrey/setup.zsh` mechanism with `--apply`.
 Different existing files remain preserved unless replacement is explicitly approved.
 
-Delta is installed without changing Git configuration or a global pager.
-To opt in, add these settings to your own Git configuration after installation:
-
-```gitconfig
-[core]
-    pager = delta
-[interactive]
-    diffFilter = delta --color-only
-```
+Delta is wired into Git automatically: `--apply` runs `git config --global core.pager delta` and
+`git config --global interactive.diffFilter 'delta --color-only'` (delta's own documented minimal
+setup) whenever delta is selected, but only for settings you have not already configured
+yourself. If `core.pager`/`interactive.diffFilter` already hold a different value, that value is
+left alone; nothing is ever overwritten.
 
 Command aliases are enabled only in interactive Zsh shells with no `AI_AGENT` marker, and only
 when the target executable is available:
@@ -337,11 +333,12 @@ when the target executable is available:
 | `y`     | `yazi`                         |
 | `ping`  | `gping`                        |
 | `dig`   | `doggo`                        |
+| `ps`    | `procs`                        |
+| `df`    | `duf`                          |
 
-`ps`, `df`, `find`, and `grep` are not replaced by aliases. Use `rg`, `fd`, `ouch`, `rsync`, and
-`rclone` directly; `procs` and `duf` are separate catalog entries (`terminal` profile) rather than
-aliases over `ps`/`df`. These command aliases do not affect scripts or
-agent shells, and removing catalog entries does not uninstall tools already on a machine.
+`find` and `grep` are not replaced; use `rg` and `fd` directly, and `ouch`, `rsync`, or `rclone`
+for archives/transfers. These command aliases do not affect scripts or agent shells, and removing
+catalog entries does not uninstall tools already on a machine.
 
 ## Package behavior and important constraints
 
@@ -397,7 +394,7 @@ search, the AUR, and upstream Linux documentation.
 - **gcalcli:** no official Arch package; AUR `gcalcli` is a maintained package. The first run needs your own Google OAuth client setup; this setup does not configure Google credentials. Approve it with `--trust gcalcli`.
 - **aws-vault:** stores AWS credentials in the OS keystore rather than plaintext files; profiles and credential setup remain yours to configure.
 - **glow:** renders Markdown in the terminal; read-only, no configuration deployed.
-- **Lazygit / Zellij / procs / duf:** standard Arch `extra` CLI/TUI tools with no configuration deployed and no accounts to set up.
+- **Lazygit:** gets the same Dracula Sakura theme as lazydocker (`gui.theme` in `config.yml`, identical color roles since both are jesseduffield gocui tools); no accounts to set up. **Zellij:** a standard Arch `extra` tool with no configuration deployed. **procs / duf:** aliased from `ps`/`df` in interactive shells (see Shell activation above); no accounts to set up.
 - **Harlequin:** a terminal SQL IDE; ships with DuckDB and SQLite adapters, other databases need their own adapter package installed separately into the same uv environment (`uv tool install 'harlequin[postgres]'` etc.), which this setup does not do for you. Covers the same use case as DBeaver, from the terminal instead of a GUI.
 - **kubectl / Helm / k9s:** none of the three configure a kubeconfig, cluster context, or cloud credentials; they use whatever is already on the system.
 - **OpenTofu:** an open-source Terraform fork; state backends, providers, and cloud credentials remain yours to configure. This setup does not run `init`/`plan`/`apply` for you.
