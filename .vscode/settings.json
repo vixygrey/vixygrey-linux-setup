@@ -1,0 +1,12 @@
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["catalog/core.json", "catalog/extended.json"],
+      "url": "./schema/catalog.schema.json"
+    },
+    {
+      "fileMatch": ["profiles.json"],
+      "url": "./schema/profiles.schema.json"
+    }
+  ]
+}

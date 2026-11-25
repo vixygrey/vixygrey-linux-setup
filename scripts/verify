@@ -2,6 +2,9 @@
 set -euo pipefail
 
 ROOT="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+if command -v go >/dev/null 2>&1; then
+  PATH="$(go env GOPATH)/bin:$PATH"
+fi
 temporary_directories=()
 
 cleanup() {

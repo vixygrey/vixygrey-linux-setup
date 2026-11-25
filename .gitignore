@@ -5,6 +5,7 @@ __pycache__/
 node_modules/
 .env
 !.env.example
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 *-plan.json

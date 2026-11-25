@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vixygrey/vixygrey-linux-setup/schema/profiles.schema.json",
+  "title": "vixygrey-linux-setup profiles",
+  "description": "Maps a profile name to the catalog IDs it selects. This schema cannot validate that each ID actually exists in catalog/*.json; run ./setup.sh --validate-catalog for that.",
+  "type": "object",
+  "propertyNames": {
+    "pattern": "^[a-z][a-z-]*$"
+  },
+  "additionalProperties": {
+    "type": "array",
+    "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "uniqueItems": true,
+    "minItems": 1
+  }
+}

@@ -54,7 +54,11 @@ class ReceiptSetup(unittest.TestCase):
         self.entry = entry
         self.app = setup.Setup(
             SimpleNamespace(
-                replace=[], trust=[entry["id"]] if trust else [], profile=[], apps_only=True
+                replace=[],
+                trust=[entry["id"]] if trust else [],
+                profile=[],
+                apps_only=True,
+                quiet=False,
             )
         )
         self.app.env["PATH"] = str(self.binary)

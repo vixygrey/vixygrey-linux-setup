@@ -6,8 +6,39 @@ import hashlib
 import os
 from pathlib import Path
 import stat
+import sys
 import tempfile
 import uuid
+
+# Status labels colored in text-format preview/apply output, shared by setup.py,
+# archives.py, and this module. Keyed by the exact uppercase label text each
+# print() call emits; anything not listed here prints uncolored.
+_LABEL_COLORS = {
+    "CREATE": "32",  # green: will be written
+    "INSTALL": "32",
+    "CONFIRMED": "32",
+    "READY": "32",
+    "PLANNED": "36",  # cyan: informational, already accounted for
+    "BACKUP": "36",
+    "FONT": "36",
+    "PRESERVE": "33",  # yellow: an acknowledged, ongoing conflict
+    "PROTECTED": "33",
+    "MISSING": "33",
+    "INSTALLED": "90",  # gray: steady state, nothing to do
+    "UNCHANGED": "90",
+    "RETAINED FONT": "90",
+    "BLOCKED": "31",  # red
+    "CONFLICT": "31",
+    "COMMAND-CONFLICT": "31",
+}
+
+
+def paint(label: str) -> str:
+    """Wrap a status label in its ANSI color when stdout is an interactive terminal."""
+    code = _LABEL_COLORS.get(label)
+    if not code or sys.stdout is None or not sys.stdout.isatty():
+        return label
+    return f"\033[{code}m{label}\033[0m"
 
 
 class SafetyError(RuntimeError):
@@ -103,7 +134,7 @@ class Files:
                 stream.flush()
                 os.fsync(stream.fileno())
             self.backups.append(backup)
-            print(f"BACKUP {relative} -> {backup}")
+            print(f"{paint('BACKUP')} {relative} -> {backup}")
         fd, temporary = tempfile.mkstemp(prefix=".vixygrey-", dir=path.parent)
         try:
             with os.fdopen(fd, "wb") as stream:

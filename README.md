@@ -4,6 +4,26 @@ Personal setup for **Ryoku 1.0 (Amaterasu), CachyOS edition**, as a graphical wo
 
 The catalog explicitly lists the selected applications and their installation sources. `soffice` is part of LibreOffice. Podman installs like any other `pacman` package, no group or service setup required. Kiro and iamlive use pinned upstream Linux payloads. OMP remains the primary AI development tool.
 
+## Contents
+
+- [Before using it](#before-using-it)
+  - [Podman](#podman)
+- [Preview and install](#preview-and-install)
+  - [Profiles](#profiles)
+  - [Status and readiness](#status-and-readiness)
+  - [Reviewable JSON plans](#reviewable-json-plans)
+  - [Theme and existing machines](#theme-and-existing-machines)
+  - [Shell activation](#shell-activation)
+- [Package behavior and important constraints](#package-behavior-and-important-constraints)
+  - [Special applications](#special-applications)
+  - [Repeated runs, changes, and failure](#repeated-runs-changes-and-failure)
+  - [Receipt identity and migration](#receipt-identity-and-migration)
+  - [Font upgrades and recovery](#font-upgrades-and-recovery)
+- [Security model](#security-model)
+  - [Refreshing catalog pins](#refreshing-catalog-pins)
+- [Verification](#verification)
+- [License](#license)
+
 ## Before using it
 
 - Run `./setup.sh` as your normal user, **never prefixed with `sudo` yourself**. `--apply` shells out to `sudo pacman`/`yay` for individual package installs when a selected entry needs one, prompting for your password per normal Arch convention; the script itself always refuses to run as root (`geteuid() == 0` is rejected outright), so there is no way to make the whole run privileged.
@@ -53,7 +73,15 @@ application in the catalog; enable it yourself if you select one of those tools.
 
 # Preview the entire catalog and theme. No installation or configuration writes.
 ./setup.sh
+
+# Repeat runs on a settled machine: --quiet drops already-satisfied INSTALLED/UNCHANGED
+# lines from text-format output, keeping the actionable lines and the summary.
+./setup.sh --quiet
 ```
+
+Text-format status words (`CREATE`, `INSTALL`, `BLOCKED`, `PRESERVE`, and the rest) are
+colored when stdout is an interactive terminal, and plain otherwise (pipes, redirected output,
+`--format json`); nothing else about the output changes.
 
 ### Profiles
 
@@ -476,6 +504,13 @@ Catalog and profile changes are deliberately manual. Do not use Dependabot or an
 updater for `catalog/*.json`, `profiles.json`, vendor artifact URLs, SHA-256 values, Flatpak IDs,
 pacman/AUR package names, or source-approval classifications.
 
+`schema/catalog.schema.json` and `schema/profiles.schema.json` (wired up for editors in
+`.vscode/settings.json`) give inline validation while hand-editing entries: required fields,
+the `version`-required-for-{npm,uv,archive,font,python-helper} rule, and the `archive` method's
+`artifacts.x86_64`/`artifacts.aarch64` shape. They mirror `validate_catalog()` in `setup.py`,
+which remains the authoritative check (including cross-entry alias/command collisions a static
+schema cannot see); keep both in sync by hand when either changes.
+
 For every catalog refresh:
 
 1. Start from the authoritative upstream release page, Arch's official package search, or the AUR.
@@ -497,8 +532,7 @@ mise install  # or otherwise provide Node 24.18.1, uv 0.13.1, and Go 1.26+
 npm ci
 uv sync --locked --group dev
 go install mvdan.cc/sh/v3/cmd/shfmt@v3.14.1
-export PATH="$(go env GOPATH)/bin:$PATH"
-./scripts/verify
+./scripts/verify  # prepends $(go env GOPATH)/bin to PATH itself to find shfmt
 ```
 
 This canonical check requires Node 24.18.1, uv 0.13.1, Go 1.26+, Python 3.11+, Zsh, and ShellCheck. `mise.toml` pins the Node, uv, and Go versions; `mise install` provisions them without hunting for the right combination. Run `npm ci` and `uv sync --locked --group dev` after cloning or changing their lockfiles. Node, Prettier, uv, Ruff, Go, and shfmt are development-only tooling; the installer runtime remains Python standard library. The check validates Prettier, Ruff, and explicitly-dialected Bash/Zsh shfmt formatting; runs the safety suite; validates the catalog with `--list`; checks managed shell files; and previews a trusted archive selection plus theme deployment in empty temporary homes. It never calls `--apply` or installs missing tools. `scripts/format-python` and `scripts/format-shell` share the same formatting contract in `--write` mode.
